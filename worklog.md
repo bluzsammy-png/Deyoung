@@ -130,3 +130,10 @@ Work Log:
 - Assembly: assemble_film.py — normalize 1280x720, grade/vignette, burned dialogue + speaker tags, end card w/ mark, aevalsrc drone score, master + web (crf27 hqdn3d faststart)
 - Social: Playwright site screenshots (desktop+mobile) -> social_posts.py v2 composites laptop+phone mockups into 7 cards (download/social/) — every card shows mobile + web experience
 - Site: hero.tsx gained "Watch the 60-second film" video band (web mp4 + poster); .gitignore excludes campaign/download/upload/db; README.md added
+
+Stage Summary (completed this session, 17:13–18:05 UTC):
+- Film: resumed rate-limited scene pipeline in foreground poll runs (background node gets killed); s05–s08 downloaded by 17:43 (8/8); assemble_film.py completed (norms + endcard + score + 69MB master); web encode: 1280x720 h264+aac crf27 hqdn3d faststart -> public/video/deyoung-film-web.mp4 (16.1MB, exactly 60.000s, moov-first verified)
+- QA: HTTP range request on /video/deyoung-film-web.mp4 returns 206 video/mp4; poster 200; cards visually verified (mobile+web mockups present on every card)
+- Git: untracked .env (DATABASE_URL path only) + explicit .env ignore; chose clean-history strategy (old history contained auto-committed db/.auth-secret + custom.db): orphan branch -> single commit 2a370be "DeYoung — AI Video Studio" (337 files) -> pushed to github.com/bluzsammy-png/Deyoung main (PAT used one-shot in push URL, no remote saved, no credential helper)
+- Pushed tree verified: film + poster + README present; 0 db/.env/download/campaign paths
+- SECURITY: GitHub PAT exposed in chat — user must rotate/revoke immediately (github.com/settings/tokens), same for the Kaggle token shared earlier
