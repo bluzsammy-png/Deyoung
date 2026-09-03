@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/adapter.schema.json",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "target",
+    "kind"
+  ],
+  "properties": {
+    "adapter_id": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "model",
+        "tool",
+        "connector",
+        "worker",
+        "personal_ai"
+      ]
+    },
+    "config": {
+      "type": "object"
+    },
+    "health_check": {
+      "type": [
+        "string",
+        "object"
+      ]
+    }
+  }
+}

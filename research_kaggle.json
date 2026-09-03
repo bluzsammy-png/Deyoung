@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://www.kaggle.com/docs/efficient-gpu-usage",
+    "name": "Efficient GPU Usage Tips",
+    "snippet": "You can use up to a quota limit per week of GPU . The quota resets weekly and is 30 hours or sometimes higher depending on demand and resources",
+    "host_name": "www.kaggle.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.kaggle.com/docs/api",
+    "name": "Public API",
+    "snippet": "Rate Limits Kaggle uses dynamic rate limiting on both the public API and on calls made while using the kaggle .com website. in automated scripts,",
+    "host_name": "www.kaggle.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.kaggle.com/general/108481",
+    "name": "Weekly Maximum GPU Usage",
+    "snippet": "Starting this week, we are implementing a limit on each user's GPU use of 30 hours/week. For context: about 15% of GPU users go over this limit in a typical ... Read more",
+    "host_name": "www.kaggle.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.linkedin.com/posts/jayadithya-r_a-practical-guide-to-stealing-your-friends-activity-7497529324619640833-prgK",
+    "name": "Jayadithya R posted on the topic",
+    "snippet": "Quotas (And Automating Them) Kaggle gives out free GPU and TPU compute. Kaggle also cuts your session off after 12 hours and puts a hard cap on ...",
+    "host_name": "www.linkedin.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.kaggle.com/code/dansbecker/running-kaggle-kernels-with-a-gpu",
+    "name": "Running Kaggle Kernels with a GPU",
+    "snippet": "Kaggle provides free access to NVidia K80 GPUs in kernels . This benchmark shows that enabling a GPU to your Kernel results in a 12.5X speedup during training ...",
+    "host_name": "www.kaggle.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Frederisk/kaggle-action",
+    "name": "Frederisk/kaggle-action: Execute free GPU CI/CD with",
+    "snippet": "For free users, kaggle will provide more than 30 hours of GPU usage per week, which is enough to provide testing for some small projects.",
+    "host_name": "github.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  }
+]

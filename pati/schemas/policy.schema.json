@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/policy.schema.json",
+  "type": "object",
+  "required": [
+    "key"
+  ],
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "value": {},
+    "FREE_ONLY": {
+      "type": "boolean",
+      "const": true
+    },
+    "MAX_SPEND": {
+      "type": "number",
+      "const": 0
+    }
+  }
+}

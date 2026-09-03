@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://www.anthropic.com/news/model-context-protocol",
+    "name": "Introducing the Model Context Protocol - Anthropic",
+    "snippet": "Nov 25, 2024 · The Model Context Protocol (MCP) is an open standard for connecting AI assistants to the systems where data lives, including content ...",
+    "host_name": "www.anthropic.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro",
+    "name": "What is the Model Context Protocol (MCP)?",
+    "snippet": "MCP (Model Context Protocol) is an open-source standard for connecting AI applications to external systems. Using MCP, AI applications like Claude or ...",
+    "host_name": "modelcontextprotocol.io",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/modelcontextprotocol",
+    "name": "Model Context Protocol - GitHub",
+    "snippet": "The Model Context Protocol (MCP) is an open protocol that enables seamless integration between LLM applications and external data sources and tools. Whether ...",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/linux/comments/1pidsib/anthropic_donates_model_context_protocol_mcp_to",
+    "name": "r/linux on Reddit: Anthropic donates \"Model Context Protocol\" (MCP",
+    "snippet": "Dec 9, 2025 · Anthropic donates \"Model Context Protocol\" (MCP) to the Linux Foundation making it the official open standard for Agentic AI. Open Source ...",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28",
+    "name": "Specification - What is the Model Context Protocol (MCP)?",
+    "snippet": "Jul 28, 2026 · Model Context Protocol (MCP) is an open protocol that enables seamless integration between LLM applications and external data sources and tools.",
+    "host_name": "modelcontextprotocol.io",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

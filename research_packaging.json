@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://www.reddit.com/r/linuxquestions/comments/j5t8kp/windowslike_task_scheduler_on_linux_cron_isnt",
+    "name": "Windows-like task scheduler on Linux? (cron isn't enough) - Reddit",
+    "snippet": "Oct 5, 2020 · Systemd has a lot of features rather than just starting. Systemd timers are equally powerful as the Windows task scheduler, but both obliterate ... Seeking open source app to create scheduled tasks on MacOS? How do I schedule an app to open every day at 8am - Reddit More results from www.reddit.com",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forum.restic.net/t/auto-generate-systemd-timer-launchd-agent-windows-task-scheduler/2949",
+    "name": "Auto-generate systemd timer / launchd agent & Windows Task",
+    "snippet": "Jul 29, 2020 · It works for systemd, launchd on macOS and Windows Task Scheduler. Here's a configuration example (in YAML, but you can also use TOML, JSON or ...",
+    "host_name": "forum.restic.net",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.advsyscon.com/comparisons/windows-task-scheduler-alternatives",
+    "name": "Windows Task Scheduler Software Alternatives: A Comparison Guide",
+    "snippet": "Pros RoboIntern is a free, open-source tool that enables users to automate and schedule a wide variety of front-office tasks without having to write scripts,",
+    "host_name": "www.advsyscon.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://splinterware.com/products/scheduler.html",
+    "name": "Best Windows Task Scheduler Alternative for Power Users",
+    "snippet": "Jul 23, 2026 · System Scheduler is a powerful task scheduler replacement for Windows, enabling users to automate tasks, schedule applications, ...",
+    "host_name": "splinterware.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://apps.apple.com/us/app/launchd-task-scheduler/id620249105?mt=12",
+    "name": "LaunchD Task Scheduler - App Store - Apple",
+    "snippet": "Launchd Task Scheduler makes macOS automation powerful, visual, and easy to manage. Create, edit, and control LaunchAgents and LaunchDaemons with a polished ...",
+    "host_name": "apps.apple.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

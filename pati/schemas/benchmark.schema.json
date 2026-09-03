@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/benchmark.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "target_kind",
+    "target_id",
+    "metrics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "target_kind": {
+      "enum": [
+        "model",
+        "tool",
+        "worker"
+      ]
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "number"
+    }
+  }
+}

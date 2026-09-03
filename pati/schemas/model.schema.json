@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/model.schema.json",
+  "type": "object",
+  "required": [
+    "model_id",
+    "name",
+    "provider",
+    "modality",
+    "license",
+    "cost",
+    "free_status",
+    "status"
+  ],
+  "properties": {
+    "model_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "modality": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "license": {
+      "type": "string"
+    },
+    "license_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "repository_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "hardware_requirements": {
+      "type": "string"
+    },
+    "RAM_requirement": {
+      "type": "string"
+    },
+    "VRAM_requirement": {
+      "type": "string"
+    },
+    "quantization_options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "context_length": {
+      "type": "integer"
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "input_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "latency_estimate": {
+      "type": "string"
+    },
+    "quality_score": {
+      "type": "number"
+    },
+    "speed_score": {
+      "type": "number"
+    },
+    "cost": {
+      "type": "number",
+      "maximum": 0,
+      "description": "FREE_ONLY: any positive cost is rejected"
+    },
+    "free_status": {
+      "enum": [
+        "FREE_FOREVER",
+        "FREE_WITH_LIMITS",
+        "OPEN_SOURCE_SELF_HOSTED"
+      ]
+    },
+    "availability": {
+      "type": "string"
+    },
+    "worker_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "startup_time": {
+      "type": "string"
+    },
+    "cold_start_time": {
+      "type": "string"
+    },
+    "max_context": {
+      "type": "integer"
+    },
+    "tool_calling_support": {
+      "type": "boolean"
+    },
+    "structured_output_support": {
+      "type": "boolean"
+    },
+    "vision_support": {
+      "type": "boolean"
+    },
+    "reasoning_support": {
+      "type": "boolean"
+    },
+    "commercial_use": {
+      "type": "string"
+    },
+    "license_restrictions": {
+      "type": "string"
+    },
+    "known_limitations": {
+      "type": "string"
+    },
+    "benchmark_results": {
+      "type": "array"
+    },
+    "last_verified": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  }
+}

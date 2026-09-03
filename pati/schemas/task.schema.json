@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/task.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "objective",
+    "type",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "parent_task_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "objective": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "capability": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "constraints": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ]
+    },
+    "policy": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ]
+    },
+    "plan": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "PLANNING",
+        "ROUTING",
+        "WAITING_FOR_RESOURCE",
+        "RUNNING",
+        "PAUSED",
+        "VALIDATING",
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED",
+        "QUARANTINED"
+      ]
+    },
+    "progress": {
+      "type": "number"
+    },
+    "result": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ]
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "trace_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "retry_count": {
+      "type": "integer"
+    },
+    "cost": {
+      "type": "number",
+      "maximum": 0
+    },
+    "created_at": {
+      "type": "number"
+    },
+    "started_at": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "completed_at": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
