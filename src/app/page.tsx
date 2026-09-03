@@ -7,7 +7,7 @@ import { useHashRoute } from "@/components/site/hash";
 import { SiteHeader } from "@/components/site/header";
 import { Hero, StickyMobileCta } from "@/components/site/hero";
 import {
-  About, Contact, FaqSection, Gallery, Services, SiteFooter, Testimonials,
+  About, Contact, FaqSection, Gallery, HowItWorks, Services, SiteFooter, StatsStrip, Testimonials,
 } from "@/components/site/sections";
 import { BookView } from "@/components/site/book-view";
 import { RequestView } from "@/components/site/request-view";
@@ -106,7 +106,9 @@ export default function Page() {
       view = (
         <main className="flex-1">
           <Hero settings={settings} />
+          <StatsStrip />
           <PlansSection plans={data?.plans ?? []} currency={settings?.currency || "USD"} />
+          <HowItWorks />
           <Services services={data?.services ?? []} currency={settings?.currency || "USD"} />
           <Gallery photos={data?.photos ?? []} />
           <About settings={settings} />

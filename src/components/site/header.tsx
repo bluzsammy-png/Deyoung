@@ -31,8 +31,8 @@ export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white/95 backdrop-blur border-b transition-shadow ${
-        scrolled ? "shadow-[0_1px_0_0_#DC2626]" : "border-border"
+      className={`sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b transition-all ${
+        scrolled ? "shadow-[0_1px_0_0_#DC2626] bg-white/95" : "border-border"
       }`}
     >
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between gap-4">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { money, type Plan, type PlanFeature } from "@/lib/types";
 import { go } from "./hash";
 import { SectionHead } from "./sections";
+import { TiltCard, Reveal } from "./motion";
 
 function planFeatures(plan: Plan): PlanFeature[] {
   try {
@@ -36,15 +37,20 @@ export function PlansSection({ plans, currency }: { plans: Plan[]; currency: str
           </p>
         </div>
 
-        <div className="mt-12 grid md:grid-cols-3 gap-5 items-stretch">
-          {plans.map((plan) => {
+        <div className="mt-12 grid md:grid-cols-3 gap-5 items-stretch dy-scene">
+          {plans.map((plan, i) => {
             const popular = plan.code === "pro";
             return (
+              <Reveal key={plan.id} delay={i * 110}>
+              <TiltCard
+                max={6}
+                lift={8}
+                className={`h-full ${popular ? "p-[2px] bg-gradient-to-b from-[#DC2626] via-[#7F1D1D] to-[#DC2626] shadow-[0_0_50px_-12px_rgba(220,38,38,0.7)]" : ""}`}
+              >
               <div
-                key={plan.id}
-                className={`relative flex flex-col p-6 border-2 ${
+                className={`relative flex flex-col p-6 h-full border-2 ${
                   popular
-                    ? "border-primary bg-white text-neutral-900 shadow-[0_0_0_4px_rgba(220,38,38,0.25)]"
+                    ? "border-primary bg-white text-neutral-900"
                     : "border-white/15 bg-white/5 text-white"
                 }`}
               >
@@ -86,6 +92,8 @@ export function PlansSection({ plans, currency }: { plans: Plan[]; currency: str
                   <Zap className="h-4 w-4" aria-hidden /> Subscribe to {plan.name}
                 </Button>
               </div>
+              </TiltCard>
+              </Reveal>
             );
           })}
         </div>

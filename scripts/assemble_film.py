@@ -14,13 +14,13 @@ BLACK = f"{BASE}/scripts/ArchivoBlack.ttf"
 MARK = f"{BASE}/campaign/social/mark-red.png"
 
 SCENES = [
-    # id, dur, text (None = no subtitle), speaker tag
+    # id, dur, text (None = no subtitle), speaker tag (None — narrator-led film v2)
     ("s01", 5.0,  "EVERY STORY DESERVES THE BIG SCREEN.", None),
-    ("s02", 10.0, "Your story deserves more than fifteen seconds.", "AMARA"),
-    ("s03", 10.0, "DeYoung gives it a full sixty.", "KOJO"),
+    ("s02", 10.0, "Your story deserves more than fifteen seconds.", None),
+    ("s03", 10.0, "DeYoung gives it a full sixty.", None),
     ("s04", 5.0,  "Type your story. Pick your length.", None),
     ("s05", 5.0,  "And watch it come alive.", None),
-    ("s06", 10.0, "Write it. We roll the cameras.", "AMARA + KOJO"),
+    ("s06", 10.0, "Write it. We roll the cameras.", None),
     ("s07", 5.0,  "Mobile or web. Your studio travels with you.", None),
     ("s08", 5.0,  None, None),
 ]
@@ -29,7 +29,10 @@ def esc(t):
     return t.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\\\'").replace("%", "\\%")
 
 def norm_clip(i, sid, dur, text, tag):
-    src = f"{FRAMES}/{sid}.mp4"
+    # narrator-led v2: prefer the re-generated take (with native audio we discard);
+    # video is used muted — the single narrator bus carries all speech.
+    src_audio = f"{FRAMES}/{sid}_audio.mp4"
+    src = src_audio if os.path.exists(src_audio) else f"{FRAMES}/{sid}.mp4"
     dst = f"{OUT}/{sid}_norm.mp4"
     fade_out = dur - 0.35
     vf = [

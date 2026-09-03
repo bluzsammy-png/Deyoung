@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Star, Clock, ArrowRight, Mail, Phone, MapPin, Instagram, Twitter, Facebook, Youtube, Send, X } from "lucide-react";
+import { Star, Clock, ArrowRight, Mail, Phone, MapPin, Instagram, Twitter, Facebook, Youtube, Send, X, PenLine, Clapperboard, Download, ChevronRight } from "lucide-react";
 import { LogoMark } from "./logo";
+import { TiltCard, Reveal } from "./motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,11 +29,12 @@ export function Services({ services, currency }: { services: Service[]; currency
         {services.length === 0 ? (
           <p className="text-muted-foreground">Services are being updated — check back soon or send a message.</p>
         ) : (
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {services.map((s) => (
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 dy-scene">
+            {services.map((s, i) => (
+              <Reveal key={s.id} delay={(i % 4) * 80}>
+              <TiltCard className="h-full">
               <article
-                key={s.id}
-                className="group border-2 border-neutral-200 hover:border-primary transition-colors flex flex-col bg-white"
+                className="group border-2 border-neutral-200 hover:border-primary transition-colors flex flex-col bg-white h-full"
               >
                 <div className="h-1.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                 <div className="p-5 flex-1 flex flex-col">
@@ -54,6 +56,8 @@ export function Services({ services, currency }: { services: Service[]; currency
                   </Button>
                 </div>
               </article>
+              </TiltCard>
+              </Reveal>
             ))}
           </div>
         )}
@@ -75,11 +79,11 @@ export function Gallery({ photos }: { photos: Photo[] }) {
           <p className="text-white/60">New work is being uploaded — check back soon.</p>
         ) : (
           <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-3">
-            {photos.map((p) => (
+            {photos.map((p, i) => (
+              <Reveal key={p.id} delay={(i % 3) * 80}>
               <button
-                key={p.id}
                 onClick={() => setActive(p)}
-                className="group relative aspect-[4/3] overflow-hidden bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="group relative aspect-[4/3] w-full overflow-hidden bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.5)] transition-shadow"
                 aria-label={`View photo: ${p.title}`}
               >
                 <Image
@@ -93,6 +97,7 @@ export function Gallery({ photos }: { photos: Photo[] }) {
                   {p.title}
                 </span>
               </button>
+              </Reveal>
             ))}
           </div>
         )}
@@ -168,9 +173,11 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
     <section className="py-16 md:py-24 bg-[#F7F7F7] border-y-4 border-primary">
       <div className="mx-auto max-w-6xl px-4">
         <SectionHead kicker="Real clients" title="Word on the Street" dark={false} />
-        <div className="mt-10 grid md:grid-cols-3 gap-4">
-          {testimonials.map((t) => (
-            <figure key={t.id} className="bg-white border-2 border-neutral-200 p-6 flex flex-col">
+        <div className="mt-10 grid md:grid-cols-3 gap-4 dy-scene">
+          {testimonials.map((t, i) => (
+            <Reveal key={t.id} delay={i * 90}>
+            <TiltCard className="h-full">
+            <figure className="bg-white border-2 border-neutral-200 p-6 flex flex-col h-full">
               <div className="flex gap-0.5" aria-label={`${t.rating} out of 5 stars`}>
                 {Array.from({ length: t.rating }).map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-primary text-primary" aria-hidden />
@@ -184,6 +191,8 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
                 {t.role ? <p className="text-xs text-muted-foreground">{t.role}</p> : null}
               </figcaption>
             </figure>
+            </TiltCard>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -367,6 +376,99 @@ export function SiteFooter({ settings }: { settings: PublicSettings | null }) {
         </p>
       </div>
     </footer>
+  );
+}
+
+/* ---------------- How it works (3D diagram) ---------------- */
+
+const STEPS = [
+  {
+    n: "01",
+    icon: PenLine,
+    title: "Describe your story",
+    body: "Type your idea, pick a length up to 60 seconds and choose 720p or crisp 4K. One prompt is all it takes to start rolling.",
+  },
+  {
+    n: "02",
+    icon: Clapperboard,
+    title: "DeYoung renders",
+    body: "The engine films your scene in a single pass — no stitching fifteen-second clips together and hoping they match.",
+  },
+  {
+    n: "03",
+    icon: Download,
+    title: "Download & share",
+    body: "Your finished film arrives with sound, ready for socials, clients or the big screen. Repeat requests fly out of the cache instantly.",
+  },
+];
+
+export function HowItWorks() {
+  return (
+    <section aria-label="How DeYoung works" className="py-16 md:py-24 bg-white overflow-hidden">
+      <div className="mx-auto max-w-6xl px-4">
+        <SectionHead kicker="How it works" title="From Idea to Film in Three Moves" dark={false} />
+        <div className="relative mt-12">
+          {/* connector line (the diagram spine) */}
+          <div
+            className="hidden lg:block absolute top-9 left-[10%] right-[10%] h-[3px] bg-gradient-to-r from-[#DC2626]/10 via-[#DC2626]/60 to-[#DC2626]/10"
+            aria-hidden
+          />
+          <div className="grid md:grid-cols-3 gap-5 dy-scene">
+            {STEPS.map((step, i) => (
+              <Reveal key={step.n} delay={i * 120}>
+                <TiltCard className="h-full relative">
+                  <div className="relative h-full bg-white border-2 border-neutral-200 hover:border-primary transition-colors p-6">
+                    <div className="flex items-center justify-between">
+                      <span className="h-14 w-14 bg-[var(--brand-black)] text-white flex items-center justify-center dy-glow-red">
+                        <step.icon className="h-6 w-6" aria-hidden />
+                      </span>
+                      <span className="text-5xl font-black text-neutral-100 select-none" aria-hidden>
+                        {step.n}
+                      </span>
+                    </div>
+                    <h3 className="mt-5 text-xl font-black uppercase tracking-tight">{step.title}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{step.body}</p>
+                    {i < STEPS.length - 1 ? (
+                      <ChevronRight
+                        className="hidden lg:block absolute -right-[26px] top-8 h-6 w-6 text-primary z-10"
+                        aria-hidden
+                      />
+                    ) : null}
+                  </div>
+                </TiltCard>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Stats marquee strip ---------------- */
+
+const STRIP_ITEMS = [
+  "60 SECONDS — ONE PASS",
+  "UP TO 4K CINEMATIC",
+  "LIVE QUEUE + HONEST ETA",
+  "INSTANT CACHE DELIVERY",
+  "MOBILE + WEB STUDIO",
+  "PAY LOCAL OR INTERNATIONAL",
+];
+
+export function StatsStrip() {
+  const row = [...STRIP_ITEMS, ...STRIP_ITEMS];
+  return (
+    <div className="bg-primary text-white overflow-hidden py-3 border-y-4 border-[var(--brand-black)]" aria-hidden>
+      <div className="dy-marquee-track">
+        {row.map((t, i) => (
+          <span key={i} className="mx-6 flex items-center gap-6 text-sm font-black tracking-[0.2em] whitespace-nowrap">
+            {t}
+            <span className="h-1.5 w-1.5 bg-white/70 rounded-full inline-block" />
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 

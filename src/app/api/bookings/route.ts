@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { bad, guardAdmin, ok, num, str } from "@/lib/api";
 import { getSettings } from "@/lib/settings";
+import { sendOwnerEmail } from "@/lib/agentmail";
 
 /** Public: create a booking (used by the checkout flow). */
 export async function POST(req: Request) {
@@ -28,6 +29,26 @@ export async function POST(req: Request) {
       status: "pending",
     },
   });
+
+  // Notify the owner's AgentMail inbox (non-fatal: booking is already saved).
+  void sendOwnerEmail({
+    subject: `New booking — ${serviceTitle} (${s.currency} ${amount ?? 0})`,
+    replyTo: email,
+    text: [
+      `You have a new booking from the website.`,
+      ``,
+      `Customer:  ${name}`,
+      `Email:     ${email}`,
+      `Phone:     ${phone || "—"}`,
+      `Service:   ${serviceTitle}`,
+      `Amount:    ${s.currency} ${amount ?? 0}`,
+      `Payment:   ${s.paymentProvider}`,
+      `Notes:     ${notes || "—"}`,
+      ``,
+      `Open the admin panel to confirm, or reply to this email to reach ${name}.`,
+    ].join("\n"),
+  }).catch(() => {});
+
   return ok({ booking });
 }
 
