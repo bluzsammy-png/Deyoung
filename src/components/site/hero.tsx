@@ -104,7 +104,6 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
           src="/video/deyoung-film-web.mp4"
           poster="/img/film-poster.jpg"
           controls
-          muted
           loop
           playsInline
           preload="metadata"

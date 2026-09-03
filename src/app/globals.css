@@ -90,6 +90,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Archivo (via next/font variable on <body>) with system fallbacks */
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   html {
     scroll-behavior: smooth;

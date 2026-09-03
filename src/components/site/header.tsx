@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Menu, X, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "./logo";
 import { go } from "./hash";
 import type { PublicSettings } from "@/lib/types";
 
@@ -40,7 +41,7 @@ export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
           className="flex items-center gap-2 font-black tracking-tight text-xl"
           aria-label={`${name} — home`}
         >
-          <span aria-hidden className="h-6 w-6 bg-primary inline-block" />
+          <LogoMark className="h-7 w-7 drop-shadow-[0_2px_6px_rgba(220,38,38,0.35)]" />
           <span className="uppercase">{name}</span>
         </a>
 

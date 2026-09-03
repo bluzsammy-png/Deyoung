@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
+// Brand display + body font: Archivo variable (wght 100-900), self-hosted.
+// Keeps the --font-geist-sans variable name so existing styles apply unchanged.
+const archivo = localFont({
+  src: "./fonts/Archivo.ttf",
+  weight: "100 900",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -79,7 +84,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
+        className={`${archivo.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         {children}
         <Toaster position="top-center" richColors closeButton />

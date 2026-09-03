@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Star, Clock, ArrowRight, Mail, Phone, MapPin, Instagram, Twitter, Facebook, Youtube, Send, X } from "lucide-react";
+import { LogoMark } from "./logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -349,7 +350,7 @@ export function SiteFooter({ settings }: { settings: PublicSettings | null }) {
       <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <p className="flex items-center gap-2 font-black text-lg uppercase tracking-tight">
-            <span className="h-5 w-5 bg-primary inline-block" aria-hidden />
+            <LogoMark className="h-6 w-6" aria-hidden />
             {s?.siteName || "DeYoung"}
           </p>
           <p className="mt-1 text-sm text-white/50">{s?.tagline || "Bold work. Real results."}</p>
