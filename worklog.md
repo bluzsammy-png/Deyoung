@@ -156,3 +156,23 @@ Stage Summary:
 - Railway build will now find schema.postgres.prisma; boot will db push + seed then serve standalone on $PORT
 - User must set DATABASE_URL in Railway: postgresql://postgres.REDACTED-C6-OLD-PROJ-REF:REDACTED-C6-DB-PASSWORD@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
 - SECURITY: new GitHub PAT + Supabase password + QuantEdge token all exposed in chat — advise rotating Supabase db password & revoking tokens after setup
+
+---
+Task ID: 24
+Agent: main (Super Z)
+Task: Verify Railway build; add film VOICE (TTS); logo rebrand + Archivo typography; QA; push
+
+Work Log:
+- Build sim: ran the exact Railway command (prisma generate --schema schema.postgres.prisma && next build && cp standalone) against Supabase URL — PASSED; booted .next/standalone/server.js on :3100 with Postgres: home 200, /api/home + /api/plans serving Postgres rows, video 206
+- TTS (skill): scripts/film_voices.mjs — 6 lines (xiaochen narrator, tongtong Amara, jam Kojo) + 2 alternates; endcard VO regenerated at speed 1.25 to fit 5s window
+- Mix: scripts/film_mix.py — silenceremove trim → highpass 85 → per-clip gain → acompressor → adelay placement (0.7/5.7/15.7/35.9/37.6/55.4s) → amix voices → apad=61s → sidechaincompress ducks score → alimiter; first mix truncated at 59.18s (voice bus ended early) — fixed with apad; final exactly 60.000s
+- Web encode: sandbox CPU burst-throttling made encodes stall repeatedly; ultrafast/crf26/no-denoise completed; 28MB moov-first verified; hero.tsx muted removed so voice plays
+- Logo rebrand: scripts/logo_rebrand.py — new D-play mark (squircle D, play-triangle counter, 3-stop red gradient, top bevel); rendered logo.svg, favicon.svg/png, icon-192/512, maskable-512, apple-touch-icon, og-image 1200x630 (lockup + AI FILM STUDIO chip + sprocket strip), mark-red.png; social_posts.py re-run for 7 cards with new mark; public/logo.svg had been Z.ai template logo — replaced
+- Typography: next/font/local Archivo variable (kept --font-geist-sans var name) + body font-family rule in globals.css (root-scoped var never resolved before); QA confirmed archivo applied
+- QA (scripts/qa_site.mjs): desktop+mobile shots; video muted:false, currentTime advances, readyState 4, audioPresent true, duration 60; 0 console/page errors
+- Pushed e994a2a..8af5b4a with user's PAT (no remote saved)
+
+Stage Summary:
+- Railway deploy verified end-to-end locally (build + standalone boot + Postgres queries + static video)
+- Film has voices; site has real logo + brand font; all live on GitHub main, Railway will rebuild
+- Sandbox CPU throttling is bursty: long encodes must run foreground with progress-to-file and tolerate wrapper timeouts (check log tail + output file after)
