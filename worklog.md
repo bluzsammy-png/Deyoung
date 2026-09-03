@@ -137,3 +137,22 @@ Stage Summary (completed this session, 17:13–18:05 UTC):
 - Git: untracked .env (DATABASE_URL path only) + explicit .env ignore; chose clean-history strategy (old history contained auto-committed db/.auth-secret + custom.db): orphan branch -> single commit 2a370be "DeYoung — AI Video Studio" (337 files) -> pushed to github.com/bluzsammy-png/Deyoung main (PAT used one-shot in push URL, no remote saved, no credential helper)
 - Pushed tree verified: film + poster + README present; 0 db/.env/download/campaign paths
 - SECURITY: GitHub PAT exposed in chat — user must rotate/revoke immediately (github.com/settings/tokens), same for the Kaggle token shared earlier
+
+---
+Task ID: 23
+Agent: main (Super Z)
+Task: Fix Railway (Railpack) deploy failure — build expected prisma/schema.postgres.prisma + deploy/start.sh; wire app to Supabase Postgres
+
+Work Log:
+- Diagnosed Railway log: custom build command `prisma generate --schema prisma/schema.postgres.prisma && next build && cp …` failed at missing schema file; start command `sh deploy/start.sh` referenced a nonexistent file; both configured in the Railway dashboard
+- Created prisma/schema.postgres.prisma (sed-transform of schema.prisma: provider postgresql, models verified byte-identical)
+- Created deploy/start.sh: idempotent `prisma db push --schema … --skip-generate` + `node scripts/seed.ts` (Node 24 native TS) non-fatal on boot, then exec node .next/standalone/server.js with HOSTNAME=0.0.0.0 + PORT
+- next.config.ts: added outputFileTracingIncludes (.prisma + @prisma/client) so the query engine ships in the standalone bundle
+- Supabase Postgres (user-provided): password contains `#` which MUST be URL-encoded %23; `prisma db push` succeeded (8.43s, all tables created); generated postgres client, seeded live DB (admin + 3 plans + 4 services + 6 photos + 3 testimonials + 8 FAQs), regenerated sqlite client, dev server restarted (200)
+- Committed e994a2a and pushed to GitHub with user's NEW PAT (ghp_FLax…; old ghp_7qn9… presumably rotated) → Railway auto-redeploy triggered
+- Pushed tree verified to contain the 3 new/changed files; no remote saved (no PAT persisted)
+
+Stage Summary:
+- Railway build will now find schema.postgres.prisma; boot will db push + seed then serve standalone on $PORT
+- User must set DATABASE_URL in Railway: postgresql://postgres.REDACTED-C6-OLD-PROJ-REF:REDACTED-C6-DB-PASSWORD@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+- SECURITY: new GitHub PAT + Supabase password + QuantEdge token all exposed in chat — advise rotating Supabase db password & revoking tokens after setup
