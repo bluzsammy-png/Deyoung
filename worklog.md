@@ -276,3 +276,25 @@ Stage Summary:
 - Homepage hero now runs a cinematic 10-slide mixed-media showreel in the brand red/black 3D frame
 - Slots for owner's real photos remain (REAL slide uses generated ultra-realistic meanwhile)
 - Pending: 60s film v3 completion, logo, native app write-up, token rotation
+
+---
+Task ID: 29
+Agent: main (Super Z)
+Task: Ship NEW talking film to replace old silent video (user: "still shows the old video no lip sync characters not talking")
+
+Work Log:
+- Found film v3 stalled: s1+s2 generated WITH audio/lip-sync (07:50 UTC), s3-s8 all provider-FAIL, every retry since ~08:00 429-throttled (video, TTS, ASR all throttled — global shared-key saturation)
+- Built scripts/film_run.mjs (unified submit+poll+download, 429-backoff, auto-resubmit on provider FAIL, MAXTRY=4); discovered sandbox reaps background processes between tool calls even with setsid -> switched to foreground 7-8min bursts, state persists in campaign/film/v3/tasks-v3.json
+- 3 burst windows + 2 single probes over 45 min: 100% 429 on video generation -> pivoted to interim plan
+- Verified s1/s2 clips have real AAC audio (ffprobe); staged into clips/ as s1.mp4/s2.mp4
+- Built scripts/v35_assemble.py: s1+s2 real talking clips (trim/caption/loudnorm) + s3-s8 as Ken Burns motion segments from character plates (maya/yuki/bea/duo/felix/lineup @1344x768, per-scene zoom/pan recipes) + burned captions + music.wav slices as bed (vol 0.16 w/ fades) + endcard
+- Fixed 2 latent ffmpeg7 bugs in endcard recipe (inherited from v3_assemble.py): options-between-inputs -> filter_complex+map; zoompan closing-quote-inside-expression -> requote whole z expr. Patched both scripts.
+- Master: deyoung-film-v35-web.mp4 = 58.02s, 13.5MB (under 16MB budget), 1920x1080 h264+aac; visual QA (frames @3s/15s/57s: talking boy w/ caption, realistic woman segment, DeYoung endcard all correct)
+- Shipped: cp to public/video/deyoung-film-web.mp4 + download/; cache-busted hero.tsx src with ?v=3
+- Pushed 668a721 -> Railway auto-deploy GREEN ("Healthcheck succeeded!", Deeyoung ● Online)
+- Updated tasks-v3.json state: s1/s2 DONE, s3-s8 PENDING_REGEN
+
+Stage Summary:
+- LIVE NOW: 58s film — 2 characters genuinely talk with lip-sync (cartoon boy, stick-man), 6 cinematic motion-comic scenes with captions + music bed, branded endcard
+- Full lip-sync completion is ONE command away when z-ai video quota resets: node scripts/film_run.mjs (regen s3-s8) then python3 scripts/v3_assemble.py (reassemble+ship, dynamic durations patched)
+- Old video (15.7MB music-only) fully replaced (13.5MB talking cut); ?v=3 busts browser cache
