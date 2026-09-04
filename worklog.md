@@ -359,3 +359,35 @@ Stage Summary:
 - LIVE: autonomous render plane — anyone with the WORKER_TOKEN can run a worker from Kaggle (free GPU) or their PC; queue→render→deliver→download fully hands-off
 - Site no longer depends on z.ai OR the owner: PATI free-first chain in place; paid Atlas/Evolink become premium workers when topped up (keys still 402-empty)
 - User next step: fresh Kaggle token (old one revoke) → `KAGGLE_API_TOKEN=… python3 scripts/kaggle_launch.py --token <WORKER_TOKEN> --watch`; token in env, never in chat
+
+---
+Task ID: R-2
+Agent: research (agency-agents)
+Task: Deep-dive https://github.com/msitarzewski/agency-agents (agent persona corpus) — runtime, catalog, license, security, relevance to DeYoung; research-only, no project changes.
+
+Work Log:
+- Cloned repo to /tmp/agency-agents (shallow 50); exists, 7.4MB, last commit af128a9 2026-09-04 (PR #834, very active, PRs in 800s)
+- Read README (1133 ln), LICENSE (MIT, "AgentLand Contributors" 2025), SECURITY.md, CONTRIBUTING.md, divisions.json, tools.json, runbooks.json, lint-agents.sh, install.sh mechanics
+- Read full/partial 15+ agent files incl. code-reviewer, ai-generated-code-auditor, payments-billing-engineer, video-streaming-engineer, reality-checker, agents-orchestrator, video-optimization-specialist
+- Cataloged 273 agent definitions across 18 divisions (~75k lines of prompt markdown); greps for tools: grants (17/273), injection patterns (clean), Bash/secrets handling
+- Verdict: plain markdown persona prompts (Claude Code subagent format), no own runtime/orchestrator; MIT allows copying w/ notice; ~10-15 files genuinely useful (security/payments/testing checklists), 95% noise for DeYoung
+
+Stage Summary:
+- Recommendation: don't install the corpus; cherry-pick 6-10 persona files (RLS auditor, secrets engineer, payments/billing doctrine, reality-checker, minimal-change) and fold their checklists into our own reviewer prompts; vendor+pin if copied (auto-update = prompt supply-chain risk)
+
+---
+Task ID: R-1
+Agent: research (OpenMontage)
+Task: Investigate github.com/open-montage/OpenMontage for reuse in DeYoung; report only, no project changes.
+
+Work Log:
+- Target URL 404s (org "open-montage" doesn't exist); real repo found via GitHub search: calesthio/OpenMontage, cloned to /tmp/openmontage (56,140 stars / 7,020 forks, last commit 2026-08-22, ~2,115 files, 109 test files)
+- Read README (781 lines), LICENSE = AGPLv3 verbatim, AGENT_GUIDE.md, docs/ARCHITECTURE.md + PROVIDERS.md, pipeline_defs/*.yaml (13), lib/ (checkpoint 633L, scoring 556L), tools/ (151 modules, ~90 provider IDs), backlot/server.py, remotion-composer
+- Verified in code: no Python orchestrator (agent IS control plane); 7-dim provider scoring; final_review post-render QA (ffprobe+frames+audio) real; checkpoint gate enforcement fail-closed; cost estimate/reserve/reconcile; fallback chains ltx->wan->hunyuan->stills
+- Security: no shell=True/os.system/eval; .env-only keys; Backlot binds 127.0.0.1 with traversal guards; downloads remote media via yt-dlp/stock sources (inherent)
+- Verdict: AGPLv3 blocks copying code into closed SaaS; patterns (scoring, fallback chains, self-review QA, cost governor) are worth clean-room reimplementation into DeYoung worker plane
+
+Stage Summary:
+- OpenMontage = mature, hugely popular AGPLv3 "agent-as-orchestrator" desktop video factory: Python tools + YAML manifests + Markdown skills driven by a coding assistant; not a server queue
+- Not directly embeddable (license + architecture), but 8 concrete patterns identified for DeYoung (provider router scoring, graceful provider degradation, pre-delivery ffmpeg QA gate, per-job cost governor, first/last-frame pinning, word-level captions, stage checkpoints with schema validation, >5s last-frame segment chaining)
+- Full structured report delivered in R-1 final message; evidence log includes all file paths read
