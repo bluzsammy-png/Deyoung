@@ -58,3 +58,9 @@ server.log
 /download/
 /upload/
 /db/
+
+# DeYoung v3 film working media (heavy) — only the final master ships via public/video
+campaign/film/v3/clips/
+campaign/film/v3/seg_*.mp4
+campaign/film/v3/caps/
+campaign/film/v3/concat.txt
