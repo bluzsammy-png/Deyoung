@@ -220,3 +220,39 @@ Stage Summary:
 - App/code side: fix deployed, DB healthy, pool healthy — original healthcheck root cause resolved
 - REAL blocker: deyoung.site domain not registered (NXDOMAIN + RDAP 404). User must re-register at registrar (~$1-10/yr) then set CNAME to Railway domain, or use Railway-generated domain meanwhile
 - Need from user: Railway dashboard URL (.up.railway.app) or a Railway API token to verify deploy + wire custom domain
+
+---
+Task ID: 26
+Agent: main (Super Z)
+Task: Take over Railway via user-provided project token; find real cause of Failed deploys; make deploy go green
+
+Work Log:
+- User token 8cb7de14-... is a PROJECT token (QuantEdge Terminal project, 99f9348d) — GraphQL backboard rejected (project() Not Authorized) but railway CLI works with it (auto-context)
+- Service found: "Deeyoung" (double-e! explains all failed domain guesses) — public domain deeyoung-production-72ef.up.railway.app; status Failed
+- Railway deploy logs: "[deyoung] WARNING: DATABASE_URL is not set" — ALL user env vars had been wiped from the service (only RAILWAY_* remained). Restored via CLI: DATABASE_URL (session :5432), AGENTMAIL_API_KEY (am_us_…51… from scripts/agentmail_setup.py), NEXT_PUBLIC_SITE_URL (railway domain) — then redeploy
+- Redeploy booted perfectly (db push in-sync, seed done, :6543 switch, Ready 48ms) yet deploy STILL Failed
+- Build logs revealed the REAL blocker: Railway dashboard healthcheck targets **/api/health** (5m retry window) — a route that NEVER existed in the app → HTTP 404 every attempt → every deploy since 8d7cc81 failed ("rate limited" 429s from hikari edge were a separate sandbox-IP artifact)
+- Fix: created src/app/api/health/route.ts (force-dynamic, SELECT 1 w/ 3s race, 200 {ok,db} / 503) + aligned railway.toml (healthcheckPath=/api/health, timeout 300)
+- Verified locally: exact Railway build command passes; standalone boot on :3199 → GET /api/health = 200 {"ok":true,"db":true,"ms":2066} against real Supabase :6543
+- Pushed efa3883 (b393c40 removed healthcheck first — superseded by efa3883 which restores it correctly against the now-existing route)
+
+Stage Summary:
+- Root causes chained: dead custom domain (deyoung.site NXDOMAIN) + wiped service env vars + dashboard healthcheck pointing at nonexistent /api/health
+- All three fixed: env vars restored, /api/health live, domain guidance delivered to user (re-register deyoung.site or stay on railway domain)
+- Awaiting: deploy green confirmation for efa3883; then verify site externally (web-reader, sandbox IP is edge-throttled)
+
+---
+Task ID: 27
+Agent: main (Super Z)
+Task: Confirm deploy green for efa3883
+
+Work Log:
+- Railway CLI status: "Deeyoung: ● Online · https://deeyoung-production-72ef.up.railway.app"
+- Build logs confirm: healthcheck /api/health attempt #1 service-unavailable (warming), attempt #2 SUCCEEDED at 11:44:18 UTC — first green deploy since 8d7cc81
+- Sandbox IP still edge-throttled (429) — local artifact only; Railway prober 200 is the authoritative external verification
+- z-ai function API (web_search/web_reader) throttled all session — could not get third-party fetch
+
+Stage Summary:
+- SITE IS LIVE at https://deeyoung-production-72ef.up.railway.app (Railway-verified)
+- Fixes live: env vars restored, /api/health route, 6543 transaction pooler in boot
+- Pending: user re-registers deyoung.site (then CNAME to railway domain); rotate exposed tokens; continue 60s film + homepage/logo tasks
