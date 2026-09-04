@@ -5,7 +5,9 @@ buildCommand = "prisma generate --schema prisma/schema.postgres.prisma && next b
 
 [deploy]
 startCommand = "sh deploy/start.sh"
-healthcheckPath = "/api/home"
-healthcheckTimeout = 120
+# NOTE: no HTTP healthcheck — Railway's edge (hikari) rate-limited the public-URL
+# prober (429 "rate limited"), failing every deploy even with a fully healthy app.
+# Deploy success = container stays up; start.sh already self-verifies (db push,
+# seed, standalone Ready) and restartPolicy covers crashes.
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
