@@ -14,7 +14,7 @@ fs.mkdirSync(CLIPS, { recursive: true });
 
 const b64 = (p) => `data:image/png;base64,${fs.readFileSync(p).toString("base64")}`;
 const SAY = (line, extra) =>
-  `The character looks straight into the lens and speaks clearly in English: "${line}" Mouth movement perfectly synchronized to the words, natural facial performance. ${extra} Clear audible voice with studio quality sound, no background music, no subtitles, no text on screen`;
+  `The character speaks in English, saying exactly and only this sentence, with mouth movements perfectly synchronized to every word: "${line}" No other dialogue, no narration, no extra words. She/He says just this one line clearly with studio quality sound. ${extra} Clear audible voice, no background music, no subtitles, no text on screen`;
 
 const SCENES = {
   s3: { dur: 10, image: `${C}/maya.png`,
