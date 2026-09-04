@@ -256,3 +256,23 @@ Stage Summary:
 - SITE IS LIVE at https://deeyoung-production-72ef.up.railway.app (Railway-verified)
 - Fixes live: env vars restored, /api/health route, 6543 transaction pooler in boot
 - Pending: user re-registers deyoung.site (then CNAME to railway domain); rotate exposed tokens; continue 60s film + homepage/logo tasks
+
+---
+Task ID: 28
+Agent: main (Super Z)
+Task: Hero graphics upgrade — replace static DY card with mixed-media ShowReel slideshow (user-approved direction: animated characters, real pictures, kids cartoons, GIFs, stick-man, banners + captions)
+
+Work Log:
+- Located the "DY card": hero.tsx 3D portrait block (default avatar, red offset frame, 60s/4K chips)
+- Reused film-v3 campaign assets (chars c1/c3/c4/c5/c6, stick.png, lineup.png) + v3s1/v3s2 film scenes
+- scripts/showreel_assets.py: copied 7 stills to public/showreel/; PIL-rendered 10-frame stick-man run-cycle GIF (16KB, red camera-eye + speed lines); ffmpeg cut 2 muted 720px square loops (clip-cartoon 315KB w/ 58% x-crop to keep the boy, clip-doors 201KB @40% x-crop captures the door leap)
+- Built src/components/site/showreel.tsx: 10 slides (image/gif/video/CSS-banner), per-slide durations, autoplay timer w/ visibility guard, hover/touch pause, prev/next/pause buttons, dots + 01/10 counter, progress bar (dy-progress), Ken Burns on stills (dy-kenburns), mobile swipe, reduced-motion safe (useSyncExternalStore), captions = per-style "recommendations" write-ups
+- globals.css: dy-progress + dy-kenburns keyframes; reduced-motion additions
+- hero.tsx: ShowReel replaces static portrait inside TiltCard (red frame + glare kept); 4K chip → "5 STYLES"; nameplate full-width on mobile, overlap style on sm+; local .env created (gitignored) with Supabase 6543 URL so dev server serves live data
+- Browser QA (agent-browser): desktop+mobile screenshots; slide nav, dots, counter, video playback (paused=hover artifact, plays on mouse-away), GIF slide, design banner, zero console/page errors; fixed chip/dots/nameplate collisions
+- Pushed 3e661f0 → Railway auto-deploy
+
+Stage Summary:
+- Homepage hero now runs a cinematic 10-slide mixed-media showreel in the brand red/black 3D frame
+- Slots for owner's real photos remain (REAL slide uses generated ultra-realistic meanwhile)
+- Pending: 60s film v3 completion, logo, native app write-up, token rotation
