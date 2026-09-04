@@ -174,7 +174,7 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#DC2626] via-[#7F1D1D] to-[#DC2626] opacity-60 blur-[6px] rounded-sm" aria-hidden />
           <div className="relative border border-white/15 bg-black">
             <video
-              src="/video/deyoung-film-web.mp4"
+              src="/video/deyoung-film-web.mp4?v=3"
               poster="/img/film-poster.jpg"
               controls
               loop

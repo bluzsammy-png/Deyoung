@@ -38,6 +38,15 @@ def sh(cmd, timeout=300):
         print("CMD FAIL:", cmd[:160], "\n", r.stderr[-500:])
         sys.exit(1)
 
+def probe_dur(path):
+    r = subprocess.run(
+        f'ffprobe -v error -show_entries format=duration -of csv=p=0 "{path}"',
+        shell=True, capture_output=True, text=True)
+    try:
+        return float(r.stdout.strip())
+    except ValueError:
+        return 0.0
+
 def esc(t):
     # drawtext text escaping (inside single-quoted shell + drawtext colon escape)
     return t.replace("\\", "").replace(":", "\\:").replace("'", "")
@@ -57,6 +66,12 @@ def build_segment(sid, dur, line, idx):
     if os.path.exists(out) and os.path.getsize(out) > 300000:
         print(f"seg {sid}: exists, skip")
         return out
+    actual = probe_dur(f"{CLIPS}/{sid}.mp4")
+    if actual < 2.0:
+        print(f"seg {sid}: clip too short ({actual:.2f}s) — abort"); sys.exit(3)
+    if actual < dur:
+        print(f"seg {sid}: target {dur}s > clip {actual:.2f}s — using {actual - 0.05:.2f}s")
+        dur = actual - 0.05
     vf = (
         "scale=1920:1080:force_original_aspect_ratio=decrease,"
         "pad=1920:1080:(ow-iw)/2:(oh-ih)/2,"
@@ -76,10 +91,10 @@ def build_endcard():
         print("seg endcard: exists, skip")
         return out
     d = ENDCARD_DUR
-    vf = (f"zoompan=z='min(1.0+0.04*on/{d*30:.0f}',1.06)':d={int(d*30)}:s=1920x1080:fps=30,"
+    vf = (f"zoompan=z='min(1.0+0.04*on/{d*30:.0f},1.06)':d={int(d*30)}:s=1920x1080:fps=30,"
           f"fade=t=in:st=0:d=0.3,fade=t=out:st={d-0.3:.2f}:d=0.3")
-    sh(f'ffmpeg -y -loglevel error -loop 1 -i "{ENDCARD}" -t {d} '
-       f'-vf "{vf}" -f lavfi -i anullsrc=r=44100:cl=stereo -shortest '
+    sh(f'ffmpeg -y -loglevel error -loop 1 -i "{ENDCARD}" -f lavfi -i anullsrc=r=44100:cl=stereo '
+       f'-filter_complex "[0:v]{vf}[vout]" -map "[vout]" -map 1:a -t {d} '
        f'{" ".join(V_ENC)} {" ".join(A_ENC)} -movflags +faststart "{out}"', timeout=300)
     print("seg endcard: built")
     return out
