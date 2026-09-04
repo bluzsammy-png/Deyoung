@@ -319,3 +319,23 @@ Stage Summary:
 - Dub s1 reads slow (6.5s line in 7s seg) — acceptable; can re-time later
 - User should top up Atlas/Evolink credits for true native lip-sync (Veo 3.1) — pipeline ready (plates uploaded to Atlas OSS, URLs in campaign/film/v4/plates.json)
 - Recommended: rotate the two API keys posted in chat
+
+---
+Task ID: 31
+Agent: main (Super Z)
+Task: Homepage edits per user screenshots — characters on Recent Work tiles, hero "BOLD WORK. REAL RESULTS." banner redesign, walking cartoon characters site-wide, no-free-trials + slashed-price urgency, price increases; plus video lip-sync status answer
+
+Work Log:
+- Re-probed both paid video APIs for true lip-sync: Atlas Cloud 402 "insufficient coding plan balance", Evolink 402 "Insufficient credits" — keys VALID but EMPTY. Kling v3.0-std i2v at $0.153/s -> 6 scenes x 10s ~= $9.20 to lip-sync the whole film. Pipeline ready when user tops up
+- Generated 6 AI character tiles for Recent Work (public/img/work/*.png -> copied over gallery-1..6.png): ultra-real portrait (red rim light), anime businesswoman + brand boards, red-gown editorial, kids-3D birthday party, cartoon boy director, sneaker commercial. 1152x864
+- Gallery UI: always-visible title chip (border-l red) + "DEYOUNG - 0N" white chip + hover "Made with DeYoung" chip + gradient overlay; DB Photo urls bumped ?v=2 (scripts/bust_gallery.mjs) to defeat image cache
+- Hero: generic glass pill replaced by angled TICKET banner (.dy-ticket, clip-path, red gradient frame, shimmer sweep, "DEYOUNG ORIGINAL" chip + tagline + "60S/5 STYLES/4K" stars); mobile stacks centered (flex-wrap). Plus red urgency link under CTAs: "Founding prices live now - they go up soon"
+- Parade (walking cartoons): PIL-rendered 5 transparent 10-frame sprite sheets (scripts/parade_sprites.py -> public/parade/{runner,kid,girl,dog,hopper}.png, 6-10KB each) — runner w/ red eye, beanie kid waving, ponytail girl w/ scarf, stick dog, red hop-blob; new src/components/site/parade.tsx renders "DEYOUNG PARK" strips (red dashed track, dust puffs, CSS steps() sprite animation, negative delays = mid-flight on load) after Hero and after Services; reduced-motion safe
+- Pricing: Plan+Service gained compareAtPrice (both schemas, db pushed to live Supabase, clients regenerated); plans/services PUT/PATCH accept it; types.ts updated. LIVE DB: plans $12/$39/$99 (was $18/$59/$149), services $65/$150/$250/$185 (was $95/$210/$350/$260). plans.tsx: urgency banner ("FOUNDING PRICES — RISING SOON / No free trials...") + per-card strikethrough + SAVE% chip + "LAUNCH PRICE — GOING UP SOON" + rate-lock microcopy. Services cards: slashed was-price + SAVE% + "INTRO RATE — RISING SOON". StatsStrip gained "FOUNDING PRICES — LOCK IN NOW". seed.ts updated for fresh installs
+- QA: next build green; standalone server + agent-browser desktop 1440 + mobile 390: ticket banner wraps correctly, parade animates, slashed prices render, 6 character tiles show, 0 page errors
+- Pushed df6a1f6 -> Railway auto-deploy
+
+Stage Summary:
+- LIVE: character-filled Recent Work, cinematic ticket hero, two walking-cartoon parades, urgency slashed pricing site-wide — no free-trial wording anywhere
+- Film lip-sync truth: not derailed — v5 film talks (TTS dub, ASR 8/8); free video model cannot follow scripted words; both paid keys are EMPTY (402). ~$10 Atlas credit = true Kling lip-sync for s3-s8
+- Pending: user tops up Atlas/Evolink -> run lip-sync regen; DY-card slideshow scope; 3D+logo; native app answer; deyoung.site re-registration; token rotation
