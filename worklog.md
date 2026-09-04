@@ -176,3 +176,28 @@ Stage Summary:
 - Railway deploy verified end-to-end locally (build + standalone boot + Postgres queries + static video)
 - Film has voices; site has real logo + brand font; all live on GitHub main, Railway will rebuild
 - Sandbox CPU throttling is bursty: long encodes must run foreground with progress-to-file and tolerate wrapper timeouts (check log tail + output file after)
+
+---
+Task ID: 24
+Agent: main (Super Z)
+Task: Railway build-failure audit (user: "audit, verify test and know") + AgentMail key setup + 60s speak-on-camera storyboard
+
+Work Log:
+- Local repo had NO remote and stale history (env rebuilt); probed github.com/bluzsammy-png/Deyoung anonymously (public repo), remote main = 8d7cc81
+- Remote history decoded: e994a2a (last good) -> 8af5b4a film+logo -> e4f9306 3D homepage+AgentMail -> 8d7cc81 railway.toml (healthcheck /api/home, 120s)
+- Reproduced EXACT railway.toml build on remote code (bun install, prisma generate postgres schema, next build, cp standalone steps): PASS locally, all 30 API routes dynamic -> build was never failing
+- Reproduced DEPLOY stage against real Supabase: db push OK, seed OK (node 24 runs seed.ts natively), standalone boot OK, but /api/home -> HTTP 500
+- Root cause: `FATAL: (EMAXCONNSESSION) max clients reached in session mode - pool_size: 15`; pg_stat_activity showed 14 idle Supavisor sessions held by the still-serving old Railway release; session-mode pooler pins 1 server conn per client so deploy overlap always exceeds 15 -> healthcheck 500 -> deploy marked failed (railway.toml added the healthcheck, which exposed it)
+- Verified transaction-mode pooler :6543 works (plans query OK)
+- Fix in deploy/start.sh: schema ops keep :5432; before exec server, rewrite pooler.supabase.com:5432 -> :6543 + pgbouncer=true + connection_limit=5 + pool_timeout=20 (POSIX sh, handles ?-less URLs)
+- E2E verification via real `sh deploy/start.sh`: db push -> seed -> 6543 switch -> server Ready 62ms -> 10/10 concurrent /api/home = 200
+- Committed 0296e2d on local main (synced local repo to remote 8d7cc81 first: git fetch + reset --hard; download/, campaign/, worklog preserved)
+- BLOCKED on push: PAT from lost session not stored anywhere ("no remote saved") — cannot push 0296e2d without a fresh token
+- AgentMail: REST API (api.agentmail.to) with org key am_us_… ("ddbobo", valid, used); listed 6 keys incl. "DeYoung Railway" + "Deyoung Web App" (proof last session's wiring exists); created requested "My key" -> am_us_…...9294bdc (FULL SECRET shown once to user in chat — rotation advised); inbox deyoungsltd@agentmail.to confirmed
+- Drafted 8-scene 60s storyboard v3 (5 styles rotate, every scene has a speaking character with native lip-sync dialogue, UI woven into scene worlds)
+
+Stage Summary:
+- Deploy failure fully explained + fixed + verified locally; single unpushed commit 0296e2d waits for a PAT (or user applies start.sh change manually)
+- Zero-code alternative fix for user: set Railway DATABASE_URL to :6543 form — but start.sh split (schema on 5432, app on 6543) is the correct pattern and is what ships
+- AgentMail integration confirmed working; new "My key" issued
+- Storyboard v3 submitted for approval before any generation (user rule: advice first, code after approval)
