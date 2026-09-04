@@ -8,10 +8,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if (denied) return denied;
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
-  const data: Record<string, string | number | boolean> = {};
+  const data: Record<string, string | number | boolean | null> = {};
   if ("title" in body) data.title = str(body.title, 160);
   if ("description" in body) data.description = str(body.description, 2000);
   if ("price" in body) data.price = num(body.price);
+  if ("compareAtPrice" in body)
+    data.compareAtPrice = body.compareAtPrice === null || body.compareAtPrice === "" ? null : num(body.compareAtPrice);
   if ("duration" in body) data.duration = str(body.duration, 80);
   if ("active" in body) data.active = !!body.active;
   if ("sortOrder" in body) data.sortOrder = parseInt(String(body.sortOrder), 10) || 0;

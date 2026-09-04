@@ -26,6 +26,7 @@ export type Service = {
   title: string;
   description: string;
   price: number;
+  compareAtPrice?: number | null;
   duration: string;
   active: boolean;
   sortOrder: number;
@@ -100,6 +101,7 @@ export type Plan = {
   name: string;
   blurb: string;
   priceMonthly: number;
+  compareAtPrice?: number | null;
   currency: string;
   maxVideosMonth: number;
   maxSecondsVideo: number;

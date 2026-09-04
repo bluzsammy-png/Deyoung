@@ -267,4 +267,144 @@
   }
 }
 
+/* ---------------- cartoon parade (walking cast) ---------------- */
+.dy-parade {
+  height: 118px;
+}
+.dy-parade-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  border-bottom: 3px dashed rgba(220, 38, 38, 0.55);
+}
+.dy-parade-sign {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.28);
+  user-select: none;
+}
+.dy-parader {
+  position: absolute;
+  left: 0;
+  bottom: var(--pb, 20px);
+  animation: dy-walk-across var(--pd, 16s) linear infinite;
+  animation-delay: var(--pdelay, 0s);
+  will-change: transform;
+}
+.dy-parader .dy-sprite {
+  display: block;
+  width: var(--pw, 64px);
+  height: var(--pw, 64px);
+  background-repeat: no-repeat;
+  background-size: calc(var(--pw, 64px) * 10) var(--pw, 64px);
+  animation: dy-sprite 0.72s steps(10) infinite;
+}
+.dy-parader::after {
+  content: "";
+  position: absolute;
+  left: -16px;
+  bottom: 0;
+  width: 30px;
+  height: 8px;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, rgba(220, 38, 38, 0.5), transparent);
+  filter: blur(2px);
+  animation: dy-dust 0.72s ease-in-out infinite;
+}
+@keyframes dy-walk-across {
+  from {
+    transform: translateX(-150px);
+  }
+  to {
+    transform: translateX(calc(100vw + 150px));
+  }
+}
+@keyframes dy-sprite {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(var(--pw, 64px) * -10) 0;
+  }
+}
+@keyframes dy-dust {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scaleX(0.7);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scaleX(1);
+  }
+}
+
+/* ---------------- hero ticket banner ---------------- */
+.dy-ticket {
+  position: relative;
+  display: inline-flex;
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  background: linear-gradient(100deg, #dc2626, #7f1d1d 55%, #dc2626);
+  padding: 2px;
+  box-shadow: 0 10px 40px -12px rgba(220, 38, 38, 0.55);
+}
+.dy-ticket-inner {
+  clip-path: polygon(11px 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
+  background: #0a0a0a;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 30px 10px 20px;
+}
+.dy-ticket-shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  transform: skewX(-18deg);
+  animation: dy-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes dy-shine {
+  0% {
+    left: -60%;
+  }
+  55%,
+  100% {
+    left: 130%;
+  }
+}
+.dy-ticket-stars {
+  letter-spacing: 0.35em;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dy-parader {
+    animation: none;
+    left: var(--sx, 8%);
+  }
+  .dy-parader .dy-sprite,
+  .dy-parader::after,
+  .dy-ticket-shine {
+    animation: none;
+  }
+  .dy-parader .dy-sprite {
+    background-position: 0 0;
+  }
+  .dy-parader::after {
+    display: none;
+  }
+}
+
 /* brand-rebuild */

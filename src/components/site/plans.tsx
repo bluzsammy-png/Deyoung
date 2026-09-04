@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clapperboard, Timer, X, Zap } from "lucide-react";
+import { Check, Clapperboard, Flame, Timer, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { money, type Plan, type PlanFeature } from "@/lib/types";
 import { go } from "./hash";
@@ -14,6 +14,11 @@ function planFeatures(plan: Plan): PlanFeature[] {
   } catch {
     return [];
   }
+}
+
+function slashedPrice(price: number, compareAt?: number | null): { was: number; save: number } | null {
+  if (!compareAt || compareAt <= price) return null;
+  return { was: compareAt, save: Math.round(((compareAt - price) / compareAt) * 100) };
 }
 
 /**
@@ -37,9 +42,22 @@ export function PlansSection({ plans, currency }: { plans: Plan[]; currency: str
           </p>
         </div>
 
+        {/* urgency banner — founding prices */}
+        <div className="mt-8 border-2 border-primary/70 bg-primary/10 px-4 py-3.5 flex flex-col sm:flex-row items-center justify-center gap-x-4 gap-y-1.5 text-center">
+          <span className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+            <Flame className="h-4 w-4 text-primary" aria-hidden />
+            Founding prices — rising soon
+          </span>
+          <span className="text-sm text-neutral-300">
+            No free trials, no teaser limits — every plan renders real videos from day one. The rates below are
+            slashed for launch and <strong className="text-white">will go up</strong>. Lock yours in now.
+          </span>
+        </div>
+
         <div className="mt-12 grid md:grid-cols-3 gap-5 items-stretch dy-scene">
           {plans.map((plan, i) => {
             const popular = plan.code === "pro";
+            const slash = slashedPrice(plan.priceMonthly, plan.compareAtPrice);
             return (
               <Reveal key={plan.id} delay={i * 110}>
               <TiltCard
@@ -61,11 +79,24 @@ export function PlansSection({ plans, currency }: { plans: Plan[]; currency: str
                 )}
                 <h3 className="text-xl font-black uppercase tracking-tight">{plan.name}</h3>
                 <p className={`mt-1 text-sm ${popular ? "text-neutral-600" : "text-neutral-400"}`}>{plan.blurb}</p>
-                <p className="mt-4 flex items-baseline gap-1">
+                {slash && (
+                  <p className="mt-3 flex items-center gap-2">
+                    <span className={`text-base font-bold line-through ${popular ? "text-neutral-400" : "text-neutral-500"}`}>
+                      {money(slash.was, plan.currency || currency)}
+                    </span>
+                    <span className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
+                      Save {slash.save}%
+                    </span>
+                  </p>
+                )}
+                <p className="mt-2 flex items-baseline gap-1">
                   <span className="text-4xl font-black tracking-tight">
                     {money(plan.priceMonthly, plan.currency || currency)}
                   </span>
                   <span className={`text-sm font-semibold ${popular ? "text-neutral-500" : "text-neutral-400"}`}>/month</span>
+                </p>
+                <p className={`mt-1 text-[11px] font-semibold uppercase tracking-widest ${popular ? "text-primary" : "text-primary"}`}>
+                  Launch price — going up soon
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm flex-1">
                   {planFeatures(plan).map((f) => (
@@ -91,6 +122,9 @@ export function PlansSection({ plans, currency }: { plans: Plan[]; currency: str
                 >
                   <Zap className="h-4 w-4" aria-hidden /> Subscribe to {plan.name}
                 </Button>
+                <p className={`mt-2 text-center text-[11px] ${popular ? "text-neutral-500" : "text-neutral-500"}`}>
+                  Your rate stays locked for as long as you keep the subscription — even after prices rise.
+                </p>
               </div>
               </TiltCard>
               </Reveal>

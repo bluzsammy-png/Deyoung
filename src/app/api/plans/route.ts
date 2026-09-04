@@ -17,6 +17,7 @@ type PlanPatch = {
   name?: string;
   blurb?: string;
   priceMonthly?: number;
+  compareAtPrice?: number | null;
   currency?: string;
   maxVideosMonth?: number;
   maxSecondsVideo?: number;
@@ -54,6 +55,12 @@ export async function PUT(req: Request) {
       name: raw.name !== undefined ? str(raw.name, 60) || existing.name : existing.name,
       blurb: raw.blurb !== undefined ? str(raw.blurb, 300) : existing.blurb,
       priceMonthly: raw.priceMonthly !== undefined ? Math.max(0, num(raw.priceMonthly)) : existing.priceMonthly,
+      compareAtPrice:
+        raw.compareAtPrice !== undefined
+          ? raw.compareAtPrice === null || raw.compareAtPrice === ""
+            ? null
+            : Math.max(0, num(raw.compareAtPrice))
+          : existing.compareAtPrice,
       currency: raw.currency !== undefined ? str(raw.currency, 8).toUpperCase() || existing.currency : existing.currency,
       maxVideosMonth:
         raw.maxVideosMonth !== undefined ? Math.min(1000, Math.max(1, Math.round(num(raw.maxVideosMonth)))) : existing.maxVideosMonth,

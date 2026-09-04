@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowRight, Clock, ShieldCheck, BadgeCheck, Play, ChevronDown } from "lucide-react";
+import { ArrowRight, Clock, ShieldCheck, BadgeCheck, Play, ChevronDown, Flame, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { go } from "./hash";
 import { TiltCard } from "./motion";
@@ -57,10 +57,20 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
       >
         {/* ---- copy ---- */}
         <div>
-          <p className="dy-glass inline-flex items-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-white/80 px-3.5 py-1.5 rounded-full">
-            <span className="h-2 w-2 bg-primary inline-block animate-pulse" aria-hidden />
-            {s?.tagline || "Bold work. Real results."}
-          </p>
+          <div className="dy-ticket max-w-full">
+            <div className="dy-ticket-inner flex-wrap justify-center text-center gap-x-3 gap-y-1.5 max-w-full">
+              <span className="dy-ticket-shine" aria-hidden />
+              <span className="inline-flex items-center gap-1.5 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1">
+                <Clapperboard className="h-3 w-3" aria-hidden /> DeYoung Original
+              </span>
+              <p className="text-xs font-black tracking-[0.28em] uppercase text-white sm:whitespace-nowrap">
+                {s?.tagline || "Bold work. Real results."}
+              </p>
+              <span className="dy-ticket-stars hidden lg:inline whitespace-nowrap" aria-hidden>
+                ★ 60S ★ 5 STYLES ★ 4K
+              </span>
+            </div>
+          </div>
 
           <h1 className="mt-6 text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.9] uppercase">
             {(() => {
@@ -113,6 +123,14 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
               </Button>
             </a>
           </div>
+
+          <button
+            onClick={() => go("#plans")}
+            className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-white transition-colors"
+          >
+            <Flame className="h-4 w-4" aria-hidden />
+            Founding prices live now — they go up soon. Lock yours in →
+          </button>
 
           <ul className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
             {[

@@ -12,6 +12,7 @@ import {
 import { BookView } from "@/components/site/book-view";
 import { RequestView } from "@/components/site/request-view";
 import { PlansSection } from "@/components/site/plans";
+import { Parade } from "@/components/site/parade";
 import { PrivacyView, ThankYouView } from "@/components/site/thank-you-privacy";
 import { AdminApp } from "@/components/site/admin/admin-app";
 
@@ -106,10 +107,12 @@ export default function Page() {
       view = (
         <main className="flex-1">
           <Hero settings={settings} />
+          <Parade variant="a" />
           <StatsStrip />
           <PlansSection plans={data?.plans ?? []} currency={settings?.currency || "USD"} />
           <HowItWorks />
           <Services services={data?.services ?? []} currency={settings?.currency || "USD"} />
+          <Parade variant="b" />
           <Gallery photos={data?.photos ?? []} />
           <About settings={settings} />
           <Testimonials testimonials={data?.testimonials ?? []} />

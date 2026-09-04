@@ -45,8 +45,21 @@ export function Services({ services, currency }: { services: Service[]; currency
                       <Clock className="h-3.5 w-3.5 text-primary" aria-hidden /> {s.duration}
                     </p>
                   ) : null}
-                  <p className="mt-4 text-3xl font-black tracking-tight">
-                    {money(s.price, currency)}
+                  <p className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="text-3xl font-black tracking-tight">{money(s.price, currency)}</span>
+                    {s.compareAtPrice && s.compareAtPrice > s.price ? (
+                      <>
+                        <span className="text-sm font-bold text-neutral-400 line-through">
+                          {money(s.compareAtPrice, currency)}
+                        </span>
+                        <span className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5">
+                          Save {Math.round(((s.compareAtPrice - s.price) / s.compareAtPrice) * 100)}%
+                        </span>
+                      </>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+                    Intro rate — rising soon
                   </p>
                   <Button
                     onClick={() => go(`#book?service=${s.id}`)}
@@ -93,8 +106,15 @@ export function Gallery({ photos }: { photos: Photo[] }) {
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 text-left text-sm font-bold translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition">
+                <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" aria-hidden />
+                <span className="absolute top-2 left-2 bg-black/85 backdrop-blur-sm text-white text-[10px] md:text-xs font-black tracking-[0.2em] uppercase px-2 py-1 border-l-2 border-primary">
                   {p.title}
+                </span>
+                <span className="absolute top-2 right-2 bg-white text-black text-[10px] font-black tracking-[0.2em] uppercase px-2 py-1 opacity-90">
+                  DeYoung • 0{(i % 6) + 1}
+                </span>
+                <span className="absolute bottom-2 right-2 bg-primary text-white text-[10px] font-black tracking-[0.2em] uppercase px-2 py-1 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition">
+                  Made with DeYoung
                 </span>
               </button>
               </Reveal>
@@ -448,6 +468,7 @@ export function HowItWorks() {
 /* ---------------- Stats marquee strip ---------------- */
 
 const STRIP_ITEMS = [
+  "FOUNDING PRICES — LOCK IN NOW",
   "60 SECONDS — ONE PASS",
   "UP TO 4K CINEMATIC",
   "LIVE QUEUE + HONEST ETA",

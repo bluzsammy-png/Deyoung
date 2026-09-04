@@ -60,6 +60,7 @@ model Service {
   title       String
   description String
   price       Float   @default(0)
+  compareAtPrice Float? // optional "was" price shown struck-through
   duration    String  @default("")
   active      Boolean @default(true)
   sortOrder   Int     @default(0)
@@ -115,6 +116,7 @@ model Plan {
   name            String
   blurb           String  @default("")
   priceMonthly    Float   @default(0)
+  compareAtPrice  Float? // optional "was" price shown struck-through
   currency        String  @default("USD")
   maxVideosMonth  Int     @default(4)
   maxSecondsVideo Int     @default(15)
