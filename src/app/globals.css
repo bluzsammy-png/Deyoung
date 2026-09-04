@@ -217,6 +217,30 @@
     transform: translateX(-50%);
   }
 }
+
+/* --- ShowReel slideshow --- */
+@keyframes dy-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes dy-kenburns {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.09) translate(-1.5%, 1%);
+  }
+}
+.dy-kenburns {
+  animation: dy-kenburns 9s ease-out alternate infinite;
+}
+.white-bg {
+  background: #ffffff;
+}
 .dy-vignette::after {
   content: "";
   position: absolute;
@@ -232,7 +256,8 @@
 @media (prefers-reduced-motion: reduce) {
   .dy-float,
   .dy-marquee-track,
-  .dy-orb {
+  .dy-orb,
+  .dy-kenburns {
     animation: none;
   }
   .dy-reveal {

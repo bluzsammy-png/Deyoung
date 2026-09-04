@@ -1,17 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { ArrowRight, Clock, ShieldCheck, BadgeCheck, Play, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { go } from "./hash";
 import { TiltCard } from "./motion";
+import { ShowReel } from "./showreel";
 import type { PublicSettings } from "@/lib/types";
 
 export function Hero({ settings }: { settings: PublicSettings | null }) {
   const s = settings;
   const name = s?.heroTitle || "DEYOUNG";
-  const photo = s?.ownerPhotoUrl || "/img/avatar-default.png";
   const sceneRef = useRef<HTMLDivElement>(null);
 
   /* Pointer parallax — subtle depth on desktop only. */
@@ -129,11 +128,11 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
           </ul>
         </div>
 
-        {/* ---- 3D portrait scene ---- */}
+        {/* ---- 3D showreel scene (was: static DY portrait) ---- */}
         <div className="relative mx-auto w-full max-w-xs md:max-w-sm">
           <div
             data-depth="14"
-            className="absolute -top-6 right-0 z-10 dy-glass rounded-xl px-4 py-3 dy-float"
+            className="absolute -top-6 right-0 z-20 dy-glass rounded-xl px-4 py-3 dy-float"
           >
             <p className="text-2xl font-black leading-none dy-grad-text">60s</p>
             <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mt-1">
@@ -142,29 +141,22 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
           </div>
           <div
             data-depth="10"
-            className="absolute -bottom-6 -left-2 z-10 dy-glass rounded-xl px-4 py-3 dy-float"
+            className="absolute -bottom-12 -right-4 z-20 dy-glass rounded-xl px-4 py-3 dy-float"
             style={{ animationDelay: "-3.5s" }}
           >
-            <p className="text-2xl font-black leading-none text-white">4K</p>
+            <p className="text-2xl font-black leading-none text-white">5</p>
             <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mt-1">
-              Cinematic
+              Styles
             </p>
           </div>
 
           <TiltCard max={9} lift={10} className="relative">
             <div className="absolute -top-3 -left-3 right-3 bottom-3 bg-primary" aria-hidden />
             <div className="absolute -bottom-3 -right-3 left-3 top-3 border-2 border-white/20" aria-hidden />
-            <div className="relative aspect-square overflow-hidden bg-neutral-900">
-              <Image
-                src={photo}
-                alt={`${s?.ownerName || "DeYoung"} — ${s?.ownerTitle || "creative professional"}, portrait`}
-                fill
-                sizes="(max-width: 768px) 80vw, 33vw"
-                className="object-cover"
-                priority
-              />
+            <div className="relative">
+              <ShowReel />
             </div>
-            <div className="relative -mt-6 ml-4 inline-flex items-center gap-2 bg-white text-black font-bold text-sm px-4 py-2 shadow-lg">
+            <div className="relative mt-2 ml-0 inline-flex items-center gap-2 bg-white text-black font-bold text-sm px-4 py-2 shadow-lg z-20 sm:-mt-6 sm:ml-4">
               <span className="h-2.5 w-2.5 bg-primary" aria-hidden />
               {s?.ownerName || "DeYoung"} — {s?.ownerTitle || "Creative Professional"}
             </div>
