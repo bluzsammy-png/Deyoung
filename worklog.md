@@ -298,3 +298,24 @@ Stage Summary:
 - LIVE NOW: 58s film — 2 characters genuinely talk with lip-sync (cartoon boy, stick-man), 6 cinematic motion-comic scenes with captions + music bed, branded endcard
 - Full lip-sync completion is ONE command away when z-ai video quota resets: node scripts/film_run.mjs (regen s3-s8) then python3 scripts/v3_assemble.py (reassemble+ship, dynamic durations patched)
 - Old video (15.7MB music-only) fully replaced (13.5MB talking cut); ?v=3 busts browser cache
+
+---
+Task ID: 30
+Agent: main (Super Z)
+Task: Finish the film — user supplied Evolink + Atlas Cloud API keys after "still shows the old video no lip sync characters not talking"
+
+Work Log:
+- SANDBOX RESET discovered mid-run: campaign/ wiped, git rolled back to Sep 3 -> recovered via fetch+reset to 2e55398 (GitHub had everything incl. v3.5 master; campaign media re-derived from public/showreel plates + fresh felix.png via z-ai image gen)
+- Atlas key: 402 insufficient balance; Evolink key: insufficient_quota — both VALID but EMPTY (user must top up to use Veo3.1/Kling there)
+- z-ai video API quota RESET (~00:07 UTC) -> film_run.mjs dripped all 6 remaining scenes through the shared-key throttle (~1 submit/10min, ~10 bursts): s3 11.8MB, s4 12.1MB, s5 4.4MB, s6 13.3MB, s7 7.3MB, s8 4.9MB — ALL visuals excellent (verified frames)
+- CRITICAL FINDING: the video model hallucinates dialogue — ASR gate (scripts/film_verify.mjs) failed EVERY clip incl. original s1/s2 in the shipped v3.5 master (e.g. "Sorry, I can't hear you." instead of the script). Reinforced prompts did NOT help. Model moves mouths but cannot follow scripted lines
+- PIVOT -> POST-DUB (v5): muted all generated clips, generated clean TTS lines (7 voices: douji/jam/xiaochen/chuichui/kazi/tongtong/luodo; s6 = two-voice exchange), speed-matched (atempo/TTS speed), laid over clips with captions
+- Fixed 3 assembly bugs en route: ffmpeg7 option-order endcard, zoompan quoting, dub-stream double-mapping (segments carried extra raw-dub audio tracks -> players heard wrong stream; now strict -map 0:v:0 -map [aout])
+- v5 master: 58.02s, 15.5MB, 1 video + 1 audio; ASR QA 8/8 lines CORRECT ("one sentence sixty seconds done" ... "if you can say it, you can film it")
+- Pushed 74ce1e3 (master + hero ?v=5 + all pipeline scripts) -> Railway healthcheck GREEN, site Online
+
+Stage Summary:
+- LIVE: fully-talking 58s film — every scene speaks its scripted line with a clean voice + caption; visuals are the approved 5-style character set
+- Dub s1 reads slow (6.5s line in 7s seg) — acceptable; can re-time later
+- User should top up Atlas/Evolink credits for true native lip-sync (Veo 3.1) — pipeline ready (plates uploaded to Atlas OSS, URLs in campaign/film/v4/plates.json)
+- Recommended: rotate the two API keys posted in chat
