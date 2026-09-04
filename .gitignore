@@ -64,3 +64,6 @@ campaign/film/v3/clips/
 campaign/film/v3/seg_*.mp4
 campaign/film/v3/caps/
 campaign/film/v3/concat.txt
+
+# worker-delivered renders (runtime media, never commit)
+/public/uploads/
