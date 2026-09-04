@@ -23,7 +23,32 @@ else
   fi
 fi
 
-# ---- 2. Launch the standalone Next.js server ----
+# ---- 2. App runtime: switch to Supabase transaction-mode pooler (:6543) ----
+# The session-mode pooler (:5432) pins one server connection per client and is
+# capped at pool_size 15. During a Railway deploy the old release keeps serving
+# while the new one boots, so both Prisma pools together exceed 15 clients and
+# every query fails with `EMAXCONNSESSION max clients reached in session mode`
+# — which fails the /api/home healthcheck. Transaction mode (:6543) multiplexes
+# many clients over few server connections and is safe under deploy overlap.
+# Schema operations above (db push / seed) intentionally still used :5432.
+if [ -n "${DATABASE_URL:-}" ]; then
+  case "$DATABASE_URL" in
+    *pooler.supabase.com:5432*)
+      APP_DB_URL="$(printf '%s' "$DATABASE_URL" | sed 's/pooler\.supabase\.com:5432/pooler.supabase.com:6543/')"
+      case "$APP_DB_URL" in
+        *\?*) APP_DB_URL="${APP_DB_URL}&pgbouncer=true&connection_limit=5&pool_timeout=20" ;;
+        *)    APP_DB_URL="${APP_DB_URL}?pgbouncer=true&connection_limit=5&pool_timeout=20" ;;
+      esac
+      export DATABASE_URL="$APP_DB_URL"
+      echo "[deyoung] app runtime → transaction-mode pooler :6543 (pgbouncer=true, connection_limit=5)"
+      ;;
+    *)
+      echo "[deyoung] DATABASE_URL is not the Supabase session pooler — using it as-is"
+      ;;
+  esac
+fi
+
+# ---- 3. Launch the standalone Next.js server ----
 export NODE_ENV=production
 export HOSTNAME=0.0.0.0
 export PORT="${PORT:-3000}"
