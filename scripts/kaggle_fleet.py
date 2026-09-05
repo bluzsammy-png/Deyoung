@@ -80,15 +80,16 @@ def push_worker(tokens, args):
     db_dsn = read_worker_db_dsn()
     results = []
     for i, kgat in enumerate(tokens):
-        fleet = FLEET[i % len(FLEET)]
+        fleet = FLEET[(i + args.fleet_offset) % len(FLEET)]
         username = introspect_username(kgat)
         slug = f"deyoung-worker-{fleet['suffix']}"
         agent = f"kaggle-gpu-{fleet['suffix']}"
         print(f"[fleet] account {i + 1}: {username} -> kernel {slug} ({fleet['model']})")
         boot = f'''
 import base64, os, pathlib, subprocess, sys
-print("[kaggle] installing local TTS + Postgres driver…", flush=True)
+print("[kaggle] installing local TTS + Postgres driver + current diffusers…", flush=True)
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "piper-tts", "psycopg2-binary"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "diffusers"], check=False)  # temporal VAE tiling needs recent diffusers
 pathlib.Path("deyoung_worker.py").write_text(base64.b64decode("{worker_b64}").decode())
 pathlib.Path("deyoung_db_worker.py").write_text(base64.b64decode("{db_worker_b64}").decode())
 os.environ["WORKER_DB_DSN"] = "{db_dsn}"
@@ -180,6 +181,7 @@ def main():
     ap.add_argument("--site", default=os.environ.get("DEYOUNG_SITE", "https://deeyoung-production-72ef.up.railway.app"))
     ap.add_argument("--max-minutes", type=int, default=480)
     ap.add_argument("--watch", action="store_true")
+    ap.add_argument("--fleet-offset", type=int, default=0, help="start at this FLEET index (so a single new account can join as worker c)")
     args = ap.parse_args()
 
     raw = args.tokens or os.environ.get("KAGGLE_TOKENS", "")
