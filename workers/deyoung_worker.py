@@ -419,39 +419,26 @@ def render_ltx(job, workdir, strict=False):
     scene, _visual = parse_scene(job["prompt"])
     film = scene is not None
     if film:
-        width, height = 960, 544  # 32-divisible, near-16:9 capture for the campaign film
-        frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 193)
+        frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 161)
         steps, seed = 36, 1000 + (scene["num"] or 0)
+        # 16GB Kaggle GPUs: big sizes OOM during attention — walk down a ladder
+        sizes = [(768, 512), (704, 480), (640, 480)]
     else:
-        width, height = 768, 512
         frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 161)
         steps, seed = 40, 42
+        sizes = [(768, 512)]
 
     last_error = None
     for key in model_chain(job.get("model"), prefer=(ARGS.prefer if ARGS else None)):
         model = LTX_CHECKPOINTS[key]
         try:
-            log(f"ltx: loading {model} on {torch.cuda.get_device_name(0)}…")
+            log(f"ltx: loading {model} on {torch.cuda.get_device_name(0)}...")
             pipe = LTXPipeline.from_pretrained(model, torch_dtype=torch.float16)
             pipe.enable_model_cpu_offload()
             try:
                 pipe.vae.enable_tiling()
             except Exception:
                 pass
-            gen = torch.Generator("cpu").manual_seed(seed)
-            result = pipe(
-                prompt=_visual,
-                negative_prompt="worst quality, inconsistent motion, blurry, jittery, distorted, watermark, text",
-                width=width, height=height,
-                num_frames=frames,
-                num_inference_steps=steps,
-                guidance_scale=3.0,
-                generator=gen,
-            ).frames[0]
-            raw = export_to_video(result, fps=24)
-            del pipe
-            torch.cuda.empty_cache()
-            return raw
         except Exception as exc:  # try next checkpoint
             last_error = exc
             log(f"ltx: {model} failed ({exc}) — trying next")
@@ -459,6 +446,33 @@ def render_ltx(job, workdir, strict=False):
                 torch.cuda.empty_cache()
             except Exception:
                 pass
+            continue
+        for width, height in sizes:
+            try:
+                gen = torch.Generator("cpu").manual_seed(seed)
+                result = pipe(
+                    prompt=_visual,
+                    negative_prompt="worst quality, inconsistent motion, blurry, jittery, distorted, watermark, text",
+                    width=width, height=height,
+                    num_frames=frames,
+                    num_inference_steps=steps,
+                    guidance_scale=3.0,
+                    generator=gen,
+                ).frames[0]
+                raw = export_to_video(result, fps=24)
+                del pipe
+                torch.cuda.empty_cache()
+                return raw
+            except Exception as exc:  # try next size down
+                last_error = exc
+                log(f"ltx: {model} @{width}x{height} failed ({str(exc)[:120]}) — trying next size")
+                try:
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass
+                continue
+        del pipe
+        torch.cuda.empty_cache()
     raise RuntimeError(f"all LTX checkpoints failed; last error: {last_error}")
 
 

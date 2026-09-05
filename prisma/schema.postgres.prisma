@@ -225,3 +225,15 @@ model SupportMessage {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+// Fleet artifact store: Kaggle GPU workers deliver rendered scene clips as
+// raw bytes here (the Railway edge rate-limits datacenter HTTP, so workers
+// bypass the app API and talk straight to Postgres).
+model WorkerArtifact {
+  id        String   @id
+  requestId String
+  mime      String   @default("video/mp4")
+  bytes     Bytes
+  size      Int      @default(0)
+  createdAt DateTime @default(now())
+}
