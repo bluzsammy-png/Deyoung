@@ -118,6 +118,7 @@ runpy.run_path("deyoung_db_worker.py", run_name="__main__")
             "kernel_type": "script",
             "is_private": "true",
             "enable_gpu": "true",
+            "machine_shape": "NvidiaTeslaT4",
             "enable_internet": "true",
             "dataset_sources": [],
             "competition_sources": [],
