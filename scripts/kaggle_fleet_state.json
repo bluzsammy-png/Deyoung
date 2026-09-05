@@ -18,5 +18,15 @@
     "checkpoint": "LTX-Video-0.9.1",
     "url": "https://www.kaggle.com/code/bittrexminingltd/deyoung-worker-b",
     "push_ok": true
+  },
+  {
+    "index": 3,
+    "username": "teslaprime",
+    "slug": "deyoung-worker-c",
+    "ref": "teslaprime/deyoung-worker-c",
+    "agent": "kaggle-gpu-c",
+    "checkpoint": "LTX-Video-0.9.0",
+    "url": "https://www.kaggle.com/code/teslaprime/deyoung-worker-c",
+    "push_ok": true
   }
 ]

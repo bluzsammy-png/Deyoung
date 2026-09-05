@@ -192,14 +192,14 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#DC2626] via-[#7F1D1D] to-[#DC2626] opacity-60 blur-[6px] rounded-sm" aria-hidden />
           <div className="relative border border-white/15 bg-black">
             <video
-              src="/video/deyoung-film-web.mp4?v=7"
-              poster="/img/film-poster.jpg?v=7"
+              src="/video/deyoung-film-web.mp4?v=8"
+              poster="/img/film-poster.jpg?v=8"
               controls
               loop
               playsInline
               preload="metadata"
               className="w-full aspect-video"
-              aria-label="DeYoung 60-second AI film trailer"
+              aria-label="DeYoung campaign film: 84 seconds, the cast talks"
             />
             <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="dy-glass rounded-full h-16 w-16 flex items-center justify-center">

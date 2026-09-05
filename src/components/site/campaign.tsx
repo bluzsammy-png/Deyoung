@@ -74,8 +74,8 @@ export function CampaignStrip() {
             <div className="relative bg-black">
               <video
                 className="w-full aspect-video object-contain bg-black"
-                src="/video/deyoung-film-web.mp4?v=7"
-                poster="/img/film-poster.jpg?v=7"
+                src="/video/deyoung-film-web.mp4?v=8"
+                poster="/img/film-poster.jpg?v=8"
                 controls
                 preload="metadata"
                 playsInline
@@ -87,7 +87,7 @@ export function CampaignStrip() {
                 className={`absolute top-3 left-3 inline-flex items-center gap-1.5 bg-black/70 backdrop-blur px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white pointer-events-none transition-opacity ${playing ? "opacity-0" : "opacity-100"}`}
               >
                 <span className="h-2 w-2 bg-primary rounded-full animate-pulse" aria-hidden />
-                46s · sound on - characters talk
+                84s · sound on - characters talk
               </span>
               <span className="absolute bottom-3 right-3 bg-primary text-white px-2 py-1 text-[10px] font-black uppercase tracking-widest pointer-events-none">
                 DeYoung Original
