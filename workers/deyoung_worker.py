@@ -419,9 +419,11 @@ def render_ltx(job, workdir, strict=False):
     scene, _visual = parse_scene(job["prompt"])
     film = scene is not None
     if film:
-        frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 161)
+        # T4 reality: 145+ frames at 768x512 sits right at the VRAM edge and
+        # a corrupted CUDA context kills the worker. 137 frames (5.7s of
+        # motion) renders reliably; encode_final tpad-fills the rest.
+        frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 137)
         steps, seed = 36, 1000 + (scene["num"] or 0)
-        # 16GB Kaggle GPUs: big sizes OOM during attention — walk down a ladder
         sizes = [(768, 512), (704, 480), (640, 480)]
     else:
         frames = min(((seconds * 24 - 1) // 8) * 8 + 1, 161)
@@ -432,13 +434,34 @@ def render_ltx(job, workdir, strict=False):
     for key in model_chain(job.get("model"), prefer=(ARGS.prefer if ARGS else None)):
         model = LTX_CHECKPOINTS[key]
         try:
-            log(f"ltx: loading {model} on {torch.cuda.get_device_name(0)}...")
+            log(f"ltx: loading {model} on {torch.cuda.get_device_name(0)} (manual offload)…")
             pipe = LTXPipeline.from_pretrained(model, torch_dtype=torch.float16)
-            pipe.enable_model_cpu_offload()
+            # 16GB Kaggle GPUs: T5-XXL resident on the GPU alongside the
+            # transformer OOMs every time. Place by hand and precompute the
+            # text embeddings on CPU (bf16), then hand them to the pipeline.
+            pipe.text_encoder.to("cpu", torch.bfloat16)
+            pipe.transformer.to("cuda")
+            pipe.vae.to("cuda")
             try:
                 pipe.vae.enable_tiling()
             except Exception:
                 pass
+            torch.cuda.empty_cache()
+
+            scene_obj, visual = parse_scene(job["prompt"])
+            neg = "worst quality, inconsistent motion, blurry, jittery, distorted, watermark, text"
+
+            def embed(text):
+                ti = pipe.tokenizer(text, padding="max_length", max_length=128,
+                                    truncation=True, add_special_tokens=True, return_tensors="pt")
+                with torch.no_grad():
+                    out = pipe.text_encoder(input_ids=ti.input_ids.to("cpu"),
+                                            attention_mask=ti.attention_mask.to("cpu").bool())
+                return (out[0].to("cuda", dtype=torch.float16),
+                        ti.attention_mask.to("cuda").bool())
+
+            pe, pm = embed(visual)
+            ne, nm = embed(neg)
         except Exception as exc:  # try next checkpoint
             last_error = exc
             log(f"ltx: {model} failed ({exc}) — trying next")
@@ -451,8 +474,8 @@ def render_ltx(job, workdir, strict=False):
             try:
                 gen = torch.Generator("cpu").manual_seed(seed)
                 result = pipe(
-                    prompt=_visual,
-                    negative_prompt="worst quality, inconsistent motion, blurry, jittery, distorted, watermark, text",
+                    prompt_embeds=pe, prompt_attention_mask=pm,
+                    negative_prompt_embeds=ne, negative_prompt_attention_mask=nm,
                     width=width, height=height,
                     num_frames=frames,
                     num_inference_steps=steps,

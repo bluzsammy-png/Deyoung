@@ -94,7 +94,8 @@ pathlib.Path("deyoung_worker.py").write_text(base64.b64decode("{worker_b64}").de
 pathlib.Path("deyoung_db_worker.py").write_text(base64.b64decode("{db_worker_b64}").decode())
 os.environ["WORKER_DB_DSN"] = "{db_dsn}"
 os.environ["DEYOUNG_PREFER"] = "{fleet['prefer']}"
-os.environ["DEYOUNG_JOB_BUDGET"] = "3.0"
+os.environ["DEYOUNG_JOB_BUDGET"] = "4.0"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 sys.argv = [
     "deyoung_db_worker.py",
     "--renderer", "film",

@@ -22,6 +22,7 @@ Usage:
 """
 
 import argparse
+import gc
 import json
 import os
 import shutil
@@ -153,47 +154,67 @@ def main():
     log(f"up — db fleet mode renderer={args.renderer} prefer={args.prefer or 'default'} agent={args.agent}")
 
     while True:
-        if (time.time() - started) / 60.0 >= args.max_minutes:
-            log("time budget reached — stopping cleanly")
-            return
-
-        db.reclaim_stale(25)
-        job = None
         try:
-            job = db.claim(args.agent)
-        except Exception as exc:
-            log(f"claim failed: {exc.__class__.__name__}: {exc}")
-            time.sleep(args.poll)
-            continue
-
-        if not job:
-            if args.once or args.exit_idle:
-                log("queue empty — exiting")
+            if (time.time() - started) / 60.0 >= args.max_minutes:
+                log("time budget reached — stopping cleanly")
                 return
-            time.sleep(args.poll)
-            continue
 
-        log(f"claimed {job['id']} — {job['seconds']}s {job['resolution']} audio={job['withAudio']} :: {job['prompt'][:70]}…")
-        workdir = tempfile.mkdtemp(prefix="deyoung-")
-        try:
-            site, token = "", ""
-            out, gpu_minutes, renderer_name, qa_report = dw.render(
-                dict(job), args.renderer, workdir, args.job_budget, site=site, token=token
-            )
-            size_mb = os.path.getsize(out) / (1024 * 1024)
-            with open(out, "rb") as fh:
-                mp4 = fh.read()
-            artifact = db.deliver(job["id"], mp4, gpu_minutes, args.agent, renderer_name, qa_report)
-            log(f"DELIVERED {job['id']} ({size_mb:.1f}MB) -> artifact {artifact} in {gpu_minutes} min")
-        except Exception as exc:
-            log(f"render failed for {job['id']}: {exc.__class__.__name__}: {str(exc)[:300]}")
             try:
-                db.fail(job["id"], args.agent, f"render error: {str(exc)[:400]}")
-            except Exception as fail_exc:
-                log(f"could not report failure: {fail_exc}")
+                db.reclaim_stale(25)
+            except Exception as exc:
+                log(f"stale reclaim skipped ({exc.__class__.__name__})")
+
+            job = None
+            try:
+                job = db.claim(args.agent)
+            except Exception as exc:
+                log(f"claim failed: {exc.__class__.__name__}: {exc}")
                 time.sleep(args.poll)
-        finally:
-            shutil.rmtree(workdir, ignore_errors=True)
+                continue
+
+            if not job:
+                if args.once or args.exit_idle:
+                    log("queue empty — exiting")
+                    return
+                time.sleep(args.poll)
+                continue
+
+            log(f"claimed {job['id']} — {job['seconds']}s {job['resolution']} audio={job['withAudio']} :: {job['prompt'][:70]}…")
+            workdir = tempfile.mkdtemp(prefix="deyoung-")
+            try:
+                site, token = "", ""
+                out, gpu_minutes, renderer_name, qa_report = dw.render(
+                    dict(job), args.renderer, workdir, args.job_budget, site=site, token=token
+                )
+                size_mb = os.path.getsize(out) / (1024 * 1024)
+                with open(out, "rb") as fh:
+                    mp4 = fh.read()
+                artifact = db.deliver(job["id"], mp4, gpu_minutes, args.agent, renderer_name, qa_report)
+                log(f"DELIVERED {job['id']} ({size_mb:.1f}MB) -> artifact {artifact} in {gpu_minutes} min")
+            except Exception as exc:
+                log(f"render failed for {job['id']}: {exc.__class__.__name__}: {str(exc)[:300]}")
+                try:
+                    db.fail(job["id"], args.agent, f"render error: {str(exc)[:400]}")
+                except Exception as fail_exc:
+                    log(f"could not report failure: {fail_exc}")
+                    time.sleep(args.poll)
+            finally:
+                shutil.rmtree(workdir, ignore_errors=True)
+                # CUDA hygiene: an OOM left behind can poison the next job
+                try:
+                    import torch
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass
+                gc.collect()
+        except KeyboardInterrupt:
+            raise
+        except SystemExit:
+            raise
+        except BaseException as exc:
+            # never let one bad cycle kill the fleet worker
+            log(f"worker cycle error (recovering): {exc.__class__.__name__}: {str(exc)[:200]}")
+            time.sleep(max(30, args.poll))
 
         if args.once:
             return
