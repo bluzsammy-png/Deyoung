@@ -1,0 +1,13 @@
+# DeYoung site — Railway config-as-code (Railpack)
+[build]
+builder = "RAILPACK"
+buildCommand = "prisma generate --schema prisma/schema.postgres.prisma && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/"
+
+[deploy]
+startCommand = "sh deploy/start.sh"
+# Dashboard healthcheck = /api/health (5m retry window). The route now exists:
+# cheap SELECT 1 gate — 200 when app+DB up, 503 otherwise.
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

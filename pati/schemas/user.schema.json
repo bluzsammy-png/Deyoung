@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/user.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "tenant_id",
+    "name",
+    "role"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "admin",
+        "member",
+        "service"
+      ]
+    }
+  }
+}

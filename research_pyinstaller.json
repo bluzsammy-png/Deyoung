@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://groups.google.com/g/pyinstaller/c/dDXwMMnAtQ8/m/-DdGuiNoBAAJ",
+    "name": "Pyinstaller license issue",
+    "snippet": "While referring the license page, it states the non-free python binary built from pyInstaller can be distributed for commercial use but the copyright doesn't ...",
+    "host_name": "groups.google.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://opensource.stackexchange.com/questions/4813/license-information-included-with-distributable-pyinstaller-binary",
+    "name": "License information included with distributable PyInstaller",
+    "snippet": "Dec 5, 2016 — I'm trying to find information on which license information I should include in the About section of my application that I build with PyInstaller and distribute ...",
+    "host_name": "opensource.stackexchange.com",
+    "rank": 1,
+    "date": "Dec 5, 2016",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/pyinstaller/pyinstaller/issues/5666",
+    "name": "Pyinstaller prunes license text of included libraries and",
+    "snippet": "Mar 24, 2021 — Pyinstaller happly prunes all this information and distributing the resulting executable will legally violate quite a lot of licenses . Please ...",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "Mar 24, 2021",
+    "favicon": ""
+  },
+  {
+    "url": "https://pyinstaller.org/en/stable/license.html",
+    "name": "License — PyInstaller 6.22.2 documentation",
+    "snippet": "PyInstaller is distributed under a dual- licensing scheme using both the GPL 2.0 License , with an exception that allows you to use it to build commercial ...",
+    "host_name": "pyinstaller.org",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://stackoverflow.com/questions/60054742/licenses-for-dependencies-with-pyinstaller",
+    "name": "Licenses for dependencies with Pyinstaller - python",
+    "snippet": "I have an application I have written in Python, that is being packaged with Pyinstaller. From what I understand (and I am not a lawyer) and from the Pyinstaller ...",
+    "host_name": "stackoverflow.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

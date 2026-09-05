@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://elevenlabs.io/docs/eleven-creative/voices/voice-cloning/professional-voice-cloning",
+    "name": "Professional Voice Cloning | ElevenLabs Documentation",
+    "snippet": "Even with their consent, you cannot clone someone else's voice. All Professional Voice Clones require a verification process to confirm that the voice belongs ... Guide · Upload Your Audio · Use Samples Speaking The...",
+    "host_name": "elevenlabs.io",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/ElevenLabs/comments/1dfq2zi/every_cloned_voice_is_flagged_now",
+    "name": "Every cloned voice is flagged now? : r/ElevenLabs - Reddit",
+    "snippet": "Jun 14, 2024 · ElevenLabs has recently introduced probation for users generating content violating Prohibited Content and Uses Policy with voice cloning tools. ElevenLabs Professional Voice Clone verification issue with non ... This voice verification is ridiculous : r/ElevenLabs - Reddit More results from www.reddit.com",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://elevenlabs.io/docs/eleven-api/guides/how-to/voices/professional-voice-cloning",
+    "name": "Professional Voice Cloning quickstart | ElevenLabs Documentation",
+    "snippet": "Before training can begin, a verification step is required to ensure you have permission to use the voice. First request the verification CAPTCHA. Create A Pvc Voice · Upload Audio Files · Retrieve Speaker Audio",
+    "host_name": "elevenlabs.io",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/774808419197163/posts/24341433692107971",
+    "name": "Hey. What are people using instead of Eleven Labs now that they've",
+    "snippet": "Jun 24, 2025 · This means that once users share their voice data, Eleven Labs can use it indefinitely without needing further consent. Voice Model Sharing: ...",
+    "host_name": "www.facebook.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://elevenlabs.io/blog/instant-vs-professional-voice-cloning",
+    "name": "Instant vs. Professional Voice Cloning: Key differences - ElevenLabs",
+    "snippet": "Aug 17, 2026 · ElevenLabs requires explicit consent and voice verification before cloning. Choose an IVC for speed and a PVC for fidelity. Both require ...",
+    "host_name": "elevenlabs.io",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://elevenlabs.io/docs/eleven-api/concepts/voice-cloning",
+    "name": "Voice cloning: how it works | ElevenLabs Documentation",
+    "snippet": "The verification process uses voice-captcha technology to confirm that you are the person providing the voice samples, rather than using recordings of someone ... What Voice Cloning Does And... · Instant Voice Cloning · Professional Voice Cloning",
+    "host_name": "elevenlabs.io",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  }
+]

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/job.schema.json",
+  "type": "object",
+  "required": [
+    "job_id",
+    "task_id",
+    "stage_id",
+    "op",
+    "capability",
+    "params"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "stage_id": {
+      "type": "string"
+    },
+    "stage_name": {
+      "type": "string"
+    },
+    "op": {
+      "type": "string"
+    },
+    "tool": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capability": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "deadline_at": {
+      "type": "number"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  }
+}

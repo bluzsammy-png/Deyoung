@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/health.schema.json",
+  "type": "object",
+  "required": [
+    "status",
+    "service",
+    "version"
+  ],
+  "properties": {
+    "status": {
+      "const": "ok"
+    },
+    "service": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "free_only": {
+      "type": "boolean",
+      "const": true
+    },
+    "max_spend": {
+      "const": 0
+    }
+  }
+}

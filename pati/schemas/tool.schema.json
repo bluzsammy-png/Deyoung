@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/tool.schema.json",
+  "type": "object",
+  "required": [
+    "tool_id",
+    "name",
+    "description",
+    "capabilities",
+    "license",
+    "free_status",
+    "status"
+  ],
+  "properties": {
+    "tool_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "version": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "repository": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "documentation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "license": {
+      "type": "string"
+    },
+    "install_method": {
+      "type": "string"
+    },
+    "runtime": {
+      "type": "string"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hardware_requirements": {
+      "type": "string"
+    },
+    "network_requirements": {
+      "type": "string"
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "health_check": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "benchmark_command": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "security_profile": {
+      "type": "string"
+    },
+    "sandbox_required": {
+      "type": "boolean"
+    },
+    "worker_type": {
+      "type": "string"
+    },
+    "startup_command": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "shutdown_command": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "last_verified": {
+      "type": "string"
+    },
+    "commercial_use": {
+      "type": "boolean"
+    },
+    "free_status": {
+      "type": "string"
+    },
+    "fallback_tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "adapter": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[Unit]
+Description=PATI Local Agent (secure bridge to this computer)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.pati/venv/bin/pati-agent run
+Restart=on-failure
+RestartSec=5
+# Hardening: agent only makes OUTBOUND calls; it never listens.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=%h/.pati %h/PATI
+
+[Install]
+WantedBy=default.target

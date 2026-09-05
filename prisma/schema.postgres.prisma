@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Owner account — only the site owner can log in to /admin
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Single-row site configuration, editable from the admin panel
+model Settings {
+  id                  String   @id @default("main")
+  siteName            String   @default("DeYoung")
+  tagline             String   @default("Bold work. Real results.")
+  heroTitle           String   @default("DEYOUNG")
+  heroSubtitle        String   @default("Creative work that gets you noticed — shot, designed and delivered fast.")
+  aboutTitle          String   @default("About DeYoung")
+  aboutBody           String   @default("")
+  ownerName           String   @default("DeYoung")
+  ownerTitle          String   @default("Creative Professional")
+  ownerPhotoUrl       String   @default("/img/avatar-default.png")
+  contactEmail        String   @default("hello@deyoung.site")
+  phone               String   @default("")
+  whatsapp            String   @default("")
+  location            String   @default("")
+  responseTime        String   @default("I reply within 24 hours — usually much faster.")
+  currency            String   @default("USD")
+  paymentProvider     String   @default("manual") // manual | paystack | flutterwave | paypal | stripe
+  paymentPublicKey    String   @default("")
+  paymentSecretKey    String   @default("")
+  paymentLinkUrl      String   @default("")
+  paymentInstructions String   @default("Pay via bank transfer or mobile money using the details below, then send your receipt on WhatsApp. Your booking is confirmed as soon as payment is received.")
+  bankDetails         String   @default("")
+  socialJson          String   @default("{}")
+  metaDescription     String   @default("DeYoung — AI video generation up to 60 seconds in one pass, plus bold creative services. Subscribe or book online, pay locally or internationally.")
+  gpuMinutesDaily     Int      @default(240) // honest daily render budget (free GPU supply)
+  updatedAt           DateTime @updatedAt
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  title     String
+  alt       String   @default("")
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  price       Float   @default(0)
+  compareAtPrice Float? // optional "was" price shown struck-through
+  duration    String  @default("")
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  phone        String   @default("")
+  serviceTitle String
+  amount       Float
+  currency     String   @default("USD")
+  status       String   @default("pending") // pending | paid | confirmed | cancelled
+  provider     String   @default("manual")
+  paymentRef   String   @default("")
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id        String  @id @default(cuid())
+  name      String
+  role      String  @default("")
+  quote     String
+  rating    Int     @default(5)
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  question  String
+  answer    String
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+}
+
+// Subscription tier — Beginner / Pro / Elite. Every limit is owner-editable from /admin.
+model Plan {
+  id              String  @id @default(cuid())
+  code            String  @unique // beginner | pro | elite
+  name            String
+  blurb           String  @default("")
+  priceMonthly    Float   @default(0)
+  compareAtPrice  Float? // optional "was" price shown struck-through
+  currency        String  @default("USD")
+  maxVideosMonth  Int     @default(4)
+  maxSecondsVideo Int     @default(15)
+  maxResolution   String  @default("720p") // 720p | 1080p
+  watermark       Boolean @default(true)
+  concurrentJobs  Int     @default(1)
+  queuePriority   Int     @default(0) // higher = rendered sooner
+  commercial      Boolean @default(false)
+  audio           Boolean @default(false)
+  featuresJson    String  @default("[]") // [{ "label": "...", "included": true }]
+  active          Boolean @default(true)
+  sortOrder       Int     @default(0)
+}
+
+// A customer's monthly subscription to one of the plans.
+model Subscription {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  userId      String    @default("") // DeYoung account that subscribed (required for new subs)
+  phone       String    @default("")
+  planCode    String
+  status      String    @default("pending") // pending | active | expired | cancelled
+  periodStart DateTime?
+  periodEnd   DateTime?
+  pricePaid   Float     @default(0)
+  currency    String    @default("USD")
+  provider    String    @default("manual")
+  paymentRef  String    @default("")
+  notes       String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// One video generation job bought with subscription quota. Queue-first by design.
+model VideoRequest {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  email          String
+  prompt         String
+  seconds        Int
+  resolution     String   @default("720p")
+  withAudio      Boolean  @default(false)
+  watermark      Boolean  @default(true)
+  queuePriority  Int      @default(0)
+  status         String   @default("queued") // queued | rendering | done | failed | cancelled
+  resultUrl      String   @default("")
+  gpuMinutes     Float    @default(0)
+  dedupKey       String   @default("") // sha256(prompt+params) — identical renders are reused
+  fromCache      Boolean  @default(false)
+  notes          String   @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  userId         String   @default("") // DeYoung account owner (empty = legacy/anonymous request)
+  model          String   @default("deyo.1") // deyo.1 | deyo.1-pro | ... | deyo-max
+  stage          String   @default("") // human-readable render stage from the worker
+  progress       Int      @default(0) // 0-100 reported by the worker
+  voice          String   @default("") // voice choice or "upload"
+  refImageUrl    String   @default("") // uploaded character/avatar reference
+}
+
+// DeYoung customer account — separate from the site owner's Admin account.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String // scrypt hash; "google-oauth" = account created via Google sign-in
+  name         String   @default("")
+  phone        String   @default("")
+  avatarUrl    String   @default("")
+  googleId     String   @default("") // Google account sub, when linked
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Licensed voice clone — consent-first by design. A voiceprint is only
+// usable in renders when a valid consent recording is on file (self voice)
+// or the owner (admin) has approved written permission (third-party voice).
+// Mirrors the industry standard: instant self-voice cloning with a recorded
+// consent statement; third-party voices are reviewed before activation.
+model VoiceClone {
+  id                String    @id @default(cuid())
+  userId            String
+  userEmail         String
+  label             String // user-facing name, e.g. "My voice"
+  ownerType         String    @default("self") // self | third-party
+  sampleUrl         String // voice sample audio (license asset)
+  consentUrl        String // recorded consent statement (license evidence)
+  writtenConsentUrl String    @default("") // written permission document (third-party path)
+  consentPhrase     String    @default("") // exact scripted phrase captured in the consent audio
+  licenseVersion    String    @default("v1") // Voice Clone License version accepted at upload
+  status            String    @default("licensed") // licensed | pending | rejected | revoked
+  reviewStatus      String    @default("pending") // pending | approved | flagged (owner audit)
+  reviewNotes       String    @default("")
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// Live support chat thread between a user and the owner (admin inbox).
+model SupportMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  userEmail String
+  fromUser  Boolean  @default(true) // true = from user, false = from support/owner
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

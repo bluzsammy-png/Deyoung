@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/capability.schema.json",
+  "type": "object",
+  "required": [
+    "capability_id",
+    "category",
+    "description",
+    "risky",
+    "min_autonomy_level"
+  ],
+  "properties": {
+    "capability_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_]+$"
+    },
+    "category": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "risky": {
+      "type": "boolean"
+    },
+    "min_autonomy_level": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+    },
+    "worker_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

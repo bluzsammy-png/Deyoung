@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+    "name": "Choose Google Drive API scopes",
+    "snippet": "Jul 22, 2026 — The drive . file OAuth scope lets users choose which files they want to share with your app. This gives them more control and confidence that ...",
+    "host_name": "developers.google.com",
+    "rank": 0,
+    "date": "Jul 22, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com",
+    "name": "Google Drive API Best Practices",
+    "snippet": "Use least-privilege access and proper OAuth tokens for Google Drive API integrations. For large migrations, contact your Google rep and watch for API throttling ... Read more",
+    "host_name": "www.facebook.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://community.latenode.com",
+    "name": "How to restrict Google Drive API permissions to a specific",
+    "snippet": "Jul 29, 2025 — Google Drive API doesn't have the folder-level permissions you want . Your best bet is using the https://www.googleapis.com/auth/drive.file scope ... Read more",
+    "host_name": "community.latenode.com",
+    "rank": 2,
+    "date": "Jul 29, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.google.com/cloud/answer/13807380?hl=en",
+    "name": "Requesting Minimum Scopes - Google Cloud Platform",
+    "snippet": "Usability: The drive . file scope works with all Drive API REST Resources which means you can use it the same way you use broader OAuth scopes . Functionality ... Read more",
+    "host_name": "support.google.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://workspaceupdates.googleblog.com",
+    "name": "Access Google Meet artifacts with a new Google Drive API",
+    "snippet": "Jul 11, 2024 — We're introducing a new OAuth scope for the Drive API : drive .meet.readonly. The new scope grants app access to read and download files from ... Read more",
+    "host_name": "workspaceupdates.googleblog.com",
+    "rank": 4,
+    "date": "Jul 11, 2024",
+    "favicon": ""
+  },
+  {
+    "url": "https://developers.google.com/workspace/drive/api/guides/limits",
+    "name": "Usage limits | Google Drive",
+    "snippet": "Jul 31, 2026 — Google Workspace users can only upload 750 GB per day between My Drive and all shared drives; this limit also applies to copies.",
+    "host_name": "developers.google.com",
+    "rank": 5,
+    "date": "Jul 31, 2026",
+    "favicon": ""
+  }
+]

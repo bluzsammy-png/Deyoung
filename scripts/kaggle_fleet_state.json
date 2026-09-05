@@ -1,0 +1,22 @@
+[
+  {
+    "index": 1,
+    "username": "jimcreat",
+    "slug": "deyoung-worker-a",
+    "ref": "jimcreat/deyoung-worker-a",
+    "agent": "kaggle-gpu-a",
+    "checkpoint": "LTX-Video-0.9.5",
+    "url": "https://www.kaggle.com/code/jimcreat/deyoung-worker-a",
+    "push_ok": true
+  },
+  {
+    "index": 2,
+    "username": "bittrexminingltd",
+    "slug": "deyoung-worker-b",
+    "ref": "bittrexminingltd/deyoung-worker-b",
+    "agent": "kaggle-gpu-b",
+    "checkpoint": "LTX-Video-0.9.1",
+    "url": "https://www.kaggle.com/code/bittrexminingltd/deyoung-worker-b",
+    "push_ok": true
+  }
+]

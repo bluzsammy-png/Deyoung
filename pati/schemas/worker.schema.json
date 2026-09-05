@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/worker.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "type",
+    "capabilities",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "LOCAL_WORKER",
+        "KAGGLE_WORKER",
+        "CONTAINER_WORKER",
+        "BATCH_WORKER",
+        "REMOTE_FREE_WORKER",
+        "OPTIONAL_CLOUD_WORKER",
+        "BROWSER_WORKER",
+        "CPU_WORKER",
+        "GPU_WORKER",
+        "VIDEO_WORKER",
+        "AUDIO_WORKER",
+        "IMAGE_WORKER",
+        "CODING_WORKER",
+        "RESEARCH_WORKER",
+        "DEPLOYMENT_WORKER"
+      ]
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "enum": [
+        "online",
+        "offline"
+      ]
+    },
+    "health": {
+      "enum": [
+        "healthy",
+        "degraded"
+      ]
+    },
+    "resources": {
+      "type": "object"
+    },
+    "machine": {
+      "type": "object"
+    },
+    "last_heartbeat": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "failure_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

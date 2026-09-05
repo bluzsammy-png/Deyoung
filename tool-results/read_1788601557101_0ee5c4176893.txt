@@ -1,0 +1,563 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useRef, useState } from "react";
+     4→import Image from "next/image";
+     5→import { ArrowRight, BadgeCheck, Clapperboard, CreditCard, Landmark, Loader2, Lock, Mail, Smartphone, User as UserIcon } from "lucide-react";
+     6→import { Button } from "@/components/ui/button";
+     7→import { Input } from "@/components/ui/input";
+     8→import { Label } from "@/components/ui/label";
+     9→import { toast } from "sonner";
+    10→import { api, money, type Plan, type PublicSettings, type Subscription, type StudioUser } from "@/lib/types";
+    11→import { go } from "./hash";
+    12→import { LogoMark } from "./logo";
+    13→
+    14→/**
+    15→ * Subscribe — always joined to an account.
+    16→ * Step 1: create the account (or sign in / continue with Google).
+    17→ * Step 2: pick the plan and pay. There is no standalone checkout:
+    18→ * the plan is created for the signed-in user only, and the studio
+    19→ * stays locked until a plan is active.
+    20→ */
+    21→
+    22→type PayWindow = Window & {
+    23→  PaystackPop?: {
+    24→    setup: (o: {
+    25→      key: string;
+    26→      email: string;
+    27→      amount: number;
+    28→      currency: string;
+    29→      ref: string;
+    30→      callback: (r: { reference: string }) => void;
+    31→      onClose: () => void;
+    32→    }) => { openIframe: () => void };
+    33→  };
+    34→  FlutterwaveCheckout?: (o: Record<string, unknown>) => void;
+    35→  paypal?: {
+    36→    Buttons: (o: Record<string, unknown>) => { render: (sel: string | HTMLElement) => Promise<void> };
+    37→  };
+    38→};
+    39→
+    40→function loadScript(src: string, id: string): Promise<void> {
+    41→  return new Promise((resolve, reject) => {
+    42→    const existing = document.getElementById(id);
+    43→    if (existing) return resolve();
+    44→    const s = document.createElement("script");
+    45→    s.src = src;
+    46→    s.id = id;
+    47→    s.async = true;
+    48→    s.onload = () => resolve();
+    49→    s.onerror = () => reject(new Error("Failed to load payment script"));
+    50→    document.head.appendChild(s);
+    51→  });
+    52→}
+    53→
+    54→export function SubscribeView({
+    55→  settings,
+    56→  plans,
+    57→  preselectPlan,
+    58→}: {
+    59→  settings: PublicSettings | null;
+    60→  plans: Plan[];
+    61→  preselectPlan?: string;
+    62→}) {
+    63→  const [checking, setChecking] = useState(true);
+    64→  const [user, setUser] = useState<StudioUser | null>(null);
+    65→  const [planCode, setPlanCode] = useState(preselectPlan || "");
+    66→  const [sub, setSub] = useState<Subscription | null>(null);
+    67→  const [busy, setBusy] = useState(false);
+    68→  const [phone, setPhone] = useState("");
+    69→  const paypalRef = useRef<HTMLDivElement>(null);
+    70→
+    71→  useEffect(() => {
+    72→    api<{ user: StudioUser }>("/api/user/me")
+    73→      .then((r) => setUser(r.user))
+    74→      .catch(() => setUser(null))
+    75→      .finally(() => setChecking(false));
+    76→  }, []);
+    77→
+    78→  const plan = plans.find((p) => p.code === planCode) || null;
+    79→  const provider = settings?.paymentProvider || "manual";
+    80→  const needsKey = ["paystack", "flutterwave", "paypal"].includes(provider);
+    81→  const providerReady = !needsKey || (provider === "stripe" ? !!settings?.paymentLinkUrl : !!settings?.paymentPublicKey);
+    82→
+    83→  /* ---------- step 1 → 2: payment ---------- */
+    84→
+    85→  async function createSubscription(e: React.FormEvent) {
+    86→    e.preventDefault();
+    87→    if (!plan) return toast.error("Pick a plan first");
+    88→    setBusy(true);
+    89→    try {
+    90→      const res = await api<{ subscription: Subscription }>("/api/subscriptions", {
+    91→        method: "POST",
+    92→        body: JSON.stringify({ planCode: plan.code, phone, provider }),
+    93→      });
+    94→      setSub(res.subscription);
+    95→      if (provider === "paypal") initPaypalSub(res.subscription);
+    96→    } catch (err) {
+    97→      toast.error(err instanceof Error ? err.message : "Could not create subscription");
+    98→    } finally {
+    99→      setBusy(false);
+   100→    }
+   101→  }
+   102→
+   103→  async function confirmPaid(reference: string) {
+   104→    if (!sub) return;
+   105→    try {
+   106→      const res = await api<{ verified: boolean; subscription: Subscription }>(
+   107→        `/api/subscriptions/${sub.id}/verify`,
+   108→        { method: "POST", body: JSON.stringify({ reference }) }
+   109→      );
+   110→      if (res.verified) {
+   111→        toast.success("Plan active — your studio is unlocked!");
+   112→        go("#studio");
+   113→      } else {
+   114→        toast.message("Payment received — the owner will activate your plan shortly.");
+   115→        go("#studio");
+   116→      }
+   117→    } catch {
+   118→      toast.message("Subscription saved. Activation pending.");
+   119→      go("#studio");
+   120→    }
+   121→  }
+   122→
+   123→  /* ---------- providers ---------- */
+   124→
+   125→  async function startPaystack() {
+   126→    if (!sub || !settings?.paymentPublicKey) return toast.error("Payment is not set up yet — use a bank transfer for now");
+   127→    try {
+   128→      await loadScript("https://js.paystack.co/v1/inline.js", "paystack-inline");
+   129→      const w = window as PayWindow;
+   130→      if (!w.PaystackPop) throw new Error("Paystack unavailable");
+   131→      const handler = w.PaystackPop.setup({
+   132→        key: settings.paymentPublicKey,
+   133→        email: sub.email,
+   134→        amount: Math.round(sub.pricePaid * 100),
+   135→        currency: sub.currency,
+   136→        ref: sub.id,
+   137→        callback: (r) => confirmPaid(r.reference),
+   138→        onClose: () => toast.message("Payment window closed — your subscription is still saved."),
+   139→      });
+   140→      handler.openIframe();
+   141→    } catch (err) {
+   142→      toast.error(err instanceof Error ? err.message : "Could not start payment");
+   143→    }
+   144→  }
+   145→
+   146→  function startFlutterwave() {
+   147→    if (!sub || !settings?.paymentPublicKey) return toast.error("Payment is not set up yet — use a bank transfer for now");
+   148→    const w = window as PayWindow;
+   149→    w.FlutterwaveCheckout?.({
+   150→      public_key: settings.paymentPublicKey,
+   151→      tx_ref: sub.id,
+   152→      amount: sub.pricePaid,
+   153→      currency: sub.currency,
+   154→      payment_options: "card,banktransfer,ussd,mobilemoneyghana,mobilemoneynigeria",
+   155→      customer: { email: sub.email, phone_number: phone, name: sub.name },
+   156→      customizations: { description: `${plan?.name || sub.planCode} plan — 1 month`.slice(0, 120) },
+   157→      callback: (data: { tx_ref?: string }) => confirmPaid(data.tx_ref || sub.id),
+   158→      onclose: () => toast.message("Payment window closed — your subscription is still saved."),
+   159→    });
+   160→  }
+   161→
+   162→  function initPaypalSub(s2: Subscription) {
+   163→    if (!settings?.paymentPublicKey) return;
+   164→    loadScript(
+   165→      `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(settings.paymentPublicKey)}&currency=${s2.currency}&intent=capture`,
+   166→      "paypal-sdk"
+   167→    )
+   168→      .then(() => {
+   169→        const w = window as PayWindow;
+   170→        if (!w.paypal || !paypalRef.current) return;
+   171→        w.paypal
+   172→          .Buttons({
+   173→            style: { color: "black", label: "pay" },
+   174→            createOrder: (_d: unknown, actions: { order: { create: (o: Record<string, unknown>) => Promise<string> } }) =>
+   175→              actions.order.create({
+   176→                purchase_units: [
+   177→                  {
+   178→                    amount: { value: s2.pricePaid.toFixed(2), currency_code: s2.currency },
+   179→                    description: `${plan?.name || s2.planCode} plan subscription`.slice(0, 127),
+   180→                  },
+   181→                ],
+   182→              }),
+   183→            onApprove: async (_d: unknown, actions: { order: { capture: () => Promise<{ id: string }> } }) => {
+   184→              const details = await actions.order.capture();
+   185→              await confirmPaid(details.id || s2.id);
+   186→            },
+   187→            onError: () => toast.error("PayPal error — try again or pick another method"),
+   188→          })
+   189→          .render(paypalRef.current)
+   190→          .catch(() => toast.error("Could not render PayPal buttons"));
+   191→      })
+   192→      .catch(() => toast.error("Could not load PayPal"));
+   193→  }
+   194→
+   195→  /* ---------- render ---------- */
+   196→
+   197→  if (checking) {
+   198→    return (
+   199→      <section className="py-20 bg-[var(--brand-black)] text-white min-h-[70vh] grid place-items-center">
+   200→        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+   201→      </section>
+   202→    );
+   203→  }
+   204→
+   205→  const currency = settings?.currency || "USD";
+   206→  const step = sub ? 3 : user ? 2 : 1;
+   207→
+   208→  return (
+   209→    <section className="py-12 md:py-20 bg-[var(--brand-black)] text-white min-h-[70vh]">
+   210→      <div className="mx-auto max-w-5xl px-4">
+   211→        <div className="text-center">
+   212→          <LogoMark className="h-10 w-10 mx-auto" aria-hidden />
+   213→          <h1 className="mt-4 text-3xl md:text-4xl font-black uppercase tracking-tight">Subscribe & Start Creating</h1>
+   214→          <p className="mt-2 text-sm text-white/60 max-w-xl mx-auto leading-relaxed">
+   215→            One flow: create your account, pick your plan, pay — and your studio unlocks.
+   216→            No subscription, no renders; every plan lives on an account.
+   217→          </p>
+   218→        </div>
+   219→
+   220→        {/* steps indicator */}
+   221→        <ol className="mt-8 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest" aria-label="Checkout steps">
+   222→          {["Account", "Plan", "Payment"].map((label, i) => (
+   223→            <li key={label} className="flex items-center gap-2">
+   224→              <span
+   225→                className={`inline-flex items-center gap-1.5 px-3 py-1.5 border ${
+   226→                  step > i + 1
+   227→                    ? "border-green-500/60 text-green-400"
+   228→                    : step === i + 1
+   229→                      ? "border-primary bg-primary/15 text-white"
+   230→                      : "border-white/15 text-white/40"
+   231→                }`}
+   232→              >
+   233→                {step > i + 1 ? <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> : <span>{i + 1}</span>}
+   234→                {label}
+   235→              </span>
+   236→              {i < 2 && <span className="text-white/25" aria-hidden>→</span>}
+   237→            </li>
+   238→          ))}
+   239→        </ol>
+   240→
+   241→        <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-8 items-start">
+   242→          {/* LEFT: the active step */}
+   243→          <div>
+   244→            {!user ? (
+   245→              <AccountStep onAuthed={(u) => { setUser(u); toast.success(`Welcome, ${u.name || u.email}!`); }} />
+   246→            ) : !sub ? (
+   247→              <form onSubmit={createSubscription} className="space-y-5 border border-white/15 bg-white/5 p-6" aria-label="Plan picker">
+   248→                <h2 className="font-black uppercase tracking-tight text-lg">2 — Pick your plan</h2>
+   249→                <p className="text-xs text-white/50">Signed in as <strong className="text-white/80">{user.name || user.email}</strong> — this plan will belong to your account.</p>
+   250→                <div className="space-y-2" role="radiogroup" aria-label="Plans">
+   251→                  {plans.map((p) => (
+   252→                    <button
+   253→                      key={p.id}
+   254→                      type="button"
+   255→                      role="radio"
+   256→                      aria-checked={planCode === p.code}
+   257→                      onClick={() => setPlanCode(p.code)}
+   258→                      className={`w-full text-left p-4 border-2 transition-colors ${
+   259→                        planCode === p.code ? "border-primary bg-primary/10" : "border-white/15 bg-white/5 hover:border-white/40"
+   260→                      }`}
+   261→                    >
+   262→                      <span className="flex items-center justify-between gap-3">
+   263→                        <span className="font-black tracking-tight">{p.name}</span>
+   264→                        <span className="font-black text-primary whitespace-nowrap">{money(p.priceMonthly, p.currency || currency)}<span className="text-white/40 text-xs font-bold">/mo</span></span>
+   265→                      </span>
+   266→                      <span className="block mt-1 text-xs text-white/60 leading-snug">
+   267→                        {p.maxVideosMonth} videos/month · up to {p.maxSecondsVideo}s · {p.maxResolution}{p.watermark ? " · watermark" : " · no watermark"}
+   268→                      </span>
+   269→                    </button>
+   270→                  ))}
+   271→                </div>
+   272→                <div className="space-y-2 max-w-sm">
+   273→                  <Label htmlFor="sb-phone" className="text-white/80">Phone / WhatsApp (optional)</Label>
+   274→                  <Input id="sb-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 800 000 0000" className="bg-white/5 border-white/20 text-white placeholder:text-white/30" />
+   275→                </div>
+   276→                {plan && (
+   277→                  <div className="border border-primary/60 bg-primary/10 p-4 flex items-center justify-between">
+   278→                    <div>
+   279→                      <p className="text-xs uppercase tracking-widest font-bold text-white/60">You are subscribing to</p>
+   280→                      <p className="font-black text-lg">{plan.name} — monthly</p>
+   281→                    </div>
+   282→                    <p className="text-2xl font-black text-primary whitespace-nowrap">{money(plan.priceMonthly, plan.currency || currency)}</p>
+   283→                  </div>
+   284→                )}
+   285→                <Button type="submit" disabled={busy || !plan} className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold text-base">
+   286→                  {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Clapperboard className="h-4 w-4" aria-hidden />}
+   287→                  {busy ? "Creating…" : "Continue to payment"}
+   288→                </Button>
+   289→                <p className="text-center text-xs text-white/40">Billed monthly · cancel anytime · no renders without an active plan.</p>
+   290→              </form>
+   291→            ) : (
+   292→              <div className="space-y-6">
+   293→                <div className="border-2 border-primary p-5 bg-primary/5">
+   294→                  <p className="text-xs uppercase tracking-widest font-bold text-white/60">3 — Payment</p>
+   295→                  <p className="font-mono font-black text-lg mt-1">{sub.id.slice(0, 10).toUpperCase()}</p>
+   296→                  <p className="mt-2 text-sm text-white/70">
+   297→                    {plan?.name || sub.planCode} plan for <strong>{sub.name}</strong> —{" "}
+   298→                    <span className="font-black text-primary">{money(sub.pricePaid, sub.currency)}</span>
+   299→                  </p>
+   300→                </div>
+   301→
+   302→                {provider === "manual" && (
+   303→                  <div className="space-y-4">
+   304→                    <h3 className="font-black text-lg uppercase inline-flex items-center gap-2">
+   305→                      <Landmark className="h-5 w-5 text-primary" aria-hidden /> Pay by bank / mobile money
+   306→                    </h3>
+   307→                    {settings?.bankDetails ? (
+   308→                      <pre className="bg-white/5 border border-white/15 p-4 text-sm whitespace-pre-wrap font-sans">{settings.bankDetails}</pre>
+   309→                    ) : null}
+   310→                    <p className="text-sm text-white/60 leading-relaxed">{settings?.paymentInstructions}</p>
+   311→                    <Button
+   312→                      onClick={() => { toast.message("Saved! The owner activates your plan as soon as the payment lands."); go("#studio"); }}
+   313→                      className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold"
+   314→                    >
+   315→                      I&apos;ve Sent the Payment <BadgeCheck className="h-4 w-4" aria-hidden />
+   316→                    </Button>
+   317→                  </div>
+   318→                )}
+   319→
+   320→                {provider === "paystack" && (
+   321→                  <div className="space-y-4">
+   322→                    <h3 className="font-black text-lg uppercase inline-flex items-center gap-2">
+   323→                      <CreditCard className="h-5 w-5 text-primary" aria-hidden /> Card, bank & mobile money
+   324→                    </h3>
+   325→                    {providerReady ? (
+   326→                      <Button onClick={startPaystack} className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold">
+   327→                        Pay {money(sub.pricePaid, sub.currency)} Securely
+   328→                      </Button>
+   329→                    ) : (
+   330→                      <Notice text="Card payment is being connected. Use a bank transfer for now — contact the owner for details." />
+   331→                    )}
+   332→                  </div>
+   333→                )}
+   334→
+   335→                {provider === "flutterwave" && (
+   336→                  <div className="space-y-4">
+   337→                    <h3 className="font-black text-lg uppercase inline-flex items-center gap-2">
+   338→                      <CreditCard className="h-5 w-5 text-primary" aria-hidden /> Card, bank & mobile money
+   339→                    </h3>
+   340→                    {providerReady ? (
+   341→                      <Button onClick={startFlutterwave} className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold">
+   342→                        Pay {money(sub.pricePaid, sub.currency)} Securely
+   343→                      </Button>
+   344→                    ) : (
+   345→                      <Notice text="Card payment is being connected. Use a bank transfer for now — contact the owner for details." />
+   346→                    )}
+   347→                  </div>
+   348→                )}
+   349→
+   350→                {provider === "paypal" && (
+   351→                  <div className="space-y-4">
+   352→                    <h3 className="font-black text-lg uppercase inline-flex items-center gap-2">
+   353→                      <CreditCard className="h-5 w-5 text-primary" aria-hidden /> PayPal or card
+   354→                    </h3>
+   355→                    {providerReady ? (
+   356→                      <div ref={paypalRef} aria-label="PayPal checkout buttons" />
+   357→                    ) : (
+   358→                      <Notice text="PayPal is being connected. Use a bank transfer for now — contact the owner for details." />
+   359→                    )}
+   360→                  </div>
+   361→                )}
+   362→
+   363→                {provider === "stripe" && (
+   364→                  <div className="space-y-4">
+   365→                    <h3 className="font-black text-lg uppercase inline-flex items-center gap-2">
+   366→                      <CreditCard className="h-5 w-5 text-primary" aria-hidden /> Pay by card (Stripe)
+   367→                    </h3>
+   368→                    {providerReady ? (
+   369→                      <Button onClick={() => { if (settings?.paymentLinkUrl) window.location.href = settings.paymentLinkUrl; }} className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold">
+   370→                        Go to Secure Card Payment
+   371→                      </Button>
+   372→                    ) : (
+   373→                      <Notice text="Card payment is being connected. Use a bank transfer for now — contact the owner for details." />
+   374→                    )}
+   375→                  </div>
+   376→                )}
+   377→
+   378→                <p className="text-center text-xs text-white/40 inline-flex items-center gap-1.5 w-full justify-center">
+   379→                  <Smartphone className="h-3.5 w-3.5" aria-hidden /> Local & international payment supported
+   380→                </p>
+   381→              </div>
+   382→            )}
+   383→          </div>
+   384→
+   385→          {/* RIGHT: order summary rail */}
+   386→          <aside className="space-y-4 lg:sticky lg:top-8">
+   387→            <div className="border border-white/15 bg-white/5 p-5">
+   388→              <p className="text-xs font-black uppercase tracking-widest text-white/50">Your order</p>
+   389→              {plan ? (
+   390→                <>
+   391→                  <p className="mt-2 text-xl font-black">{plan.name}</p>
+   392→                  <p className="text-xs text-white/60 mt-1 leading-relaxed">{plan.blurb}</p>
+   393→                  <p className="mt-3 text-2xl font-black text-primary">
+   394→                    {money(plan.priceMonthly, plan.currency || currency)}
+   395→                    <span className="text-xs text-white/40 font-bold"> /month</span>
+   396→                  </p>
+   397→                  <ul className="mt-3 space-y-1.5 text-xs text-white/60">
+   398→                    <li>· {plan.maxVideosMonth} videos every month</li>
+   399→                    <li>· Up to {plan.maxSecondsVideo}s per video</li>
+   400→                    <li>· Renders at {plan.maxResolution}</li>
+   401→                    <li>· {plan.watermark ? "DeYoung watermark" : "No watermark"}</li>
+   402→                  </ul>
+   403→                </>
+   404→              ) : (
+   405→                <p className="mt-2 text-sm text-white/60">Pick a plan on the left to see the summary here.</p>
+   406→              )}
+   407→            </div>
+   408→            <div className="border border-white/15 bg-white/5 p-5">
+   409→              <p className="text-xs font-black uppercase tracking-widest text-white/50">Why an account?</p>
+   410→              <ul className="mt-3 space-y-2 text-xs text-white/60 leading-relaxed">
+   411→                <li className="flex gap-2"><Lock className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" aria-hidden /> Your plan, quota and queue live on your account — no shared checkout links.</li>
+   412→                <li className="flex gap-2"><BadgeCheck className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" aria-hidden /> Your renders, licensed voices and support chat stay in one studio.</li>
+   413→                <li className="flex gap-2"><ArrowRight className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" aria-hidden /> Subscribe while registering — it takes under a minute.</li>
+   414→              </ul>
+   415→            </div>
+   416→          </aside>
+   417→        </div>
+   418→      </div>
+   419→    </section>
+   420→  );
+   421→}
+   422→
+   423→/* ---------------- Step 1: account ---------------- */
+   424→
+   425→function AccountStep({ onAuthed }: { onAuthed: (u: StudioUser) => void }) {
+   426→  const [mode, setMode] = useState<"signup" | "signin">("signup");
+   427→  const [form, setForm] = useState({ name: "", email: "", password: "" });
+   428→  const [busy, setBusy] = useState(false);
+   429→  const [error, setError] = useState("");
+   430→  const [googleReady, setGoogleReady] = useState(false);
+   431→
+   432→  useEffect(() => {
+   433→    api<{ configured: boolean }>("/api/auth/google/status")
+   434→      .then((r) => setGoogleReady(r.configured === true))
+   435→      .catch(() => setGoogleReady(false));
+   436→  }, []);
+   437→
+   438→  async function submit(e: React.FormEvent) {
+   439→    e.preventDefault();
+   440→    setBusy(true);
+   441→    setError("");
+   442→    try {
+   443→      const url = mode === "signin" ? "/api/user/login" : "/api/user/register";
+   444→      const body =
+   445→        mode === "signin"
+   446→          ? { email: form.email, password: form.password }
+   447→          : { name: form.name, email: form.email, password: form.password };
+   448→      const res = await api<{ user: StudioUser }>(url, { method: "POST", body: JSON.stringify(body) });
+   449→      onAuthed(res.user);
+   450→    } catch (err) {
+   451→      setError(err instanceof Error ? err.message : "Something went wrong");
+   452→    } finally {
+   453→      setBusy(false);
+   454→    }
+   455→  }
+   456→
+   457→  const nextParam = encodeURIComponent("/#subscribe");
+   458→
+   459→  return (
+   460→    <div className="border border-white/15 bg-white/5 p-6">
+   461→      <h2 className="font-black uppercase tracking-tight text-lg">1 — Your account</h2>
+   462→      <p className="mt-1 text-xs text-white/50">
+   463→        {mode === "signup"
+   464→          ? "Create it now — your plan attaches straight to it."
+   465→          : "Sign in and we'll attach the plan to your account."}
+   466→      </p>
+   467→
+   468→      <form onSubmit={submit} className="mt-5 space-y-4">
+   469→        {mode === "signup" && (
+   470→          <div className="space-y-2">
+   471→            <Label htmlFor="sb-name" className="text-white/80">Name</Label>
+   472→            <div className="relative">
+   473→              <UserIcon className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden />
+   474→              <Input id="sb-name" required value={form.name} autoComplete="name"
+   475→                onChange={(e) => setForm({ ...form, name: e.target.value })}
+   476→                placeholder="Your name"
+   477→                className="pl-9 bg-white/5 border-white/20 text-white placeholder:text-white/30 focus-visible:ring-primary" />
+   478→            </div>
+   479→          </div>
+   480→        )}
+   481→        <div className="space-y-2">
+   482→          <Label htmlFor="sb-email" className="text-white/80">Email</Label>
+   483→          <div className="relative">
+   484→            <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden />
+   485→            <Input id="sb-email" type="email" required value={form.email} autoComplete="email"
+   486→              onChange={(e) => setForm({ ...form, email: e.target.value })}
+   487→              placeholder="you@example.com"
+   488→              className="pl-9 bg-white/5 border-white/20 text-white placeholder:text-white/30 focus-visible:ring-primary" />
+   489→          </div>
+   490→        </div>
+   491→        <div className="space-y-2">
+   492→          <Label htmlFor="sb-pass" className="text-white/80">Password</Label>
+   493→          <div className="relative">
+   494→            <Lock className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden />
+   495→            <Input id="sb-pass" type="password" required value={form.password}
+   496→              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+   497→              onChange={(e) => setForm({ ...form, password: e.target.value })}
+   498→              placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+   499→              className="pl-9 bg-white/5 border-white/20 text-white placeholder:text-white/30 focus-visible:ring-primary" />
+   500→          </div>
+   501→        </div>
+   502→
+   503→        {error && <p className="text-sm text-primary font-semibold" role="alert">{error}</p>}
+   504→
+   505→        <Button type="submit" disabled={busy} className="w-full h-12 bg-primary hover:bg-[#B91C1C] text-white font-bold text-base">
+   506→          {busy ? "One moment…" : mode === "signin" ? "Sign in & continue" : "Create account & continue"}
+   507→          <ArrowRight className="h-4 w-4" aria-hidden />
+   508→        </Button>
+   509→
+   510→        {googleReady && (
+   511→          <>
+   512→            <div className="flex items-center gap-3" aria-hidden>
+   513→              <span className="h-px flex-1 bg-white/15" />
+   514→              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">or</span>
+   515→              <span className="h-px flex-1 bg-white/15" />
+   516→            </div>
+   517→            <a
+   518→              href={`/api/auth/google/start?next=${nextParam}`}
+   519→              className="flex h-12 w-full items-center justify-center gap-3 bg-white text-[#1F1F1F] text-sm font-bold hover:bg-white/90 transition-colors"
+   520→              aria-label="Continue with Google"
+   521→            >
+   522→              <GoogleG />
+   523→              Continue with Google
+   524→            </a>
+   525→          </>
+   526→        )}
+   527→
+   528→        <p className="text-center text-sm text-white/60">
+   529→          {mode === "signup" ? "Already have an account?" : "New to DeYoung?"}{" "}
+   530→          <button
+   531→            type="button"
+   532→            onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); }}
+   533→            className="font-bold text-primary hover:underline underline-offset-4"
+   534→          >
+   535→            {mode === "signup" ? "Sign in" : "Create one"}
+   536→          </button>
+   537→        </p>
+   538→        <p className="text-center text-[11px] text-white/40 leading-relaxed">
+   539→          By continuing you agree to our{" "}
+   540→          <a href="#terms" className="underline underline-offset-2 hover:text-white">Terms</a> and{" "}
+   541→          <a href="#privacy" className="underline underline-offset-2 hover:text-white">Privacy Policy</a>.
+   542→        </p>
+   543→      </form>
+   544→    </div>
+   545→  );
+   546→}
+   547→
+   548→function Notice({ text }: { text: string }) {
+   549→  return <p className="bg-white/5 border border-primary/40 p-4 text-sm text-white/70">{text}</p>;
+   550→}
+   551→
+   552→/** Google "G" — the standard four-colour mark used on sign-in buttons. */
+   553→function GoogleG() {
+   554→  return (
+   555→    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden className="shrink-0">
+   556→      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+   557→      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+   558→      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+   559→      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+   560→    </svg>
+   561→  );
+   562→}
+   563→

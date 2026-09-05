@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/agent.schema.json",
+  "type": "object",
+  "required": [
+    "agent_id",
+    "kind"
+  ],
+  "properties": {
+    "agent_id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "PERSONAL_AI_CLIENT",
+        "CLI_CLIENT",
+        "API_CLIENT",
+        "MCP_CLIENT"
+      ]
+    },
+    "adapter": {
+      "type": "string"
+    }
+  }
+}

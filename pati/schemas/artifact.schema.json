@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pati.local/schemas/artifact.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "type",
+    "size",
+    "checksum",
+    "storage"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stage_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "worker_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "mime_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "location": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "storage": {
+      "enum": [
+        "control_plane",
+        "local_reference"
+      ]
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string"
+    },
+    "retention": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "number"
+    }
+  }
+}
