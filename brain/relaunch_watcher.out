@@ -1,0 +1,2 @@
+[2026-09-06T23:18:50Z] watcher start — polling deyoungsltd/deyoung-v2-s01 every 10min (max 300)
+[2026-09-06T23:18:51Z] canary status: deyoungsltd/deyoung-v2-s01 has status "KernelWorkerStatus.RUNNING" (waited 0min)

@@ -540,3 +540,21 @@ Stage Summary:
 - Fleet auth FULLY RESTORED: vault (0600, gitignored) + offsite backup (VERIFY PASS) + brain loop alive. Nothing token-related touched git (verified via staged-diff scan).
 - Cutover runbook (in vault) remains pending: Railway WORKER_TOKEN set → old token 401.
 - NEXT (per BRAIN.md §4 flag): v10 relaunch needs the SHRUNK/checkpointed render plan (12h-cap blocker) — blind re-push rejected; kernel source re-pullable from Kaggle.
+
+---
+Task ID: 38
+Agent: Super Z (main)
+Task: "Go" — v10 relaunch: analyze v1 failure, build checkpointed v2 kernel, canary + wave 2
+
+Work Log:
+- Re-pulled all 4 kernel sources from Kaggle (source survives server-side; local copy was wiped). Extracted JOBS_B64: 11 surviving prompts (s01-s03, s07-s08, g09-g14). s04-s06, s09-s10, g01-g08 prompts are LOST (not in master spec) -> regeneration task flagged.
+- ROOT CAUSE (v1, 12h GPU / 0 output): 158f@1376x768 joint video+audio jobs on T4 >> the 90-min per-job timeout -> every job aborted before writing mp4; no checkpointing, no cap awareness.
+- Built scripts/h3v2_make.py (checkpointed kernel generator): shrunk jobs (native 768p band, len=80, 4-step turbo; canary uses 960x544x121), NO mid-render abort (6h watchdog), 11h hard-cap skip-guard with adaptive rate calibration, status.json heartbeat every poll, result.json manifest.
+- CANARY pushed: deyoungsltd/deyoung-v2-s01 (s01) ~23:07Z -> RUNNING; brain loop auto-discovered it (FLEET_PREFIXES match) and will auto-harvest.
+- Discovered reserve account names via `kernels list --mine` per token (free): w3=jimcreat, w4/w6=bittrexminingltd, w5=teslaprime(2nd token), w7=youngwilly, w8=wikeyoung5. Vault updated with identities + verification notes.
+- WAVE 2 STAGED (dirs built, NOT pushed): v2-jc-a(jimcreat)=s02+s03, v2-bx-a(bittrex)=g09+g10, v2-yw-a(youngwilly)=g11+g12, v2-wk-a(wikeyoung5)=g13+g14, v2-tp-a(teslaprime)=s07, v2-bx-b(bittrex)=s08. Quota-aware: named accounts ~24 GPU-h burned -> 1-2 jobs max; fresh accounts carry the wave.
+- scripts/v2_wave2_watcher.py launched detached (pid 5078): polls canary, verifies output (s01.mp4 >=1MB + result.json ok) -> ONLY on proof pushes wave 2 with per-account tokens; any failure = GROUND STOP with reason in brain/relaunch.log.
+
+Stage Summary:
+- Autonomous relaunch chain live: canary (running) -> watcher gate -> wave 2 (6 kernels, 10 scenes/clips) -> brain harvest. Conservative ETA: canary output ~02:10Z, wave-2 scenes land over the following ~6h.
+- Committed: h3v2_make.py, v2_wave2_watcher.py, BRAIN.md §4 plan, re-pulled kernel sources (campaign/ untracked by design). Zero secrets in git (staged-diff scans clean).
