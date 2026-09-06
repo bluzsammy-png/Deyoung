@@ -2,14 +2,14 @@
   "fleet": {
     "accounts": {
       "deyoungsltd": {
-        "checked": "2026-09-06T17:34:08Z",
+        "checked": "2026-09-06T18:24:34Z",
         "known_fleet_kernels": [
           "deyoungsltd/deyoung-h3-e",
           "deyoungsltd/deyoung-h3-e2"
         ]
       },
       "teslaprime": {
-        "checked": "2026-09-06T17:34:11Z",
+        "checked": "2026-09-06T18:24:35Z",
         "known_fleet_kernels": [
           "teslaprime/deyoung-h3-f",
           "teslaprime/deyoung-h3-f2",
@@ -20,35 +20,35 @@
     "history": {},
     "kernels": {
       "deyoungsltd/deyoung-h3-e": {
-        "checked": "2026-09-06T17:34:10Z",
+        "checked": "2026-09-06T18:24:35Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
-        "status": "running"
+        "status": "cancelAcknowledged"
       },
       "deyoungsltd/deyoung-h3-e2": {
-        "checked": "2026-09-06T17:34:09Z",
+        "checked": "2026-09-06T18:24:35Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
-        "status": "running"
+        "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-h3-f": {
-        "checked": "2026-09-06T17:34:15Z",
+        "checked": "2026-09-06T18:24:36Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
-        "status": "running"
+        "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-h3-f2": {
-        "checked": "2026-09-06T17:34:14Z",
+        "checked": "2026-09-06T18:24:36Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
-        "status": "running"
+        "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-worker-c": {
-        "checked": "2026-09-06T17:34:15Z",
+        "checked": "2026-09-06T18:24:36Z",
         "fetched": true,
         "files": [
           {
@@ -68,11 +68,13 @@
         "status": "complete"
       }
     },
-    "last_pass": "2026-09-06T17:34:15Z"
+    "last_pass": "2026-09-06T18:24:36Z"
   },
   "ops": {
     "pending_review": [
-      "teslaprime/deyoung-worker-c:fetched"
+      "deyoungsltd/deyoung-h3-e2=cancelAcknowledged",
+      "deyoungsltd/deyoung-h3-e=cancelAcknowledged",
+      "teslaprime/deyoung-h3-f2=cancelAcknowledged"
     ]
   }
 }

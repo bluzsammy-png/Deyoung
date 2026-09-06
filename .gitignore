@@ -79,3 +79,6 @@ brain/*.tmp
 
 # transient tool artifacts
 /tool-results/
+
+# W1 object-storage local driver (dev only — ephemeral, never commit)
+/media/

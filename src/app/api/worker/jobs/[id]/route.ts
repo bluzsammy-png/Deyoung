@@ -1,8 +1,7 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { db } from "@/lib/db";
 import { bad, num, ok, str } from "@/lib/api";
 import { guardWorker } from "@/lib/worker";
+import { buildKey, putObject, sha256, sniffMime } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +10,10 @@ const MAX_UPLOAD = 200 * 1024 * 1024; // matches the plan caps and Railway body 
 /**
  * PATCH /api/worker/jobs/:id — worker-side render pipeline transitions.
  *
- * - action=deliver (multipart): upload the finished mp4. Stored under
- *   public/uploads and served through /api/worker/file/:name so delivery works
- *   identically in dev and in the standalone production bundle.
+ * - action=deliver (multipart): upload the finished mp4. Stored in OBJECT
+ *   STORAGE via the storage adapter (spec §D.1) with an Asset metadata row, and
+ *   served through /api/files/:assetId — survives deploys forever (fixes C-4)
+ *   and is private-by-default (fixes H-4).
  * - action=deliver (JSON): { resultUrl } for workers that host the file
  *   elsewhere (OSS bucket, transfer service).
  * - action=fail: put the job back in a visible "failed" state with a reason —
@@ -50,16 +50,42 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     const gpuMinutes = num(form.get("gpuMinutes"));
     const renderer = (String(form.get("renderer") || "worker") + "").slice(0, 40);
 
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(dir, { recursive: true });
-    const name = `req-${id}.mp4`;
-    await fs.writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
+    // W1: object storage + Asset row (spec §D.1) — no more ephemeral public/uploads
+    const buf = Buffer.from(await file.arrayBuffer());
+    const sniffed = sniffMime(buf);
+    if (!sniffed || sniffed.kind !== "video") {
+      return bad(
+        "Delivered file is not a recognizable video (MP4/WebM/MOV magic bytes required) — refusing to store it"
+      );
+    }
+    let assetId: string;
+    try {
+      const key = buildKey("renders", `req-${id}.mp4`);
+      const put = await putObject(key, buf, sniffed.mime);
+      const asset = await db.asset.create({
+        data: {
+          kind: "video",
+          mime: sniffed.mime,
+          bytes: buf.length,
+          storageKey: put.key,
+          driver: put.driver,
+          isPublic: false,
+          sha256: sha256(buf),
+          createdBy: `worker:${renderer}`,
+        },
+      });
+      assetId = asset.id;
+    } catch (e) {
+      // honest failure — the worker can retry, nothing pretends success (prompt §65)
+      return bad(e instanceof Error ? e.message : "Storage write failed", 503);
+    }
 
     const updated = await db.videoRequest.update({
       where: { id },
       data: {
         status: "done",
-        resultUrl: `/api/worker/file/${name}?v=1`,
+        resultAssetId: assetId,
+        resultUrl: `/api/files/${assetId}`,
         gpuMinutes: gpuMinutes > 0 ? gpuMinutes : request.gpuMinutes,
         fromCache: false,
         notes: `rendered by ${renderer} — delivered ${new Date().toISOString()}`,
@@ -77,10 +103,13 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (action === "deliver") {
     const resultUrl = str(body.resultUrl, 500);
     if (!resultUrl) return bad("resultUrl is required for JSON delivery");
+    // link internal assets so the customer id+email authz on /api/files works
+    const m = /^\/api\/files\/([A-Za-z0-9_-]+)$/.exec(resultUrl);
     const updated = await db.videoRequest.update({
       where: { id },
       data: {
         status: "done",
+        resultAssetId: m ? m[1] : request.resultAssetId,
         resultUrl,
         gpuMinutes:
           body.gpuMinutes !== undefined ? Math.max(0, num(body.gpuMinutes)) : request.gpuMinutes,

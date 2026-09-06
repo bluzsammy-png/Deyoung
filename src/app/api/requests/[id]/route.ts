@@ -17,6 +17,12 @@ export async function GET(req: Request, ctx: Ctx) {
   if (!request || request.email !== email) return bad("Request not found", 404);
 
   const queuePosition = await queuePositionFor(request);
+  // Internal /api/files delivery URLs are private-by-default; the id+email match
+  // the customer just used IS the authorization — append it so the link works.
+  const resultUrl =
+    request.resultAssetId && request.resultUrl.startsWith("/api/files/")
+      ? `${request.resultUrl}?request=${request.id}&email=${encodeURIComponent(email)}`
+      : request.resultUrl;
   return ok({
     request: {
       id: request.id,
@@ -24,7 +30,7 @@ export async function GET(req: Request, ctx: Ctx) {
       seconds: request.seconds,
       resolution: request.resolution,
       status: request.status,
-      resultUrl: request.resultUrl,
+      resultUrl,
       fromCache: request.fromCache,
       createdAt: request.createdAt,
     },
@@ -51,11 +57,14 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if (action === "deliver") {
     const resultUrl = str(body.resultUrl, 500);
     if (!resultUrl) return bad("A result file URL is required to deliver");
+    // admin-delivered internal assets (/api/files/:assetId) get linked for customer authz
+    const m = /^\/api\/files\/([A-Za-z0-9_-]+)$/.exec(resultUrl);
     const updated = await db.videoRequest.update({
       where: { id },
       data: {
         status: "done",
         resultUrl,
+        resultAssetId: m ? m[1] : request.resultAssetId,
         gpuMinutes: body.gpuMinutes !== undefined ? Math.max(0, num(body.gpuMinutes)) : request.gpuMinutes,
       },
     });

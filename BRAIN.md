@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-07 (W0 executed: secrets purged from all history, rate limiting + auth hardening + gitleaks CI shipped; WORKER_TOKEN cutover STAGED awaiting fleet delivery; owner actions listed in §6)
+Last updated: 2026-09-07 (W1 storage_v2 SHIPPED: object storage + Asset model + /api/upload + /api/files; fleet kernels CANCELLED at Kaggle 12h cap — relaunch attempted: secrets purged from all history, rate limiting + auth hardening + gitleaks CI shipped; WORKER_TOKEN cutover STAGED awaiting fleet delivery; owner actions listed in §6)
 
 ---
 
@@ -67,6 +67,7 @@ manifests, credit ledger, Nigerian-law compliance, WCAG 2.2 AA). See tracker in 
   starts `fleet_brain.py --loop 60` with nohup if not already running, records PID in
   `brain/loop.pid`, logs to `brain/loop.out`. Run it EVERY session (sandbox resets kill
   processes but not files). Check alive: `kill -0 $(cat brain/loop.pid)`.
+- **⚠️ Fleet state 2026-09-07 ~17:51Z**: ALL FOUR film kernels →  at 12h01m after push (= Kaggle 12h GPU session cap), outputs EMPTY — the v10 renders were lost, not completed. Recovery:  → re- re-runs the identical kernel source (source survives on Kaggle; the local kernel dir was lost in the sandbox reset). If the cap kills them again, the per-scene launch plan (each scene its own kernel, parallel, resumable) becomes mandatory. GPU quota check: Kaggle 30 GPU-h/week per account — cancelled runs consumed ~12h each; relaunch may be quota-blocked.
 - **Fleet state 2026-09-06 ~17:05Z**: `deyoungsltd/deyoung-h3-e`, `deyoung-h3-e2`, `teslaprime/deyoung-h3-f`, `deyoung-h3-f2` — **status RUNNING** since ~05:50Z (~11h; at/above the usual GPU session cap — completion or timeout imminent). Outputs: empty so far. `teslaprime/deyoung-worker-c` = COMPLETE (Sep 5 PATI DB-worker run; scripts archived to `campaign/v10/teslaprime__deyoung-worker-c/`). Monitor with `python3 scripts/fleet_brain.py`.
 - **Film v10 plan** (from the pre-reset session, partially lost): 10 scenes `s01`–`s10`
   (MiniMax H3 on Kaggle T4, 2–9h render window) + 14 gallery clips `g01`–`g14`. When

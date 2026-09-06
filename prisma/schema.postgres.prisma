@@ -163,10 +163,28 @@ model VideoRequest {
   queuePriority  Int      @default(0)
   status         String   @default("queued") // queued | rendering | done | failed | cancelled
   resultUrl      String   @default("")
+  resultAssetId  String?
+  resultFor      Asset?   @relation(fields: [resultAssetId], references: [id])
   gpuMinutes     Float    @default(0)
   dedupKey       String   @default("") // sha256(prompt+params) — identical renders are reused
   fromCache      Boolean  @default(false)
   notes          String   @default("")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// W1 storage_v2 (spec D.1/E.6): metadata for every stored media object.
+// Bytes live in object storage (Supabase Storage or local dev dir) — never in Postgres.
+model Asset {
+  id         String   @id @default(cuid())
+  kind       String
+  mime       String
+  bytes      Int
+  storageKey String   @unique
+  driver     String
+  isPublic   Boolean  @default(false)
+  sha256     String?
+  createdBy  String   @default("admin")
+  resultFor  VideoRequest[]
+  createdAt  DateTime @default(now())
 }

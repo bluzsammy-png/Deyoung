@@ -453,3 +453,29 @@ Stage Summary:
 - W0 items 1, 2 (staged), 3, 4 (rate-limit + logging), 5 SHIPPED; force-push + AgentMail revocation + admin password change remain OWNER actions (no PAT by design)
 - Repo history contains zero real secrets; CI now blocks reintroduction
 - Next: W1 storage_v2 (object storage + signed URLs + /api/upload + /api/files) once owner force-pushes; fleet watch continues automatically
+
+---
+Task ID: 35
+Agent: main (Super Z)
+Task: Owner uploaded deyoung-master-implementation-prompt.md ("read the file and follow the prompt") — execute markdown.md.txt implementation; this session = W1 storage_v2 (spec §D.1/§E.6)
+
+Work Log:
+- Read the full 2211-line implementation prompt (66 numbered directives; phases 1–9; "BUILD THE REAL SYSTEM" / no fake states / honest blockers)
+- W1 shipped — storage_v2:
+  * Prisma: Asset model + VideoRequest.resultAssetId relation added to BOTH schemas (caught + fixed a self-inflicted overwrite bug during the sync); db push green (sqlite dev), postgres schema ready for deploy-time push
+  * src/lib/storage.ts: StorageAdapter — supabase driver (REST: ensure-bucket/put/sign/delete, private bucket deyoung-media) + local dev driver (./media, gitignored, loud production warning); magic-byte MIME sniffing (jpg/png/webp/gif/mp4/webm/mov/mp3/wav/ogg); REQUIRES CONFIGURATION honest failure when supabase driver lacks envs (verified live)
+  * POST /api/upload (admin): magic-byte sniffing (client content-type is a LIED about in tests and correctly ignored), size caps image 8MB/video 200MB/audio 50MB, object storage, Asset row, returns {assetId,url} the admin UI already expects (C-5 closed)
+  * GET/HEAD /api/files/:assetId: private-by-default authz (admin session OR customer id+email match — the site's existing trust model), supabase → 302 to 10-min signed URL, local → Range-capable streaming (206 verified); public site imagery open with immutable caching
+  * Worker deliver path rewritten through the adapter: sniff-must-be-video, Asset row (createdBy worker:<name>), resultUrl=/api/files/:id, resultAssetId linked — KILLS C-4 (deploy wipe) + H-4 (unauthenticated /api/worker/file); legacy route kept with DEPRECATED banner
+  * requests/[id] GET appends customer authz params to internal delivery URLs; admin PATCH deliver + worker JSON deliver link resultAssetId for internal URLs
+- QA (scripts/qa_storage_w1.sh + qa_worker_data.mjs asset/resulturl commands):
+  * LIVE-verified vs the running dev server + isolated server runs: worker deliver → object storage → Asset → 404 without params → 200 with id+email → video/mp4 → Range 206 → admin session allowed (6/6, reproduced 3×)
+  * Unit: sniffMime 8/8 (png/jpeg/gif/webp/mp4/webm/mov/text-reject)
+  * ADMIN upload HTTP test: blocked by sandbox — next dev ignores .env/.env.development.local/inline env overrides (verified 3 ways incl. .env swap), parallel next dev boots corrupt the shared Turbopack cache (SST errors) and one OOM-killed the main server (restarted via setsid; healthy). Blocker class: THIRD-PARTY/INFRASTRUCTURE (sandbox), not code — admin path uses the exact primitives proven live (guardAdmin + sniff + putObject + asset.create)
+  * Sandbox incidents during QA: killed the system :3000 dev server (was wedged on corrupted cache; restarted via setsid — healthy); left a sandbox-only WORKER_TOKEN in .env (dev-only; prod token lives in Railway + vault)
+- Fleet: ALL 4 film kernels → cancelAcknowledged at 12h01m post-push (Kaggle 12h session cap), outputs EMPTY — v10 renders lost. Recovery runbook added to BRAIN.md (kernels pull → re-push re-runs identical source; per-scene relaunch plan if the cap repeats)
+
+Stage Summary:
+- C-4 and C-5 CLOSED in code (pending deploy); H-4 closed for new deliveries; honest REQUIRES CONFIGURATION states shipped per prompt §6
+- Deliverables for prompt §63 (partial, this wave): working upload/delivery chain, updated BRAIN.md/worklog; docs updates + relaunch attempt next
+- Remaining W1 items: owner adds SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on Railway + STORAGE_DRIVER=supabase (REQUIRES OWNER INPUT — the service key is not stored anywhere), then set STORAGE_DRIVER; until then deliveries use the local driver (works but ephemeral — the honest warning fires in prod logs)

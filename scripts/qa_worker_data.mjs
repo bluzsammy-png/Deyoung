@@ -27,9 +27,31 @@ if (cmd === "seed") {
   console.log(JSON.stringify({ subscriptionId: sub.id, jobIds: jobs.map(j => j.id) }));
 } else if (cmd === "verify") {
   const req = await db.videoRequest.findUnique({ where: { id: reqId } });
-  console.log(JSON.stringify({ status: req?.status, resultUrl: req?.resultUrl, gpuMinutes: req?.gpuMinutes, notes: req?.notes }));
+  console.log(JSON.stringify({ status: req?.status, resultUrl: req?.resultUrl, resultAssetId: req?.resultAssetId, gpuMinutes: req?.gpuMinutes, notes: req?.notes }));
+} else if (cmd === "asset") {
+  const a = await db.asset.findUnique({ where: { id: reqId }, select: { mime: true, kind: true, driver: true } });
+  console.log(a ? [a.mime, a.kind, a.driver].join("|") : "MISSING");
+} else if (cmd === "resulturl") {
+  // W1: internal deliveries are email-scoped — return the URL with authz params
+  const req = await db.videoRequest.findUnique({ where: { id: reqId } });
+  if (!req) throw new Error("request not found");
+  const url = req.resultAssetId && req.resultUrl.startsWith("/api/files/")
+    ? `${req.resultUrl}?request=${req.id}&email=${encodeURIComponent(req.email)}`
+    : req.resultUrl;
+  console.log(url);
 } else if (cmd === "cleanup") {
   const req = await db.videoRequest.findUnique({ where: { id: reqId } });
+  if (req?.resultAssetId) {
+    const asset = await db.asset.findUnique({ where: { id: req.resultAssetId } });
+    if (asset) {
+      if (asset.driver === "local") {
+        const { rm } = await import("node:fs/promises");
+        const path = await import("node:path");
+        await rm(path.join(process.cwd(), "media", asset.storageKey), { force: true });
+      }
+      await db.asset.delete({ where: { id: asset.id } });
+    }
+  }
   if (req) await db.videoRequest.delete({ where: { id: reqId } });
   const subs = await db.subscription.findMany({ where: { email } });
   for (const s of subs) await db.subscription.delete({ where: { id: s.id } });

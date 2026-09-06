@@ -1,3 +1,11 @@
+/**
+ * DEPRECATED (W1, spec §D.1): superseded by /api/files/:assetId, which serves
+ * object-storage-backed assets with authz. This route still streams legacy
+ * public/uploads files referenced by old resultUrl rows; it serves ONLY
+ * *.mp4 names from that directory and is unauthenticated by design for
+ * backwards compatibility. Old rows are ephemeral (wiped per deploy) — do not
+ * build new integrations on this endpoint.
+ */
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";

@@ -34,8 +34,11 @@ python3 workers/deyoung_worker.py --site $BASE --token $WORKER_TOKEN --renderer 
 
 echo "[5] verify job1 in DB + download…"
 node scripts/qa_worker_data.mjs verify "$EMAIL" "$JOB1"
-curl -s -o /tmp/qa-delivered.mp4 -w "    file GET: %{http_code} (%{size_download} bytes)\n" "$BASE/api/worker/file/req-$JOB1.mp4"
-curl -s -o /dev/null -w "    range GET: %{http_code}\n" -H "Range: bytes=0-1023" "$BASE/api/worker/file/req-$JOB1.mp4"
+# W1: deliveries now land in object storage, resultUrl = /api/files/:assetId (email-scoped)
+URL1=$(node scripts/qa_worker_data.mjs resulturl "$EMAIL" "$JOB1")
+echo "    resultUrl: $URL1"
+curl -s -o /tmp/qa-delivered.mp4 -w "    file GET: %{http_code} (%{size_download} bytes)\n" "$BASE$URL1"
+curl -s -o /dev/null -w "    range GET: %{http_code}\n" -H "Range: bytes=0-1023" "$BASE$URL1"
 ffprobe -v error -show_entries stream=codec_type,codec_name -of csv=p=0 /tmp/qa-delivered.mp4 | sed 's/^/    stream: /'
 
 echo "[6] second cycle picks job2…"
