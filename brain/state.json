@@ -2,14 +2,14 @@
   "fleet": {
     "accounts": {
       "deyoungsltd": {
-        "checked": "2026-09-06T16:45:10Z",
+        "checked": "2026-09-06T16:50:06Z",
         "known_fleet_kernels": [
           "deyoungsltd/deyoung-h3-e",
           "deyoungsltd/deyoung-h3-e2"
         ]
       },
       "teslaprime": {
-        "checked": "2026-09-06T16:45:10Z",
+        "checked": "2026-09-06T16:50:06Z",
         "known_fleet_kernels": [
           "teslaprime/deyoung-h3-f",
           "teslaprime/deyoung-h3-f2",
@@ -20,35 +20,35 @@
     "history": {},
     "kernels": {
       "deyoungsltd/deyoung-h3-e": {
-        "checked": "2026-09-06T16:45:10Z",
+        "checked": "2026-09-06T16:50:06Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "running"
       },
       "deyoungsltd/deyoung-h3-e2": {
-        "checked": "2026-09-06T16:45:10Z",
+        "checked": "2026-09-06T16:50:06Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "running"
       },
       "teslaprime/deyoung-h3-f": {
-        "checked": "2026-09-06T16:45:11Z",
+        "checked": "2026-09-06T16:50:07Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "running"
       },
       "teslaprime/deyoung-h3-f2": {
-        "checked": "2026-09-06T16:45:11Z",
+        "checked": "2026-09-06T16:50:07Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "running"
       },
       "teslaprime/deyoung-worker-c": {
-        "checked": "2026-09-06T16:45:11Z",
+        "checked": "2026-09-06T16:50:07Z",
         "fetched": true,
         "files": [
           {
@@ -68,7 +68,7 @@
         "status": "complete"
       }
     },
-    "last_pass": "2026-09-06T16:45:11Z"
+    "last_pass": "2026-09-06T16:50:07Z"
   },
   "ops": {
     "pending_review": [
