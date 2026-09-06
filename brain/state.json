@@ -1,54 +1,73 @@
 {
   "fleet": {
     "accounts": {
+      "bittrexminingltd": {
+        "checked": "2026-09-06T23:09:28Z",
+        "known_fleet_kernels": [
+          "bittrexminingltd/deyoung-h3-b",
+          "bittrexminingltd/deyoung-h3-b2",
+          "bittrexminingltd/deyoung-worker-b"
+        ]
+      },
       "deyoungsltd": {
-        "checked": "2026-09-06T23:00:57Z",
+        "checked": "2026-09-06T23:09:14Z",
         "known_fleet_kernels": [
           "deyoungsltd/deyoung-h3-e",
-          "deyoungsltd/deyoung-h3-e2"
+          "deyoungsltd/deyoung-h3-e2",
+          "deyoungsltd/deyoung-v2-s01"
+        ]
+      },
+      "jimcreat": {
+        "checked": "2026-09-06T23:09:17Z",
+        "known_fleet_kernels": [
+          "jimcreat/deyoung-diag",
+          "jimcreat/deyoung-h3-a",
+          "jimcreat/deyoung-h3-a-canary",
+          "jimcreat/deyoung-h3-a2",
+          "jimcreat/deyoung-worker-a"
         ]
       },
       "teslaprime": {
-        "checked": "2026-09-06T23:00:58Z",
+        "checked": "2026-09-06T23:09:26Z",
         "known_fleet_kernels": [
           "teslaprime/deyoung-h3-f",
           "teslaprime/deyoung-h3-f2",
           "teslaprime/deyoung-worker-c"
         ]
+      },
+      "wikeyoung5": {
+        "checked": "2026-09-06T23:09:30Z",
+        "known_fleet_kernels": [
+          "wikeyoung5/deyoung-h3-d",
+          "wikeyoung5/deyoung-h3-d2"
+        ]
+      },
+      "youngwilly": {
+        "checked": "2026-09-06T23:09:29Z",
+        "known_fleet_kernels": [
+          "youngwilly/deyoung-h3-c",
+          "youngwilly/deyoung-h3-c2"
+        ]
       }
     },
     "history": {},
     "kernels": {
-      "deyoungsltd/deyoung-h3-e": {
-        "checked": "2026-09-06T23:00:58Z",
+      "bittrexminingltd/deyoung-h3-b": {
+        "checked": "2026-09-06T23:09:28Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
-      "deyoungsltd/deyoung-h3-e2": {
-        "checked": "2026-09-06T23:00:58Z",
+      "bittrexminingltd/deyoung-h3-b2": {
+        "checked": "2026-09-06T23:09:28Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
-      "teslaprime/deyoung-h3-f": {
-        "checked": "2026-09-06T23:00:59Z",
-        "fetched": false,
-        "files": [],
-        "lastRunTime": null,
-        "status": "cancelAcknowledged"
-      },
-      "teslaprime/deyoung-h3-f2": {
-        "checked": "2026-09-06T23:00:58Z",
-        "fetched": false,
-        "files": [],
-        "lastRunTime": null,
-        "status": "cancelAcknowledged"
-      },
-      "teslaprime/deyoung-worker-c": {
-        "checked": "2026-09-06T23:00:59Z",
+      "bittrexminingltd/deyoung-worker-b": {
+        "checked": "2026-09-06T23:09:29Z",
         "fetched": true,
         "files": [
           {
@@ -66,15 +85,168 @@
         ],
         "lastRunTime": null,
         "status": "complete"
+      },
+      "deyoungsltd/deyoung-h3-e": {
+        "checked": "2026-09-06T23:09:15Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "deyoungsltd/deyoung-h3-e2": {
+        "checked": "2026-09-06T23:09:15Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "deyoungsltd/deyoung-v2-s01": {
+        "checked": "2026-09-06T23:09:15Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "running"
+      },
+      "jimcreat/deyoung-diag": {
+        "checked": "2026-09-06T23:09:17Z",
+        "fetched": true,
+        "files": [],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "jimcreat/deyoung-h3-a": {
+        "checked": "2026-09-06T23:09:17Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "jimcreat/deyoung-h3-a-canary": {
+        "checked": "2026-09-06T23:09:18Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "comfy.log"
+          },
+          {
+            "bytes": null,
+            "name": "result.json"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "jimcreat/deyoung-h3-a2": {
+        "checked": "2026-09-06T23:09:18Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "jimcreat/deyoung-worker-a": {
+        "checked": "2026-09-06T23:09:20Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "__pycache__/deyoung_worker.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_db_worker.py"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_worker.py"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "teslaprime/deyoung-h3-f": {
+        "checked": "2026-09-06T23:09:27Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "teslaprime/deyoung-h3-f2": {
+        "checked": "2026-09-06T23:09:27Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "teslaprime/deyoung-worker-c": {
+        "checked": "2026-09-06T23:09:27Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "__pycache__/deyoung_worker.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_db_worker.py"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_worker.py"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "wikeyoung5/deyoung-h3-d": {
+        "checked": "2026-09-06T23:09:30Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "wikeyoung5/deyoung-h3-d2": {
+        "checked": "2026-09-06T23:09:30Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "youngwilly/deyoung-h3-c": {
+        "checked": "2026-09-06T23:09:29Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "youngwilly/deyoung-h3-c2": {
+        "checked": "2026-09-06T23:09:29Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
       }
     },
-    "last_pass": "2026-09-06T23:00:59Z"
+    "last_pass": "2026-09-06T23:09:30Z"
   },
   "ops": {
     "pending_review": [
-      "deyoungsltd/deyoung-h3-e2=cancelAcknowledged",
-      "deyoungsltd/deyoung-h3-e=cancelAcknowledged",
-      "teslaprime/deyoung-h3-f2=cancelAcknowledged"
+      "bittrexminingltd/deyoung-h3-b2=cancelAcknowledged",
+      "bittrexminingltd/deyoung-h3-b=cancelAcknowledged",
+      "bittrexminingltd/deyoung-worker-b:fetched",
+      "bittrexminingltd/deyoung-worker-b=complete",
+      "jimcreat/deyoung-diag:empty-output",
+      "jimcreat/deyoung-diag=complete",
+      "jimcreat/deyoung-h3-a-canary:fetched",
+      "jimcreat/deyoung-h3-a-canary=complete",
+      "jimcreat/deyoung-h3-a2=cancelAcknowledged",
+      "jimcreat/deyoung-h3-a=cancelAcknowledged",
+      "jimcreat/deyoung-worker-a:fetched",
+      "jimcreat/deyoung-worker-a=complete",
+      "wikeyoung5/deyoung-h3-d2=cancelAcknowledged",
+      "wikeyoung5/deyoung-h3-d=cancelAcknowledged",
+      "youngwilly/deyoung-h3-c2=cancelAcknowledged",
+      "youngwilly/deyoung-h3-c=cancelAcknowledged"
     ]
   }
 }
