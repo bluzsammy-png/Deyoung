@@ -11,6 +11,10 @@ const SECRET_FILE = path.join(process.cwd(), "db", ".auth-secret");
 
 /** Persisted per-install secret so sessions survive restarts. */
 function getSecret(): string {
+  // W0 fix (C-3/§F.1): never fall back to a public deterministic value — that let
+  // anyone forge admin sessions. Order: env → per-install file → fail closed.
+  const env = process.env.AUTH_SECRET;
+  if (env && env.length >= 32) return env;
   try {
     if (fs.existsSync(SECRET_FILE)) {
       const s = fs.readFileSync(SECRET_FILE, "utf8").trim();
@@ -21,8 +25,9 @@ function getSecret(): string {
     fs.writeFileSync(SECRET_FILE, s, { mode: 0o600 });
     return s;
   } catch {
-    // last-resort deterministic fallback (still not guessable without db access)
-    return crypto.createHash("sha256").update("deyoung-fallback-secret").digest("hex");
+    throw new Error(
+      "AUTH_SECRET env var must be set (>=32 chars) when the filesystem is not writable — refusing to run with a guessable session secret"
+    );
   }
 }
 
@@ -85,7 +90,9 @@ export async function createSession(admin: { id: string; email: string }): Promi
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false, // behind tunnel/https in production; lax keeps it simple in preview
+    // W0 fix (§F.1): HTTPS-only cookie in production (site is always behind TLS on
+    // Railway/custom domain); plain HTTP localhost dev keeps working.
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_TTL_SEC,
   });
@@ -112,20 +119,40 @@ export async function isAdmin(): Promise<boolean> {
 /* ---------- admin bootstrap ---------- */
 
 export const DEFAULT_ADMIN_EMAIL = "admin@deyoung.site";
-export const DEFAULT_ADMIN_PASSWORD = "deyoung123";
+
+/**
+ * W0 fix (§F.1): the old hardcoded "deyoung123" bootstrap password was public in the
+ * repo. Bootstrap password now comes from ADMIN_BOOTSTRAP_PASSWORD env, or is
+ * generated randomly and printed ONCE to the server log on first boot.
+ */
+function bootstrapPassword(): string | null {
+  const env = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  if (env && env.length >= 10) return env;
+  return null;
+}
 
 export async function ensureAdmin(): Promise<void> {
   const count = await db.admin.count();
   if (count === 0) {
+    const fromEnv = bootstrapPassword();
+    const password = fromEnv ?? crypto.randomBytes(12).toString("base64url");
     await db.admin.create({
       data: {
         email: DEFAULT_ADMIN_EMAIL,
-        passwordHash: hashPassword(DEFAULT_ADMIN_PASSWORD),
+        passwordHash: hashPassword(password),
       },
     });
+    if (!fromEnv) {
+      // shown once in deploy logs so the owner can claim the account, then change it
+      console.log(
+        `[admin-bootstrap] first admin created — email: ${DEFAULT_ADMIN_EMAIL} password: ${password} (change it in Security immediately)`
+      );
+    }
   }
 }
 
 export function isDefaultPassword(stored: string): boolean {
-  return verifyPassword(DEFAULT_ADMIN_PASSWORD, stored);
+  // only "default" when the operator opted into an env bootstrap password
+  const fromEnv = bootstrapPassword();
+  return fromEnv !== null && verifyPassword(fromEnv, stored);
 }

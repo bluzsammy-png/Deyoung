@@ -1,8 +1,11 @@
 import { db } from "@/lib/db";
 import { bad, ok, str } from "@/lib/api";
 import { sendOwnerEmail } from "@/lib/agentmail";
+import { guard } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+  const limited = guard(req, "submit");
+  if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const name = str(body.name, 120);
   const email = str(body.email, 200);

@@ -1,8 +1,11 @@
 import { db } from "@/lib/db";
 import { bad, ok, str } from "@/lib/api";
 import { createSession, ensureAdmin, verifyPassword } from "@/lib/auth";
+import { guard } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+  const limited = guard(req, "login");
+  if (limited) return limited;
   try {
     const body = await req.json().catch(() => ({}));
     const email = str(body.email, 200).toLowerCase();

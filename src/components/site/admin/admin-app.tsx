@@ -213,8 +213,8 @@ function LoginForm({ onDone }: { onDone: () => void }) {
             </Button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground text-center">
-            First time? Log in with <strong>admin@deyoung.site</strong> / <strong>deyoung123</strong> — then
-            change the password in Security immediately.
+            Access is restricted. The owner account is created on first boot — its
+            credentials are shown once in the deploy log and never published here.
           </p>
         </div>
         <p className="mt-6 text-center">

@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-07 (vault backup re-verified PASS via CLI; brain loop relaunched; fleet check 17:0xZ)
+Last updated: 2026-09-07 (W0 executed: secrets purged from all history, rate limiting + auth hardening + gitleaks CI shipped; WORKER_TOKEN cutover STAGED awaiting fleet delivery; owner actions listed in §6)
 
 ---
 
@@ -101,7 +101,18 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 | 2 | Existing-code audit (stack, routes, auth, payments, worker plane, content/claims, trackers, a11y, tests) | **DONE** (5 CRITICAL + 10 HIGH + 12 MEDIUM findings, incl. leaked AgentMail key + WORKER_TOKEN in git-tracked files — see spec §A.2) |
 | 3 | Write `markdown.md.txt` (56 sections incl. research tables, NOT VERIFIED / LEGAL REVIEW REQUIRED discipline) | **DONE** — deliverable at `download/markdown.md.txt` + repo-root copy; 720 lines, all 56 items mapped in §I.6 |
 | 4 | Validate spec against codebase (prompt §75 checklist) | **DONE** (§I.1 self-audit) |
-| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | PENDING — **start with W0 security emergencies (spec §I.4 days 1–3): rotate + purge the two leaked secrets** |
+| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | **W0 EXECUTED 2026-09-07** (see below) — W1 storage_v2 + RateLimit table next |
+
+**W0 state (2026-09-07, Task 34):**
+- ✅ C-1/C-2 secrets purged from ALL 33 commits (git filter-repo; verified 0 hits, full-history blob scan). Working tree de-leaked (agentmail_setup.py env-only, qa_worker_plane.sh env-based, worklog redacted, tool-results/ untracked).
+- ⚠️ **OWNER ACTION: force-push** — local history is rewritten; pushes need the owner's PAT (none stored by design). After push, GitHub shows the purged history; old key revocation at agentmail.to still required.
+- ✅ WORKER_TOKEN rotation STAGED: new token in vault `worker_plane.current_token` (+ refreshed Kaggle backup). Cutover ONLY after the 4 film kernels deliver (they hold the old token): set on Railway → verify old gets 401.
+- ✅ Login: public creds hint removed; bootstrap password = `ADMIN_BOOTSTRAP_PASSWORD` env or random-once-in-deploy-log; session secret = `AUTH_SECRET` env → file → **fail closed** (no public fallback); cookie `secure` in production.
+- ✅ Rate limiting v1 (`src/lib/ratelimit.ts`, in-memory, §F.2 numbers): login 5/15m, contact/booking/subscription 5/h, video-request 10/h, verify 10/h — 7 endpoints wired, 429+Retry-After. W1: Postgres-backed table + stream limits.
+- ✅ Prod Prisma query logging OFF (F.6). ✅ gitleaks CI (`.github/workflows/secret-scan.yml`).
+- ⏳ C-5 /api/upload: still ghost (404s, no exposure) — real implementation lands with storage_v2 (days 4–7 per spec).
+- ⏳ Pre-existing tsc errors (21: book-view 12, admin-settings 4, misc) — untouched by W0, fix in W1.
+- **OWNER env checklist for next deploy**: `AUTH_SECRET` (≥32 chars), `ADMIN_BOOTSTRAP_PASSWORD` (≥10), then after fleet delivery the WORKER_TOKEN cutover; owner changes admin password in Security panel.
 
 Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root copy).
 

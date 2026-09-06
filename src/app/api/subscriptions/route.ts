@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { bad, guardAdmin, ok, str } from "@/lib/api";
+import { guard } from "@/lib/ratelimit";
 
 /** Admin: list every subscription. Public: create a pending subscription (checkout step 1). */
 export async function GET() {
@@ -10,6 +11,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const limited = guard(req, "submit");
+  if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const name = str(body.name, 120);
   const email = str(body.email, 200).toLowerCase();

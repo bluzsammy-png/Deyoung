@@ -2,9 +2,12 @@ import { db } from "@/lib/db";
 import { bad, guardAdmin, ok, num, str } from "@/lib/api";
 import { getSettings } from "@/lib/settings";
 import { sendOwnerEmail } from "@/lib/agentmail";
+import { guard } from "@/lib/ratelimit";
 
 /** Public: create a booking (used by the checkout flow). */
 export async function POST(req: Request) {
+  const limited = guard(req, "submit");
+  if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const name = str(body.name, 120);
   const email = str(body.email, 200);

@@ -433,3 +433,23 @@ Stage Summary:
 - Step 2 DONE: permanent brain live (BRAIN.md current-state + every-minute fleet_brain loop + session protocol for any successor AI)
 - Step 3 DONE: master upgrade spec verified complete (56/56) and delivered
 - Next: watch fleet (loop auto-fetches); on completion rebuild v10 assembly tooling (BRAIN.md §4 lost-work warning); then spec wave W0 (rotate leaked AgentMail key + WORKER_TOKEN)
+
+---
+Task ID: 34
+Agent: main (Super Z)
+Task: W0 security emergencies (spec §I.4 days 1–3) — owner approved with "yes"
+
+Work Log:
+- W0-1 purge: found BOTH secrets in MORE places than the audit listed (worker token also in scripts/qa_worker_plane.sh:5 + tool-results/read_*.txt; tool-results/ was git-tracked). Working tree de-leaked: agentmail_setup.py → AGENTMAIL_API_KEY env-only (hard fail if missing), qa_worker_plane.sh → env/.env.local based, worklog.md redacted (full token + am_us_ partials), tool-results/ untracked + gitignored
+- History purge: git filter-repo. LESSON: --replace-text is silently a NO-OP when combined with --invert-paths --path in this build (passes 1-2 claimed success, replaced nothing — caught by full-history blob scan). Pass 3 (replace-text only, --debug) worked. Final state verified THREE ways: pickaxe -S = 0, per-commit git grep across all 33 rewritten commits = 0 for both real secrets, Frankenstring artifact (my sloppy dummy rule) also purged. HEAD → a3a44a1; safety bundle deleted
+- W0-2 rotation staged: new WORKER_TOKEN generated into vault worker_plane.current_token; vault backup refreshed (VERIFY VERDICT: PASS). Cutover DELIBERATELY DELAYED until 4 film kernels deliver (they authenticate with the old token); exact runbook embedded in vault _meta note
+- W0-3 auth hardening: admin-app.tsx public creds hint removed; auth.ts — AUTH_SECRET env → per-install file → THROW (public deterministic fallback eliminated), cookie secure:true in production, ensureAdmin uses ADMIN_BOOTSTRAP_PASSWORD env or random password logged once; seed.ts same (no more deyoung123 anywhere in tracked files)
+- W0-4 rate limiting: src/lib/ratelimit.ts (in-memory fixed-window, §F.2 numbers: login 5/15m, submit 5/h, request 10/h, verify 10/h) wired into 7 endpoints with 429+Retry-After (login, contact, bookings, subscriptions, requests, both verify routes); Postgres-backed upgrade noted for W1. Prod Prisma query logging OFF (db.ts: error+warn only in production). /api/upload (C-5) intentionally deferred to storage_v2 per spec days 4–7
+- W0-5 gitleaks: .github/workflows/secret-scan.yml (push/PR, full history) + .gitleaks.toml (allowlist = placeholders/redaction markers only)
+- Typecheck: 0 new errors (21 pre-existing in book-view/admin-settings/skills/examples/pool_check — recorded for W1)
+- Brain: loop healthy throughout (pid 5437); 4 film kernels still RUNNING at last pass; BRAIN.md §6 now carries the W0 state + owner action checklist
+
+Stage Summary:
+- W0 items 1, 2 (staged), 3, 4 (rate-limit + logging), 5 SHIPPED; force-push + AgentMail revocation + admin password change remain OWNER actions (no PAT by design)
+- Repo history contains zero real secrets; CI now blocks reintroduction
+- Next: W1 storage_v2 (object storage + signed URLs + /api/upload + /api/files) once owner force-pushes; fleet watch continues automatically

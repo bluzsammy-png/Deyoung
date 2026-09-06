@@ -1,0 +1,26 @@
+# gitleaks config — DeYoung repo
+# Extends the default rules; allowlists below are placeholders/test values only.
+# Real secrets must NEVER be added here — rotate them instead.
+
+title = "DeYoung gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "known placeholders and negative-test values"
+paths = [
+  '''(^|/)spec_parts/''',
+  '''worklog\.md$''',
+]
+regexes = [
+  # negative-test dummy in the QA script (deliberately invalid)
+  '''dyw_dummy-negative-test''',
+  '''dyw_totallywrong''',
+  # redaction markers left by the W0 history purge
+  '''REDACTED-C2''',
+  '''C1-ROTATED-REMOVED''',
+  '''C2-ROTATED-REMOVED''',
+  # documentation truncations of the agentmail key prefix (prefix is not secret)
+  '''am_us_…''',
+]

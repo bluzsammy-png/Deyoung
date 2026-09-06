@@ -17,12 +17,16 @@ function hashPassword(password: string): string {
 
 async function main() {
   // ---- owner account ----
+  // W0 fix (§F.1): never seed a public default password. Bootstrap password comes
+  // from ADMIN_BOOTSTRAP_PASSWORD env (>=10 chars) or is generated + printed once.
   const adminCount = await prisma.admin.count();
   if (adminCount === 0) {
+    const fromEnv = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+    const password = fromEnv && fromEnv.length >= 10 ? fromEnv : crypto.randomBytes(12).toString("base64url");
     await prisma.admin.create({
-      data: { email: "admin@deyoung.site", passwordHash: hashPassword("deyoung123") },
+      data: { email: "admin@deyoung.site", passwordHash: hashPassword(password) },
     });
-    console.log("seed: admin admin@deyoung.site / deyoung123");
+    console.log(`seed: admin admin@deyoung.site / ${password} (change it in Security immediately)`);
   }
 
   // ---- settings ----

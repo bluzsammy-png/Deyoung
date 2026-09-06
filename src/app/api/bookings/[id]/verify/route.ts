@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { bad, ok, str } from "@/lib/api";
 import { getSettings } from "@/lib/settings";
+import { guard } from "@/lib/ratelimit";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -11,6 +12,8 @@ type Ctx = { params: Promise<{ id: string }> };
  * manually from the dashboard instead.
  */
 export async function POST(req: Request, ctx: Ctx) {
+  const limited = guard(req, "verify");
+  if (limited) return limited;
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
   const reference = str(body.reference, 200);

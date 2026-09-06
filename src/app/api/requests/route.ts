@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { bad, guardAdmin, num, ok, str } from "@/lib/api";
+import { guard } from "@/lib/ratelimit";
 import {
   RESOLUTION_RANK,
   activeSubForEmail,
@@ -17,6 +18,8 @@ import {
  * Admin GET: the full render queue.
  */
 export async function POST(req: Request) {
+  const limited = guard(req, "request");
+  if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const email = str(body.email, 200).toLowerCase();
   const prompt = str(body.prompt, 4000);
