@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-06 (master upgrade specification DELIVERED; fleet check 17:05Z)
+Last updated: 2026-09-07 (vault backup re-verified PASS via CLI; brain loop relaunched; fleet check 17:0xZ)
 
 ---
 
@@ -37,12 +37,20 @@ manifests, credit ledger, Nigerian-law compliance, WCAG 2.2 AA). See tracker in 
 
 - **Local vault**: `workers/secrets/kaggle_tokens.json` (chmod 600, gitignored via `/workers/secrets/`).
 - **Off-site backup (durable across sandbox resets)**: **private Kaggle dataset
-  `deyoungsltd/deyoung-worker-vault`** (verified private 2026-09-06: foreign token → 403).
+  `deyoungsltd/deyoung-worker-vault`**. Re-verified 2026-09-07: owner-list found,
+  round-trip sha256 content MATCH, foreign token → blocked (404).
+- **⚠️ API lesson (2026-09-07)**: raw v1 REST `datasets/list?user=` and `datasets/view`
+  return empty/404 **even for the owner** with Bearer KGAT auth — they give FALSE negatives.
+  The official `kaggle` CLI is authoritative for dataset ops. CLI 2.2.4 auth = file
+  `~/.kaggle/access_token` (KGAT), NOT `KAGGLE_KEY`. `scripts/vault_backup.py` now drives
+  the CLI and self-heals the access_token file; `--verify` exits 0 only on PASS.
 - **Recovery if vault file is missing** (sandbox reset):
-  1. `pip install kaggle` → `KAGGLE_API_TOKEN=<any valid token> kaggle datasets files deyoungsltd/deyoung-worker-vault`
-  2. `kaggle datasets download deyoungsltd/deyoung-worker-vault` → unzip → restore to `workers/secrets/kaggle_tokens.json`, `chmod 600`.
-  3. If ALL tokens are lost/rotated: owner must regenerate at kaggle.com → Settings → API → "Create New Token", then re-create vault + backup dataset.
-- **Refresh the backup after any vault edit**: `python3 scripts/vault_backup.py` (uses official CLI under the hood).
+  1. `pip install --user --break-system-packages kaggle`
+  2. Put ANY valid KGAT token in `~/.kaggle/access_token` (chmod 600), then:
+     `kaggle datasets download deyoungsltd/deyoung-worker-vault --unzip -p /tmp/vrec`
+  3. Restore: `cp /tmp/vrec/kaggle_tokens.json workers/secrets/ && chmod 600 workers/secrets/kaggle_tokens.json`
+  4. If ALL tokens are lost/rotated: owner must regenerate at kaggle.com → Settings → API → "Create New Token", then re-create vault + backup dataset.
+- **Refresh the backup after any vault edit**: `python3 scripts/vault_backup.py` (CLI-based; prints VERIFY VERDICT: PASS/FAIL).
 - **Rules**: never commit vault contents; never paste token values into worklog, BRAIN.md,
   spec files, or chat; reference the vault path only. Account names are NOT secret.
 
@@ -55,6 +63,10 @@ manifests, credit ledger, Nigerian-law compliance, WCAG 2.2 AA). See tracker in 
 - **Monitor/fetch (idempotent, one pass)**: `python3 scripts/fleet_brain.py`
   (loop mode: `python3 scripts/fleet_brain.py --loop 60`). Writes `brain/state.json`
   (loop-owned `fleet` section) + appends `brain/events.log`.
+- **Always-on loop (the brain pulse)**: `bash scripts/brain_boot.sh` — idempotent:
+  starts `fleet_brain.py --loop 60` with nohup if not already running, records PID in
+  `brain/loop.pid`, logs to `brain/loop.out`. Run it EVERY session (sandbox resets kill
+  processes but not files). Check alive: `kill -0 $(cat brain/loop.pid)`.
 - **Fleet state 2026-09-06 ~17:05Z**: `deyoungsltd/deyoung-h3-e`, `deyoung-h3-e2`, `teslaprime/deyoung-h3-f`, `deyoung-h3-f2` — **status RUNNING** since ~05:50Z (~11h; at/above the usual GPU session cap — completion or timeout imminent). Outputs: empty so far. `teslaprime/deyoung-worker-c` = COMPLETE (Sep 5 PATI DB-worker run; scripts archived to `campaign/v10/teslaprime__deyoung-worker-c/`). Monitor with `python3 scripts/fleet_brain.py`.
 - **Film v10 plan** (from the pre-reset session, partially lost): 10 scenes `s01`–`s10`
   (MiniMax H3 on Kaggle T4, 2–9h render window) + 14 gallery clips `g01`–`g14`. When
@@ -96,12 +108,13 @@ Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root
 ## 7. Session protocol (the "AI in charge" loop)
 
 1. Read `BRAIN.md` (this file) + last 2 worklog entries.
-2. Run `python3 scripts/fleet_brain.py` — record fleet deltas into the conversation.
-3. If fleet outputs landed → follow §4 film v10 chain (rebuild tooling first if missing).
-4. Continue the highest **PENDING/IN PROGRESS** item in §6.
-5. Before ending: update `BRAIN.md` (status + "Last updated"), append `worklog.md`, commit
+2. `bash scripts/brain_boot.sh` — ensure the always-on fleet loop is running (every minute).
+3. Run `python3 scripts/fleet_brain.py` once — record fleet deltas into the conversation.
+4. If fleet outputs landed → follow §4 film v10 chain (rebuild tooling first if missing).
+5. Continue the highest **PENDING/IN PROGRESS** item in §6.
+6. Before ending: update `BRAIN.md` (status + "Last updated"), append `worklog.md`, commit
    brain/spec/doc changes (never secrets, never campaign media).
-6. Honesty rules: no fake progress, no unverifiable claims, mark unknowns NOT VERIFIED,
+7. Honesty rules: no fake progress, no unverifiable claims, mark unknowns NOT VERIFIED,
    mark legal interpretation LEGAL REVIEW REQUIRED.
 
 ## 8. Standing owner decisions / context

@@ -73,4 +73,6 @@ campaign/film/v3/concat.txt
 
 # brain runtime churn (events log only; brain/state.json is committed on real changes)
 /brain/events.log
+/brain/loop.pid
+/brain/loop.out
 brain/*.tmp

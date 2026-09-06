@@ -412,3 +412,24 @@ Stage Summary:
 - Tokens can never be lost again (local vault + private Kaggle dataset backup + recovery runbook)
 - Permanent brain live: any future session reads BRAIN.md first, runs fleet_brain.py, continues tracker
 - No push performed (no PAT stored by design); everything committed locally
+
+---
+Task ID: 33-b
+Agent: main (Super Z)
+Task: Owner directive "yes do all from step 1-3" — verify + harden token vault, relaunch permanent brain, re-verify master spec delivery
+
+Work Log:
+- Verified vault on disk: workers/secrets/kaggle_tokens.json (8 tokens, chmod 600); git check-ignore PASS (/workers/secrets/ @ .gitignore:72)
+- CRITICAL correction: raw v1 REST datasets/list?user= and datasets/view return FALSE negatives with Bearer KGAT (empty/404 even for owner). The Task 33 dataset backup was NEVER missing — REST probes were lying. Official kaggle CLI (pip 2.2.4, auth via ~/.kaggle/access_token) sees everything: dataset deyoungsltd/deyoung-worker-vault exists (private, ready, created 2026-09-06 16:07Z)
+- Round-trip proof: downloaded dataset copy, sha256 74177e04a58a6bf7... == local vault sha256 → CONTENT MATCH; foreign token still blocked (404)
+- Rewrote scripts/vault_backup.py: now CLI-based (REST upload/file endpoint 404s with Bearer), self-heals ~/.kaggle/access_token from vault, create-or-version idempotent, --verify exits 0 only on owner-list + content-match + foreign-blocked. End-to-end: VERIFY VERDICT: PASS
+- Permanent brain hardened: new scripts/brain_boot.sh (idempotent: pidfile + kill -0 check, nohup fleet_brain.py --loop 60, logs brain/loop.out); loop STARTED pid 4807 17:09Z, first pass clean; gitignore += /brain/loop.pid /brain/loop.out
+- BRAIN.md updated: §3 API lesson + CLI recovery runbook, §4 brain_boot instructions, §7 protocol renumbered (boot loop is step 2)
+- Master spec re-verified: markdown.md.txt 720 lines / 92KB, 9 parts A–I, §I.6 index = 56/56 items (28 rows × 2 cols, no gaps), 23× NOT VERIFIED + 12× LEGAL REVIEW REQUIRED; deliverable in download/ + repo root
+- Fleet: 4 film kernels (deyoung-h3-e, e2, f, f2) still RUNNING at 17:03Z pass (~11.3h elapsed — completion/timeout imminent); brain loop now watches them every 60s and will auto-fetch outputs into campaign/v10/
+
+Stage Summary:
+- Step 1 DONE: tokens cannot be lost (local 0600 vault + verified private Kaggle backup + CLI recovery runbook + hardened backup script)
+- Step 2 DONE: permanent brain live (BRAIN.md current-state + every-minute fleet_brain loop + session protocol for any successor AI)
+- Step 3 DONE: master upgrade spec verified complete (56/56) and delivered
+- Next: watch fleet (loop auto-fetches); on completion rebuild v10 assembly tooling (BRAIN.md §4 lost-work warning); then spec wave W0 (rotate leaked AgentMail key + WORKER_TOKEN)
