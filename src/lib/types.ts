@@ -15,6 +15,11 @@ export type PublicSettings = {
   responseTime: string;
   currency: string;
   paymentProvider: "manual" | "paystack" | "flutterwave" | "paypal" | "stripe" | string;
+  // Public-by-design payment fields: the Paystack/Flutterwave/PayPal PUBLIC key
+  // is required client-side by their SDKs, and paymentLinkUrl is a
+  // customer-facing checkout link. The SECRET key is never exposed here.
+  paymentPublicKey: string;
+  paymentLinkUrl: string;
   paymentInstructions: string;
   bankDetails: string;
   socialJson: string;

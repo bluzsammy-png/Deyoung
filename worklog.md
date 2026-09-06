@@ -498,3 +498,26 @@ Work Log:
 Stage Summary:
 - W1 storage_v2 + RateLimit are LIVE and E2E-verified against real Supabase; bucket deyoung-media private.
 - Owner actions now include: (a) check whether the OLD Supabase project (eu-central-1) still exists — if yes rotate its DB password (same password as new project) or delete the project; (b) Railway env vars per vault supabase.json _meta (DATABASE_URL with ?schema=deyoung, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_DRIVER=supabase, AUTH_SECRET, ADMIN_BOOTSTRAP_PASSWORD); (c) note: gitleaks CI has never actually run because the repo has no origin remote — it fires on first push.
+
+---
+Task ID: 36
+Agent: Super Z (main)
+Task: "Go" — continue approved pipeline: vault Supabase creds (gitignored, permanent) + finish W1
+
+Work Log:
+- DISCOVERED sandbox snapshot-restore wipe: ALL gitignored files lost (workers/secrets/, .env.local, ~/.kaggle auth, brain loop pid/out, kaggle CLI, download/ contents). Git repo + HEAD intact (all Task 35 W1 commits present). Working tree had 1 real loss (src/app/api/upload/route.ts deleted) + mode churn on 23 files → `git checkout -- .` restored everything from HEAD.
+- Re-vaulted Supabase creds from session context: workers/secrets/supabase.json (0600, key names aligned to w1_e2e_test.ts: database_url_session_pooler/transaction_pooler under "supabase" obj) + self-protecting inner .gitignore + .env.local (0600: DATABASE_URL tx-pooler ?schema=deyoung, DIRECT_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_DRIVER=supabase). Triple git check-ignore verified.
+- Recreated prisma/_pggen.prisma (postgres client w/ output=pg-client-tmp; both gitignored) → W1 E2E re-run vs REAL Supabase: 11/11 ALL PASS (putObject/signedUrl/round-trip/private-reject/objectStat/delete + local driver + RateLimit table semantics + tx pooler :6543). Re-added missing `server-only` dep.
+- Verified deyoung.RateLimit + schema state server-side (prisma db execute, exit 0).
+- Re-staged WORKER_TOKEN rotation: fresh crypto-random token in vault worker_plane (old staged token lost in wipe; cutover runbook embedded; Railway svc 1a50a560 unchanged).
+- Reinstalled kaggle CLI 2.2.4 (auth BLOCKED: KGAT tokens unrecoverable — chicken-and-egg with the private offsite dataset).
+- Generated + vaulted ADMIN_BOOTSTRAP_PASSWORD (admin@deyoung.site / change-on-first-login) + AUTH_SECRET (48B hex) into supabase.json admin_bootstrap/auth_secret; mirrored into .env.local.
+- SEEDED the real Postgres deyoung schema (session pooler :5432, postgres client): admin + 3 plans + 4 services + 6 photos + 3 testimonials + 8 FAQs — production-ready DB.
+- FIXED all 21 pre-existing tsc errors → 0: ROOT CAUSE = publicSettings() stripped paymentPublicKey/paymentLinkUrl while book-view/admin-settings consume them → added both to PublicSettings + serializer (public-by-design; SECRET key still stripped) — this was a LATENT CHECKOUT BUG (Paystack/Flutterwave/PayPal could never start on the live site). Plus: pool_check prisma.setting→settings typo; image-edit skill SDK shape (image: string, not images[]); stock-analysis analyzer → createVision w/ VisionMultimodalContentItem (image_url/data-URI, model glm-4.5v); tsconfig excludes examples/ (standalone, socket.io not an app dep).
+- Diagnosed dev-server topology: bun install postinstall regenerates sqlite client; bun env injection shadows .env.local DATABASE_URL with .env file: URL → sandbox preview correctly runs SEEDED SQLITE (platform default); production runs deploy/start.sh → postgres deyoung + supabase driver. Seeded sqlite; restarted via canonical .zscripts/dev.sh (first setsid attempt died silently). Verified live: /api/home 200 w/ 4 services/6 photos/8 faqs/3 plans/3 testimonials, paymentPublicKey present, paymentSecretKey NOT leaked.
+- New diag scripts (env-driven, no secrets): scripts/w1_count_rows.ts, scripts/w1_schema_probe.ts.
+
+Stage Summary:
+- W1 COMPLETE: storage_v2 + Postgres RateLimit + 0 tsc errors + seeded production DB + latent checkout bug fixed. All secrets gitignored+0600; git tree clean of secrets.
+- BLOCKED ON OWNER: (1) re-provide deyoungsltd KGAT token → restores vault kaggle_tokens.json from offsite dataset + revives brain loop; (2) Railway env per vault supabase.json; (3) WORKER_TOKEN cutover; (4) force-push purged history (PAT); (5) revoke old AgentMail key; (6) old Supabase project (eu-central-1) password rotation/deletion.
+- Dev server: healthy on :3000 (seeded sqlite preview). Brain loop: intentionally DOWN (no KGAT).

@@ -119,18 +119,20 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 - ⚠️ **OWNER ACTION: force-push** — local history is rewritten; pushes need the owner's PAT (none stored by design). After push, GitHub shows the purged history; old key revocation at agentmail.to still required.
 - ✅ WORKER_TOKEN rotation STAGED: new token in vault `worker_plane.current_token` (+ refreshed Kaggle backup). Cutover ONLY after the 4 film kernels deliver (they hold the old token): set on Railway → verify old gets 401.
 - ✅ Login: public creds hint removed; bootstrap password = `ADMIN_BOOTSTRAP_PASSWORD` env or random-once-in-deploy-log; session secret = `AUTH_SECRET` env → file → **fail closed** (no public fallback); cookie `secure` in production.
-- ✅ Rate limiting v1 (`src/lib/ratelimit.ts`, in-memory, §F.2 numbers): login 5/15m, contact/booking/subscription 5/h, video-request 10/h, verify 10/h — 7 endpoints wired, 429+Retry-After. W1: Postgres-backed table + stream limits.
-- ✅ Prod Prisma query logging OFF (F.6). ✅ gitleaks CI (`.github/workflows/secret-scan.yml`).
-- ⏳ C-5 /api/upload: still ghost (404s, no exposure) — real implementation lands with storage_v2 (days 4–7 per spec).
-- ⏳ Pre-existing tsc errors (21: book-view 12, admin-settings 4, misc) — untouched by W0, fix in W1.
-- **OWNER env checklist for next deploy**: `AUTH_SECRET` (≥32 chars), `ADMIN_BOOTSTRAP_PASSWORD` (≥10), then after fleet delivery the WORKER_TOKEN cutover; owner changes admin password in Security panel.
+- ✅ Rate limiting v2 (`src/lib/ratelimit.ts`, Postgres `RateLimit` table in `deyoung` schema, §F.2 numbers, async guard() at all 8 sites, opportunistic 24h prune, in-memory fallback when DB unreachable).
+- ✅ Prod Prisma query logging OFF (F.6). ✅ gitleaks CI (`.github/workflows/secret-scan.yml`; fires on first push — repo has no origin remote yet).
+- ✅ C-5 /api/upload: SHIPPED (W1 storage_v2 — supabase driver + signed URLs + `/api/files/:id` authz delivery; E2E 11/11 vs real Supabase).
+- ✅ Pre-existing tsc errors: **0** (was 21). W1 fixed the root causes: `publicSettings()` now carries `paymentPublicKey`+`paymentLinkUrl` (public-by-design — this was a LATENT CHECKOUT BUG: Paystack/Flutterwave/PayPal could never start), pool_check typo, skill SDK shapes; `examples/` excluded from app typecheck.
+- ⚠️ 2026-09-07 SANDBOX RESTORE INCIDENT: snapshot restore wiped ALL gitignored files (vault `workers/secrets/*`, `.env.local`, `~/.kaggle`, brain loop files, kaggle CLI). Git history intact. Recovered: Supabase vault + `.env.local` re-vaulted from session context (0600, gitignored, E2E-verified), `server-only` dep re-added, WORKER_TOKEN re-staged in vault. UNRECOVERABLE without owner input: the 8 fleet KGAT tokens + old staged WORKER_TOKEN (their only other copy is the offsite Kaggle dataset, which itself needs an owner token to read).
+- **BRAIN LOOP DOWN** since restore: `fleet_brain.py` needs vault kaggle_tokens.json (gone). Do NOT start until owner re-provides at least the `deyoungsltd` KGAT token. Fleet kernels were all `cancelAcknowledged` (12h cap, outputs EMPTY) — nothing to harvest anyway.
+- **OWNER env checklist for next deploy** (values in vault `supabase.json`): `DATABASE_URL` (tx pooler, `?schema=deyoung`), `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_DRIVER=supabase`, `AUTH_SECRET` (vaulted, ≥32), `ADMIN_BOOTSTRAP_PASSWORD` (vaulted, ≥10), then WORKER_TOKEN cutover (vault runbook) + owner changes admin password in Security panel. Postgres `deyoung` schema is seeded and production-ready (admin + plans/services/photos/testimonials/faqs).
 
 Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root copy).
 
 ## 7. Session protocol (the "AI in charge" loop)
 
 1. Read `BRAIN.md` (this file) + last 2 worklog entries.
-2. `bash scripts/brain_boot.sh` — ensure the always-on fleet loop is running (every minute).
+2. `bash scripts/brain_boot.sh` — ensure the always-on fleet loop is running (every minute). **BLOCKED 2026-09-07**: needs owner KGAT token re-provisioned into vault first.
 3. Run `python3 scripts/fleet_brain.py` once — record fleet deltas into the conversation.
 4. If fleet outputs landed → follow §4 film v10 chain (rebuild tooling first if missing).
 5. Continue the highest **PENDING/IN PROGRESS** item in §6.

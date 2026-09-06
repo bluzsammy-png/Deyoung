@@ -46,6 +46,12 @@ export function publicSettings(s: SiteSettings) {
     responseTime: s.responseTime,
     currency: s.currency,
     paymentProvider: s.paymentProvider,
+    // Public key (NOT the secret key) — required by Paystack/Flutterwave/PayPal
+    // inline SDKs on the client; paymentLinkUrl is the customer checkout link.
+    // Fix for the W1 latent checkout bug: without these the public site could
+    // never start a payment ("Payment is not set up yet" forever).
+    paymentPublicKey: s.paymentPublicKey,
+    paymentLinkUrl: s.paymentLinkUrl,
     paymentInstructions: s.paymentInstructions,
     bankDetails: s.bankDetails,
     socialJson: s.socialJson,

@@ -27,7 +27,7 @@ async function main() {
   const plans = await t.plan.count();
   console.log("== 6543 transaction mode OK, plan rows:", plans);
   // concurrent burst like the healthcheck hammer
-  const burst = await Promise.all(Array.from({ length: 12 }, () => t.setting.findFirst()));
+  const burst = await Promise.all(Array.from({ length: 12 }, () => t.settings.findFirst()));
   console.log("== 12 concurrent queries over 6543, results:", burst.filter(Boolean).length, "ok");
   await t.$disconnect();
 }
