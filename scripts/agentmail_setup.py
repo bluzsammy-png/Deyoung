@@ -3,7 +3,10 @@
 import json, sys
 from agentmail import AgentMail
 
-KEY = "am_us_…51f778aa07202c11a2452fd6c2fd583a036ff7aca992790691dd9fc415"
+import os
+KEY = os.environ.get("AGENTMAIL_API_KEY") or ""
+if not KEY:
+    raise SystemExit("AGENTMAIL_API_KEY env var required (never hardcode keys)")
 c = AgentMail(api_key=KEY)
 
 print("=== EXISTING API KEYS ===")

@@ -2,7 +2,8 @@
 # One-shot QA for the DeYoung worker plane (server must live inside this call).
 set -u
 cd /home/z/my-project
-export WORKER_TOKEN=REDACTED-C2
+[ -f .env.local ] && set -a && . ./.env.local && set +a
+export WORKER_TOKEN="${WORKER_TOKEN:?set WORKER_TOKEN in env or .env.local (never hardcode)}"
 PORT=3311
 BASE=http://localhost:$PORT
 

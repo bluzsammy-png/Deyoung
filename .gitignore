@@ -76,3 +76,6 @@ campaign/film/v3/concat.txt
 /brain/loop.pid
 /brain/loop.out
 brain/*.tmp
+
+# transient tool artifacts
+/tool-results/

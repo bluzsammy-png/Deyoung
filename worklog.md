@@ -352,7 +352,7 @@ Work Log:
 - scripts/kaggle_launch.py — one-command Kaggle GPU launch: reads KAGGLE_API_TOKEN (new KGAT_ style) or ~/.kaggle/kaggle.json, bakes worker+site+token into PRIVATE gpu/internet kernel, pushes via official CLI, --watch poll; ~30 free GPU-h/week, re-run for another session
 - docs/WORKERS.md — full architecture (queue → Kaggle kernel / owner PC / paid APIs), runbooks, ops notes (ephemeral uploads, rotation)
 - QA end-to-end (scripts/qa_worker_plane.sh, one foreground burst): seeded 2 jobs (scripts/qa_worker_data.mjs; fixed: Subscription needs name+periodStart/periodEnd, no months field), guards 401/401, atomic claim (BEGIN IMMEDIATE), stub renders delivered = h264+aac 5.000s 720p, GET 200 + Range 206, empty-queue JSON, cleanup OK, path traversal 404. First attempt hit .next/dev/lock (stale) + schema mismatch — both fixed
-- next build green (4 new dynamic routes); WORKER_TOKEN=REDACTED-C2 set on Railway service 1a50a560-4211-4309-b195-aa2b569afc8f via CLI (note: project ID 99f9348d ≠ service ID)
+- next build green (4 new dynamic routes); WORKER_TOKEN=dyw_[REDACTED-C2-rotate-Task34] set on Railway service 1a50a560-4211-4309-b195-aa2b569afc8f via CLI (note: project ID 99f9348d ≠ service ID)
 - Pushed 532c572..d0e32cb → Railway deploy 3f54d37c SUCCESS (healthcheck green). Sandbox probe of worker API = 429 (edge throttle artifact; Railway prober is authoritative)
 
 Stage Summary:
