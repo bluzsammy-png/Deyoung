@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""DEPRECATED — DO NOT LAUNCH. The sandbox reaped this long-sleeping process twice
+(died silently after its first poll). The canary-gate logic now lives inside
+scripts/fleet_brain.py as relaunch_step(), running under the proven-surviving
+60s loop. Kept only as a historical reference of the gate semantics."""
 """v2 relaunch watcher: waits for the canary kernel to complete, verifies its
 output contains a real rendered scene, and ONLY THEN pushes the staged wave-2
 kernels (switching per-account tokens from the vault). Any failure = wave 2

@@ -558,3 +558,22 @@ Work Log:
 Stage Summary:
 - Autonomous relaunch chain live: canary (running) -> watcher gate -> wave 2 (6 kernels, 10 scenes/clips) -> brain harvest. Conservative ETA: canary output ~02:10Z, wave-2 scenes land over the following ~6h.
 - Committed: h3v2_make.py, v2_wave2_watcher.py, BRAIN.md §4 plan, re-pulled kernel sources (campaign/ untracked by design). Zero secrets in git (staged-diff scans clean).
+
+---
+Task ID: 39
+Agent: Super Z (main)
+Task: "Go" — harden the v2 relaunch chain (watcher fix) + Railway cutover preparation
+
+Work Log:
+- Found the wave-2 gate BROKEN: standalone v2_wave2_watcher.py died silently TWICE (23:18, 23:23) — sandbox reaps long-sleeping background processes; fleet_brain.py's 60s loop is the only proven-surviving host. DEPRECATED the watcher (header warning; do not relaunch).
+- Migrated the gate INTO the brain loop: fleet_brain.py relaunch_step() — state machine (waiting -> verifying -> pushing -> done | grounded) recorded in brain/state.json "relaunch"; on canary COMPLETE it verifies the harvest (mp4 >=1MB + result.json ok, 5-poll grace + one direct CLI output pull), then pushes wave 2 with per-account vault tokens. Idempotency: state saved after EACH push (kill mid-wave never double-pushes), per-slug attempt counter (3x then abandon), ERROR/CANCEL/failed-verify = GROUND STOP logged to brain/relaunch.log. Token file swaps always restore owner in finally (brain loop's own API calls use explicit Bearer tokens, no race).
+- Restarted loop via canonical brain_boot.sh (new pid 5555). First pass verified: state.relaunch created, phase=waiting, canary running. Chain now: canary completes -> harvest -> verify -> wave-2 push -> fleet pass auto-harvests those too.
+- Railway track: probed prod — BOTH bases (railway.app + deyoungltd.site) 429 from sandbox IP = documented edge-throttle artifact, not an outage signal. No Railway CLI/config/token in sandbox (the old owner project token 8cb7de14-… died with the sandbox wipe; VERIFIED the full value was never in git — only the truncated prefix in worklog, no leak).
+- Built scripts/railway_cutover.sh (one-shot, values from vault, never echoes secrets): ensure CLI -> whoami -> apply ALL 8 prod env vars (DATABASE_URL tx-pooler ?schema=deyoung&pgbouncer, DIRECT_URL session-pooler ?schema=deyoung, SUPABASE_URL, SERVICE_ROLE_KEY, STORAGE_DRIVER=supabase, AUTH_SECRET, ADMIN_BOOTSTRAP_PASSWORD, WORKER_TOKEN=staged dyw_62bf…) to service 1a50a560… with --skip-deploy -> single redeploy -> health poll 12 min -> claim-auth probes (no-token 401/403, NEW token 200 = cutover proof). Vault reader tested: 8/8 vars resolve, URL shapes correct. --health-only mode works. BLOCKED ON OWNER: RAILWAY_TOKEN.
+- Cutover runbook step 3 DONE: WORKER_TOKEN (staged) added to .env.local (gitignored, 0600) — qa_worker_plane.sh now runs with the NEW token locally.
+- BRAIN.md updated: §4 (autonomous gate), §6 (cutover automated/blocked-on-token, loop status corrected from stale "DOWN"), header.
+
+Stage Summary:
+- v2 relaunch chain is now FULLY autonomous and crash-tolerant; canary eta ~02:10Z, wave 2 fires automatically on verified canary output, outputs auto-harvest thereafter.
+- Railway cutover reduced to ONE owner action: provide RAILWAY_TOKEN, then `bash scripts/railway_cutover.sh`.
+- Lost-prompt regeneration (s04-s06, s09-s10, g01-g08) remains the known content gap for a follow-up wave.
