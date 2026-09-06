@@ -4,8 +4,12 @@
  */
 import { PrismaClient } from "@prisma/client";
 
-const SESSION = "postgresql://postgres.REDACTED-C6-OLD-PROJ-REF:REDACTED-C6-DB-PASSWORD@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require&connection_limit=2";
-const TXMODE = "postgresql://postgres.REDACTED-C6-OLD-PROJ-REF:REDACTED-C6-DB-PASSWORD@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=5";
+// C-6 fix: credentials live only in env / the vault — never in this file.
+const SESSION = process.env.DATABASE_URL;
+if (!SESSION) {
+  throw new Error("Set DATABASE_URL (session-pooler URL with ?schema=deyoung). Values live in workers/secrets/supabase.json.");
+}
+const TXMODE = SESSION.replace(":5432", ":6543") + (SESSION.includes("?") ? "&" : "?") + "pgbouncer=true";
 
 async function main() {
   // 1. Who is connected right now (via session pooler)?

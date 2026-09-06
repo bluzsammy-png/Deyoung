@@ -188,3 +188,17 @@ model Asset {
   resultFor  VideoRequest[] // renders produced from this asset
   createdAt  DateTime @default(now())
 }
+
+// W1 (spec §F.2): Postgres-backed fixed-window rate-limit counters.
+// Survives restarts, works across instances, and is inspectable by the admin
+// Security panel. `bucket` = "<class>:<ip>"; the in-memory limiter remains as
+// a fallback if the DB is unreachable (see src/lib/ratelimit.ts).
+model RateLimit {
+  id        String   @id @default(cuid())
+  bucket    String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}

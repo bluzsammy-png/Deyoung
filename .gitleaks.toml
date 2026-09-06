@@ -21,6 +21,9 @@ regexes = [
   '''REDACTED-C2''',
   '''C1-ROTATED-REMOVED''',
   '''C2-ROTATED-REMOVED''',
+  # redaction markers left by the W1 C-6 history purge (old Supabase DB password + project ref)
+  '''REDACTED-C6-DB-PASSWORD''',
+  '''REDACTED-C6-OLD-PROJ-REF''',
   # documentation truncations of the agentmail key prefix (prefix is not secret)
   '''am_us_…''',
 ]

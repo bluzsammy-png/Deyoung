@@ -7,13 +7,33 @@ set -u
 echo "[deyoung] boot — node $(node -v)"
 
 # ---- 1. Sync database schema (idempotent, non-fatal) ----
+# SAFETY GUARD (verified 2026-09-07): the Supabase project this deployment uses
+# is SHARED — its default `public` schema holds 33 tables belonging to a
+# different application. All DeYoung tables live in the dedicated `deyoung`
+# schema. If DATABASE_URL is a Supabase URL without ?schema=, inject
+# schema=deyoung BEFORE db push; otherwise --accept-data-loss would drop the
+# other app's tables. Never remove this guard without re-verifying tenancy.
+DB_PUSH_URL="${DATABASE_URL:-}"
+if [ -n "$DB_PUSH_URL" ]; then
+  case "$DB_PUSH_URL" in
+    *supabase*schema=*) : ;;
+    *supabase*)
+      case "$DB_PUSH_URL" in
+        *\?*) DB_PUSH_URL="${DB_PUSH_URL}&schema=deyoung" ;;
+        *)    DB_PUSH_URL="${DB_PUSH_URL}?schema=deyoung" ;;
+      esac
+      echo "[deyoung] Supabase URL had no ?schema= — injected schema=deyoung (shared-project guard)"
+      ;;
+  esac
+fi
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "[deyoung] WARNING: DATABASE_URL is not set — admin/content APIs will fail until it is added."
 else
   if [ -x ./node_modules/.bin/prisma ]; then
-    echo "[deyoung] syncing database schema (prisma db push)…"
+    echo "[deyoung] syncing database schema (prisma db push, scoped to the deyoung schema)…"
     ./node_modules/.bin/prisma db push \
       --schema prisma/schema.postgres.prisma \
+      --url "$DB_PUSH_URL" \
       --skip-generate --accept-data-loss \
       || echo "[deyoung] WARNING: db push failed (continuing — tables may already exist)"
     echo "[deyoung] seeding demo content if empty…"
@@ -35,12 +55,22 @@ if [ -n "${DATABASE_URL:-}" ]; then
   case "$DATABASE_URL" in
     *pooler.supabase.com:5432*)
       APP_DB_URL="$(printf '%s' "$DATABASE_URL" | sed 's/pooler\.supabase\.com:5432/pooler.supabase.com:6543/')"
+      # keep the shared-project schema guard in force at runtime too
+      case "$APP_DB_URL" in
+        *supabase*schema=*) : ;;
+        *supabase*)
+          case "$APP_DB_URL" in
+            *\?*) APP_DB_URL="${APP_DB_URL}&schema=deyoung" ;;
+            *)    APP_DB_URL="${APP_DB_URL}?schema=deyoung" ;;
+          esac
+          ;;
+      esac
       case "$APP_DB_URL" in
         *\?*) APP_DB_URL="${APP_DB_URL}&pgbouncer=true&connection_limit=5&pool_timeout=20" ;;
         *)    APP_DB_URL="${APP_DB_URL}?pgbouncer=true&connection_limit=5&pool_timeout=20" ;;
       esac
       export DATABASE_URL="$APP_DB_URL"
-      echo "[deyoung] app runtime → transaction-mode pooler :6543 (pgbouncer=true, connection_limit=5)"
+      echo "[deyoung] app runtime → transaction-mode pooler :6543 (pgbouncer=true, connection_limit=5, schema=deyoung)"
       ;;
     *)
       echo "[deyoung] DATABASE_URL is not the Supabase session pooler — using it as-is"

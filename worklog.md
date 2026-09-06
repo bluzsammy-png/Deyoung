@@ -479,3 +479,22 @@ Stage Summary:
 - C-4 and C-5 CLOSED in code (pending deploy); H-4 closed for new deliveries; honest REQUIRES CONFIGURATION states shipped per prompt §6
 - Deliverables for prompt §63 (partial, this wave): working upload/delivery chain, updated BRAIN.md/worklog; docs updates + relaunch attempt next
 - Remaining W1 items: owner adds SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on Railway + STORAGE_DRIVER=supabase (REQUIRES OWNER INPUT — the service key is not stored anywhere), then set STORAGE_DRIVER; until then deliveries use the local driver (works but ephemeral — the honest warning fires in prod logs)
+
+---
+Task ID: 35
+Agent: Super Z (main)
+Task: W1 data foundation — Supabase credentials vaulted + storage_v2 E2E + RateLimit Postgres + C-6 leak purge
+
+Work Log:
+- Vaulted the owner-provided Supabase credentials (workers/secrets/supabase.json, 0600, gitignored) + self-protecting inner .gitignore; vault_backup.py extended to back up the WHOLE vault dir; offline backup re-verified (owner-list YES, round-trip YES, foreign 404, VERDICT PASS); fixed latent vault_backup PATH bug (setdefault never fired).
+- Verified DB connectivity (SELECT 1 via Prisma, URL-encoded '#' password as %23).
+- CRITICAL DISCOVERY: the provided Supabase project is SHARED with another application (33 trading-app tables in `public`). Zero destructive push allowed. Created dedicated `deyoung` schema; pushed the full postgres schema into it; verified `public` untouched (33 models before and after).
+- Added RateLimit model (spec F.2) to BOTH prisma schemas; ratelimit.ts upgraded to Postgres-backed counters (upsert/increment, opportunistic 24h prune, in-memory fallback when DB unreachable); guard() is now async — all 8 route call sites converted to await.
+- Supabase Storage E2E against the real project via the real adapter (scripts/w1_e2e_test.ts): putObject/signedUrl/round-trip/private-reject/objectStat/delete + local-driver fallback + RateLimit table semantics + transaction-pooler :6543 pgbouncer — ALL PASS (11/11). Fixed ensureBucket (Supabase answers 400 not 404 for missing bucket → list-buckets approach). Documented Supabase read-after-delete cache artifact; authoritative deletion proof = 2nd DELETE returns code NoSuchKey.
+- C-6 LEAK FOUND + PURGED: old Supabase project ref + DB PASSWORD (reused on the new project!) hardcoded in 4 diagnostic scripts (diag_conn_age.mjs, diag_live.mjs, diag_tables.mjs, pool_check.ts) and worklog.md. Rewrote all 4 to env-driven (fail-fast); gitleaks allowlist extended with C-6 redaction markers; full-history purge via git filter-repo --replace-text (W0 playbook: replace-text alone, triple verification after).
+- deploy/start.sh shared-project guard: bare Supabase DATABASE_URL gets ?schema=deyoung auto-injected before db push --accept-data-loss (prevents dropping the other app's tables) and at runtime (:6543 rewrite preserves the schema param).
+- typecheck: 21 errors = exact pre-existing baseline, 0 new.
+
+Stage Summary:
+- W1 storage_v2 + RateLimit are LIVE and E2E-verified against real Supabase; bucket deyoung-media private.
+- Owner actions now include: (a) check whether the OLD Supabase project (eu-central-1) still exists — if yes rotate its DB password (same password as new project) or delete the project; (b) Railway env vars per vault supabase.json _meta (DATABASE_URL with ?schema=deyoung, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_DRIVER=supabase, AUTH_SECRET, ADMIN_BOOTSTRAP_PASSWORD); (c) note: gitleaks CI has never actually run because the repo has no origin remote — it fires on first push.

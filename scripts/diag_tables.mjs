@@ -1,7 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
-const TX_URL = "postgresql://postgres.REDACTED-C6-OLD-PROJ-REF:REDACTED-C6-DB-PASSWORD@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=2";
-const db = new PrismaClient({ datasources: { db: { url: TX_URL } } });
+// C-6 fix: credentials live only in env / the vault — never in this file.
+const TX_URL = (process.env.DATABASE_URL || "").replace(":5432", ":6543");
+if (!TX_URL || !TX_URL.includes("://")) {
+  throw new Error("Set DATABASE_URL (session-pooler URL with ?schema=deyoung). Values live in workers/secrets/supabase.json.");
+}
+const db = new PrismaClient({ datasources: { db: { url: TX_URL + (TX_URL.includes("?") ? "&" : "?") + "pgbouncer=true" } } });
 
 const tables = await db.$queryRawUnsafe(`
   SELECT tablename FROM pg_tables

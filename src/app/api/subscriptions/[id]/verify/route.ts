@@ -11,7 +11,7 @@ type Ctx = { params: Promise<{ id: string }> };
  * the subscription. Without a configured secret, the owner activates manually.
  */
 export async function POST(req: Request, ctx: Ctx) {
-  const limited = guard(req, "verify");
+  const limited = await guard(req, "verify");
   if (limited) return limited;
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));

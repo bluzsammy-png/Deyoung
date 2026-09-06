@@ -82,3 +82,7 @@ brain/*.tmp
 
 # W1 object-storage local driver (dev only — ephemeral, never commit)
 /media/
+
+# W1 isolated postgres client for e2e testing (regenerable)
+/prisma/pg-client-tmp/
+/prisma/_pggen.prisma

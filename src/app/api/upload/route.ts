@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const denied = await guardAdmin();
   if (denied) return denied;
-  const limited = guard(req, "submit");
+  const limited = await guard(req, "submit");
   if (limited) return limited;
 
   const form = await req.formData().catch(() => null);

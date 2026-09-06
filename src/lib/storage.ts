@@ -70,22 +70,24 @@ function supabaseEnv() {
 
 async function ensureBucket(): Promise<void> {
   const { url, key } = supabaseEnv();
-  const head = await fetch(`${url}/storage/v1/bucket/${BUCKET}`, {
+  // List buckets instead of GET /bucket/{name}: Supabase answers 400 (not 404)
+  // for a missing bucket, which is indistinguishable from a bad request here.
+  const list = await fetch(`${url}/storage/v1/bucket`, {
     headers: { Authorization: `Bearer ${key}` },
   });
-  if (head.ok) return;
-  if (head.status === 404) {
-    const created = await fetch(`${url}/storage/v1/bucket`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ name: BUCKET, public: false, fileSizeLimit: 209715200 }),
-    });
-    if (!created.ok && created.status !== 409 && created.status !== 400) {
-      throw new Error(`Supabase bucket creation failed: HTTP ${created.status}`);
-    }
-    return;
+  if (!list.ok) {
+    throw new Error(`Supabase bucket check failed: HTTP ${list.status}`);
   }
-  throw new Error(`Supabase bucket check failed: HTTP ${head.status}`);
+  const buckets = (await list.json()) as Array<{ name: string }>;
+  if (Array.isArray(buckets) && buckets.some((b) => b.name === BUCKET)) return;
+  const created = await fetch(`${url}/storage/v1/bucket`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: BUCKET, public: false, fileSizeLimit: 209715200 }),
+  });
+  if (!created.ok && created.status !== 409 && created.status !== 400) {
+    throw new Error(`Supabase bucket creation failed: HTTP ${created.status}`);
+  }
 }
 
 async function sbPut(key: string, data: Buffer, contentType: string): Promise<void> {
@@ -201,6 +203,13 @@ export async function getObject(key: string): Promise<Buffer | null> {
   return fs.readFile(localPath(key)).catch(() => null);
 }
 
+/**
+ * Delete an object. NOTE (empirical, 2026-09-07): Supabase acknowledges the
+ * DELETE, but GETs may keep serving the bytes from a short CDN/cache window
+ * afterwards. Treat a follow-up DELETE returning code "NoSuchKey" as the
+ * authoritative proof of deletion — not GET visibility. Relevant only for
+ * rare private-render revocations; tmp/ lifecycle cleanup is unaffected.
+ */
 export async function deleteObject(key: string): Promise<void> {
   if (currentDriver() === "supabase") return sbDelete(key);
   await fs.rm(localPath(key), { force: true });

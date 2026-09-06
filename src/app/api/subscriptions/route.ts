@@ -11,7 +11,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const limited = guard(req, "submit");
+  const limited = await guard(req, "submit");
   if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const name = str(body.name, 120);

@@ -23,7 +23,8 @@ import sys
 import tempfile
 import time
 
-VAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "workers", "secrets", "kaggle_tokens.json"))
+VAULT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "workers", "secrets"))
+VAULT = os.path.join(VAULT_DIR, "kaggle_tokens.json")
 OWNER = "deyoungsltd"
 SLUG = "deyoung-worker-vault"
 REF = f"{OWNER}/{SLUG}"
@@ -47,7 +48,8 @@ def ensure_cli_auth():
         with open(tok_path, "w") as f:
             f.write(want + "\n")
         os.chmod(tok_path, 0o600)
-    os.environ.setdefault("PATH", os.path.expanduser("~/.local/bin") + ":" + os.environ.get("PATH", ""))
+    local_bin = os.path.expanduser("~/.local/bin")
+    os.environ["PATH"] = local_bin + os.pathsep + os.environ.get("PATH", "")
     if not shutil.which("kaggle"):
         raise SystemExit("kaggle CLI not found; pip install --user --break-system-packages kaggle")
 
@@ -56,8 +58,17 @@ def cli(*args, timeout=180):
     return subprocess.run(["kaggle", *args], capture_output=True, text=True, timeout=timeout)
 
 
+def vault_files():
+    """Every secret JSON in the vault gets backed up (kaggle_tokens, supabase, future ones)."""
+    return sorted(
+        f for f in os.listdir(VAULT_DIR)
+        if f.endswith(".json") and not f.startswith(".")
+    )
+
+
 def stage_dir(tmp):
-    shutil.copy2(VAULT, os.path.join(tmp, "kaggle_tokens.json"))
+    for name in vault_files():
+        shutil.copy2(os.path.join(VAULT_DIR, name), os.path.join(tmp, name))
     meta = {
         "title": "DeYoung Worker Vault",
         "id": REF,
@@ -108,9 +119,13 @@ def verify():
     try:
         with tempfile.TemporaryDirectory() as dl:
             d = cli("datasets", "download", REF, "-p", dl, "--unzip", timeout=300)
-            local = open(VAULT, "rb").read()
-            got = os.path.join(dl, "kaggle_tokens.json")
-            ok_files = os.path.exists(got) and open(got, "rb").read() == local
+            ok_files = True
+            for name in vault_files():
+                local = open(os.path.join(VAULT_DIR, name), "rb").read()
+                got = os.path.join(dl, name)
+                if not (os.path.exists(got) and open(got, "rb").read() == local):
+                    print(f"round-trip mismatch: {name}")
+                    ok_files = False
     except Exception as e:
         print(f"round-trip: error {type(e).__name__}: {e}")
     print(f"round-trip content match: {'YES' if ok_files else 'NO'}")

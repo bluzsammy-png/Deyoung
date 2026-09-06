@@ -18,7 +18,7 @@ import {
  * Admin GET: the full render queue.
  */
 export async function POST(req: Request) {
-  const limited = guard(req, "request");
+  const limited = await guard(req, "request");
   if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const email = str(body.email, 200).toLowerCase();

@@ -4,7 +4,7 @@ import { createSession, ensureAdmin, verifyPassword } from "@/lib/auth";
 import { guard } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
-  const limited = guard(req, "login");
+  const limited = await guard(req, "login");
   if (limited) return limited;
   try {
     const body = await req.json().catch(() => ({}));
