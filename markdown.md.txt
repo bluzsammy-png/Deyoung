@@ -1,0 +1,720 @@
+# markdown.md.txt — DEYOUNGLTD.SITE MASTER UPGRADE SPECIFICATION
+## AI Film Production Studio — Deep Research · Existing-Site Audit · Target Architecture · Legal/Safety Program
+
+**Deliverable of the master upgrade prompt** (`upload/Pasted Content_1788739243620.txt`, 79 requirements).
+**Audience**: the AI/developer who will safely upgrade the existing site. **Date of research**: 2026-09-06 (UTC).
+**Verification discipline** (binding on every reader of this file):
+- Numbers appear only where an authoritative source was checked during this research pass; anything else is marked **NOT VERIFIED** with a "how to verify" instruction.
+- Legal interpretation is never asserted as certainty; uncertain items are marked **LEGAL REVIEW REQUIRED** and collected in §I.3.
+- No fabrication anywhere: no invented limits, no invented law, no invented licenses. "UNKNOWN" is a valid finding.
+
+> Reading order for the implementing AI: §A (what exists, what's broken) → §I.4 (14-day plan, do these first) → §B–§E (build the core) → §F–§G (trust & legal) → §H (engineering discipline) → §I (tables & checklists). Upgrade, do not rebuild: every design below reuses a working subsystem that exists today. The 56 required specification items (prompt §70) are mapped 1:1 in §I.6.
+
+---
+
+# PART A — CURRENT STATE
+
+## A.1 Current architecture (what is actually deployed, 2026-09-06)
+
+**Stack (verified by direct code inspection):**
+
+| Layer | Today | Evidence |
+|---|---|---|
+| Frontend | Next.js `^16.1.1`, React `^19`, Tailwind v4 (CSS-config), shadcn/ui (new-york), single client page with hash router (`#home #book #subscribe #request #privacy #thanks #admin`) | `package.json:60–67`; `src/components/site/hash.ts:15–41`; `src/app/page.tsx` |
+| Backend | Next.js Route Handlers, ~30 routes under `src/app/api/**`, all manual validation (`str()/num()` in `src/lib/api.ts`) — **zod is installed but imported 0 times** | `src/lib/api.ts`; grep `from "zod"` → 0 |
+| Database | Supabase Postgres (prod) via transaction pooler `:6543` (rewritten at boot by `deploy/start.sh:34–48`); SQLite dev (`db/custom.db`); **two hand-synced Prisma schemas** | `prisma/schema.prisma` vs `prisma/schema.postgres.prisma` (diff = datasource only) |
+| ORM | Prisma `^6.11.1`; **zero `relations` declared** — all FKs are stringly-typed `planCode`/`subscriptionId` with manual cascade deletes | schema files; `subscriptions/[id]/route.ts:57` |
+| Auth | Bespoke: scrypt password hashes (good), HMAC-SHA256 stateless cookie `dy_admin`, 7-day TTL, `secure:false` (bad), signing secret persisted to `db/.auth-secret` on ephemeral disk → falls back to a **deterministic public constant** `sha256("deyoung-fallback-secret")` | `src/lib/auth.ts:10–35, 57–88` |
+| Admin | Single hardcoded-bootstrapped admin (`admin@deyoung.site` / `deyoung123`), default creds **printed on the login screen** | `auth.ts:114–115`; `admin-app.tsx:215–218` |
+| Payments | Client-side SDKs (Paystack inline.js, PayPal SDK, Stripe hosted link) + server-side verify endpoints for Paystack/Flutterwave only; **no webhooks**; `manual` provider = owner confirms by hand; PayPal auto-path is dead code; Flutterwave client launcher never loads its script (silent no-op) | `book-view.tsx:218–255`; `bookings/[id]/verify/route.ts:30–52` |
+| Worker plane | `/api/worker/claim` (atomic `updateMany` claim — genuinely safe), `/api/worker/jobs/[id]` (multipart ≤200MB → `public/uploads/req-<id>.mp4`), `/api/worker/status`, `/api/worker/file/[name]` (Range/206, regex whitelist, **public, unauthenticated**); `WORKER_TOKEN` Bearer (or `?token=` — leaks into logs) | `worker/claim/route.ts:23–54`; `src/lib/worker.ts:20–35` |
+| Render workers | `workers/deyoung_worker.py`: `stub` (ffmpeg gradient) + `ltx` (LTX-Video 0.9.x via diffusers on CUDA; 768×512 internal, ≤161 frames ≈ 6.7s @24fps even for 60s jobs; auto-fallback to stub) | `deyoung_worker.py:178–248` |
+| GPU fleet | Kaggle T4/P100 kernels launched by `scripts/kaggle_launch.py` (~30 free GPU-h/week/account, 8 accounts in vault); MiniMax-H3 film fleet kernels running 2026-09-06; monitor: `scripts/fleet_brain.py` → `brain/state.json` | vault `workers/secrets/kaggle_tokens.json`; `brain/state.json` |
+| Storage | **Ephemeral container FS**: every render/upload is wiped on the next Railway deploy; DB rows outlive files → dead download links | `docs/WORKERS.md:100–104`; `worker/jobs/[id]/route.ts:53–56` |
+| Email | AgentMail → **owner-only** notifications (booking/contact). Customers never receive any email | `src/lib/agentmail.ts`; `contact/route.ts:16–30` |
+| Deploy | GitHub `bluzsammy-png/Deyoung` (public repo) → Railway Railpack; healthcheck `/api/health`; `typescript.ignoreBuildErrors: true` (TS errors ship silently); **no CI, no `.github/`** | `railway.toml:4–13`; `next.config.ts:6–8` |
+| Live URL | https://deyoungltd.site (custom domain on Railway edge) + https://deeyoung-production-72ef.up.railway.app | Railway; DNS verified 2026-09-06 |
+| Trackers | **None** (no GA/Pixel/PostHog/Sentry/Clarity — grep 0). Fonts self-hosted (next/font/local Archivo). Only outbound third parties: Supabase, AgentMail, payment SDKs, wa.me link | §7 audit grep results |
+
+**Prisma models today (11):** `Admin`, `Settings` (site copy + contact + currency + **`paymentSecretKey` stored plaintext in DB** + `gpuMinutesDaily=240`), `Photo`, `Service` (+`compareAtPrice`), `Booking`, `Message`, `Testimonial`, `Faq`, `Plan` (beginner/pro/elite limits incl. `maxSecondsVideo`, `queuePriority`), `Subscription` (period-based), `VideoRequest` (status `queued|rendering|done|failed|cancelled`, `dedupKey` cache, `gpuMinutes` worker-self-reported).
+
+**What genuinely works and must NOT be rebuilt:** the hash-router single-page storefront; server-side-enforced plan limits + queue position/ETA; the dedup render cache (`dedupKey` checked *before* concurrency limits); the atomic worker claim; the scrypt login; the Railway deploy chain with `:6543` pooler rewrite; the v5 talking-film pipeline (TTS post-dub, ASR-verified 8/8 — the free video model cannot follow scripted dialogue, hallucinated lines; post-dub is the honest fix, proven working); the Kaggle fleet toolchain + secrets vault.
+
+## A.2 Current-code audit — findings register
+
+Severity: **C = critical (fix before any feature work)** · H = high · M = medium · L = low. Every finding is reproducible at the cited path.
+
+### CRITICAL (5)
+| ID | Finding | Evidence | Immediate fix |
+|---|---|---|---|
+| C-1 | **Live AgentMail API key committed in a tracked file** (`am_us_3c12…` in cleartext) | `scripts/agentmail_setup.py:6`; `git ls-files` confirms tracked | Rotate key at AgentMail → move to Railway env var → purge file+history (git filter-repo) → force-push |
+| C-2 | **Production `WORKER_TOKEN` committed in tracked worklog** (`dyw_a71c9…` + Railway service ID) | `worklog.md:355` | Rotate `WORKER_TOKEN` on Railway → re-launch workers with new token → purge history |
+| C-3 | **Default admin creds printed on the public login screen** (`admin@deyoung.site / deyoung123`) | `admin-app.tsx:215–218`; also `seed.ts:23`, `smoke_subs.py:9` | Owner changes password now; remove hint from UI; keep `/api/auth/me` `usingDefaultPassword` banner; bootstrap creds from env |
+| C-4 | **Ephemeral storage destroys paid deliverables**: renders in `public/uploads/` vanish on every deploy; customers holding download links get 404s | `worker/jobs/[id]/route.ts:53–56`; `docs/WORKERS.md:100–104` | Object storage (R2/Supabase Storage) behind signed URLs — §D.1 |
+| C-5 | **`/api/upload` does not exist but the admin UI calls it** — every admin image upload and manual video delivery 404s; admin pastes URLs instead, which then break `next/image` (no `remotePatterns` configured) | callers: `admin-content.tsx:174`, `admin-subs.tsx:334`; route glob has no `/api/upload` | Implement or remove; see §E.6 |
+
+### HIGH (10)
+- **H-1 No rate limiting anywhere** — login brute-force, contact/book/request spam all unbounded (grep `rate|throttle` → 0). → §F.2
+- **H-2 Session cookie `secure:false`** on an HTTPS site (`auth.ts:88`). → §F.1
+- **H-3 Auth-secret fallback to a public constant** when the ephemeral disk write fails (`auth.ts:25`) — session forgery becomes feasible. → §F.1
+- **H-4 Unauthenticated render download**: `GET /api/worker/file/req-<id>.mp4` needs only the request ID (no email check); combined with `GET /api/requests/[id]?email=` IDOR (email guess = prompt/status/resultUrl disclosure) | `worker/file/[name]/route.ts`; `requests/[id]/route.ts:11–33`. → §F.2
+- **H-5 Quota-burn IDOR**: anyone can submit renders against another person's subscription by claiming their email (`requests/route.ts:27–33`). → §F.2
+- **H-6 No payment webhooks** — verification only works if the buyer's browser returns; closed tab = paid-but-pending forever. No webhook signature verification anywhere. → §E.2
+- **H-7 Verify endpoints don't bind currency or payer identity** — amount-only match (`bookings/[id]/verify/route.ts:30–39`). → §E.2
+- **H-8 Payment secret key stored plaintext in the Settings DB row** (`schema.prisma:39`), single point of compromise; should be env + least exposure. → §E.2
+- **H-9 Prisma query logging on in production** (`db.ts:10` `log:['query']`) — performance + PII-in-logs. → §F.6
+- **H-10 `typescript.ignoreBuildErrors:true` + neutered ESLint (28 disabled rules) + zero CI** — type errors and regressions ship silently. → §H.2
+
+### MEDIUM (12)
+- **M-1 Fake testimonials presented as real clients** — seeded quotes rendered under "Real clients / Word on the Street" (`seed.ts:234–263`, `sections.tsx:195`). Violates zero-fabrication charter; consumer-protection exposure. → §G.1
+- **M-2 "4K" claims contradict the renderer** (hero chip "★ 4K", request copy "up to 60 seconds… 4K"; plans cap 1080p; worker renders 768×512 upscaled; LTX caps ~6.7s/pass) — `hero.tsx:70`, `sections.tsx:409,473`, `schema.prisma:123`, `deyoung_worker.py:235`. → §G.1
+- **M-3 "Rate stays locked forever" promise not implemented in the data model** (`plans.tsx:126`; `pricePaid` overwritten by admin PATCH). → §E.1
+- **M-4 PayPal capture is client-side and never verified; Flutterwave client launcher dead** (`book-view.tsx:239–286`; verify route returns `provider-does-not-need-verification`). → §E.2
+- **M-5 Worker `resultUrl` JSON delivery accepts any URL** (≤500 chars, no allowlist) — compromised worker could aim customers anywhere. → §C.2
+- **M-6 No heartbeat/staleness/reaper**: a crashed worker leaves jobs `rendering` forever; only manual admin recovery. → §C.1
+- **M-7 No job attempt counter / poison-job policy / transition validation** on admin status changes. → §B.4
+- **M-8 `Float` money** in schema (Booking.amount, Plan.price, Service.price, VideoRequest.gpuMinutes). → §B.1
+- **M-9 GPU-minutes accounting is worker-self-reported** (`max(0.1, round(elapsed))`), used only for dashboard. → §E.1 cost engine
+- **M-10 Legal surface = one hash-route privacy page**; no Terms, no Refund page, no Cookies, no Accessibility statement; privacy page asserts "Visitors of the site cannot see your booking or message details" which H-4/H-5 contradict. → §G.4–G.6
+- **M-11 `deploy/start.sh` runs `node scripts/seed.ts` on every boot; Node <22.6 cannot execute TS → seed silently skipped (`|| echo WARNING`)**; also `prisma db push --accept-data-loss` on every boot. → §H.5
+- **M-12 SEO defects**: `sitemap.xml` uses relative `<loc>` (invalid); `robots.txt` contains a non-standard `Noindex:` directive; manifest description is pre-pivot copy; `metadataBase` falls back to localhost. → §H.5
+
+### LOW (6)
+- L-1 Unused heavy deps ship in node_modules (`next-auth`, `framer-motion`, `@mdxeditor/editor`, `@tanstack/*`, `zustand`, `recharts`, `react-syntax-highlighter`, `z-ai-web-dev-sdk`) — slow installs, larger attack surface. → §H.5
+- L-2 Vestigial `tailwind.config.ts` (v3-style globs don't match `src/`); live theme is `globals.css` `@theme`. → §H.5
+- L-3 `next/font/google` Geist Mono = build-time Google fetch; fine today, self-host for air-gapped reproducibility. → §F.5
+- L-4 Header admin link `#admin` visible in footer; harmless but consider owner-only reveal. → §F.1
+- L-5 StructuredData hardcodes "Mo-Su 00:00-23:59" opening hours (false claim if untrue). → §G.1
+- L-6 `/api` root route returns `{"Hello, world!"}` stub; `examples/` scaffolding; 3 duplicate Archivo copies. → §H.5
+
+### Accessibility findings (full list in §F.7; summary)
+Showreel dot buttons 6px (WCAG 2.2 target-size fail); arrows 32px; `text-white/40–60` low-contrast text in footer/hero/ticket (AA fail at small sizes); gallery lightbox has no focus trap/Escape (dialog pattern fail); hash views (`#book`, `#subscribe`, `#request`, `#privacy`) have **no h1**; hero film has no `<track kind="captions">` (reduced-motion is, by contrast, handled well in 3 layers — keep it).
+
+## A.3 Gap analysis — today vs the AI-film-studio target
+
+| Capability (target) | Status today | Gap size |
+|---|---|---|
+| Multi-user accounts, customer login, email verification | None — customers are email strings on Booking/Subscription rows | Large (§B.1 profiles) |
+| Production manifest / script / scenes / character bible / storyboards | One `prompt` string per VideoRequest; Elite sells "multi-scene" but no scene model exists | Large (§B.2–B.3) |
+| Job state machine (11 states, attempts, leases, DLQ) | 5 flat statuses, no attempts/lease/reaper | Medium (§B.4) |
+| Realtime production events (SSE), live studio UI | None (polling with `?email=`; 0 EventSource/WebSocket) | Medium (§D.4–D.5) |
+| Object storage + signed URLs + lifecycle cleanup | Ephemeral FS; per-deploy data loss | Medium (§D.1) |
+| Credit ledger + cost engine | Row-count quota; self-reported gpuMinutes | Medium (§E.1) |
+| Payments hardened (webhooks, currency binding, server capture) | Callback-only verify, amount-only | Medium (§E.2) |
+| Model registry w/ license gates + fallback chain | Hardcoded LTX/MiniMax-H3 kernels | Medium (§C.3–C.4) |
+| QC automation (ffprobe/ASR gates) | Manual eyeballing (film_verify.mjs exists as a script, not wired to the platform) | Small (§D.8) |
+| Feature flags / audit logs / rate limiting / backups | All absent | Small each (§F.2, §E.5, §H.4) |
+| Legal pages (Terms, Refunds, Cookies, A11y statement) | Privacy-only | Small but blocking (§G) |
+| Testing / CI | None (sandbox shell scripts only) | Medium (§H.1–H.2) |
+
+## A.4 Target architecture (one screen)
+
+```
+Browser (Next.js 16 single page + /studio + /admin)
+   │  fetch + SSE (/api/events/stream)
+   ▼
+CONTROL PLANE (same Next.js app + Supabase Postgres)      ← owns all state
+   ├─ auth/users/profiles (RLS)        ├─ productions/manifests/scenes
+   ├─ job queue (state machine+leases) ├─ production_events (source of truth)
+   ├─ credit_ledger (immutable)        ├─ payments + webhooks (server-verified)
+   └─ model_registry (license gates)   └─ feature_flags / audit_logs
+   │                                      │
+   │ signed URLs (never raw keys)         ▼
+   ▼                                 EXECUTION PLANE (stateless, replaceable)
+OBJECT STORAGE (R2 / Supabase Storage)   Kaggle T4 workers (deyoung_worker.py v2)
+   private buckets, lifecycle rules       claim → download inputs → render →
+   renders/refs/audio/thumbnails          checkpoint → upload → deliver → heartbeat
+   ├─ FREE: Supabase Storage 1GB          ├─ FREE: Kaggle ~30 GPU-h/wk × N accounts
+   └─ PAID: R2 (zero egress)              └─ PAID: Atlas/Evolink premium APIs (Kling/Veo)
+```
+**Invariants (the whole document in five lines):**
+1. The browser never talks to Kaggle, storage keys, or payment APIs directly — only to the control plane.
+2. The control plane owns every state transition; workers are stateless and disposable.
+3. Every expensive operation carries an idempotency key; every balance change is a ledger row; every render is an asset-graph node.
+4. Real events only: if the backend didn't emit it, the UI doesn't show it. Unknown → honest state, never a fake progress bar.
+5. Free-first with a documented paid exit at every layer (§E.3–E.4).
+
+## A.5 Why this architecture (prompt §14/§78 rationale, grounded in this codebase's history)
+
+- **A film compiler beats "prompt → video API"** because the work we actually shipped proves it: our own model hallucinated every scripted line (Task 30, worklog) — recovered only because the pipeline separated script, voices, visuals, and assembly, so we could post-dub with TTS and ASR-verify all 8 lines. That is a compiler property: stages are independently inspectable, retryable, and replaceable. A monolithic prompt-to-API call gives one unrecoverable output.
+- **Multiple shots beat one long generation** for the same reason: a 60s film = 8–10 scene jobs of 5–10s each (matching §3 of the prompt); any scene can fail and be re-queued without destroying the production. Our first live film (v3.5) shipped exactly this way when the provider failed 6/8 scenes — Ken Burns fallback for missing scenes, real clips where we had them. Duration must always be computed from actual rendered assets (`ffprobe`), never claimed from a model spec (§D.8).
+- **Workers are disposable; state is not** — Kaggle kills sessions (our 4 film kernels run ~10h toward a ~9–12h cap); therefore leases + heartbeats + checkpointing (§C.1) are not optional. Losing a free GPU session must cost one scene, never a production.
+- **The ledger exists because credits are money.** Row-count quotas cannot express refunds, reversals, promotions, or expirations, and cannot be audited when a customer disputes a charge (§E.1).
+- **Legal/compliance surfaces exist because this is a paid Nigerian consumer service**, not a demo: fabricated testimonials and unverifiable capability claims are the two things regulators and payment providers actually act on (§G).
+
+---
+# PART B — DATA & JOB CORE
+
+## B.1 Database architecture (target)
+
+Same engine (Supabase Postgres) — **upgrade, don't migrate away**. Prisma stays as the ORM; the two hand-synced schema files are consolidated by making `prisma/schema.prisma` the single source and generating the postgres variant (`sed` transform already exists in `deploy` flow) — with a CI check that the two never drift (§H.2).
+
+**Money**: replace every `Float` amount with `Int` minor units (kobo) or Prisma `Decimal` — this includes `Booking.amount`, `Plan.priceMonthly/compareAtPrice`, `Service.price/compareAtPrice`, `Subscription.pricePaid`, and the new ledger (§E.1). Rounding rules live in code, not in float arithmetic.
+
+**Relations**: declare real Prisma `relations` for every existing stringly-typed FK (`Subscription.planCode → Plan.code` as a unique FK, `VideoRequest.subscriptionId → Subscription.id` with `onDelete: Cascade`), eliminating manual cascade deletes (`subscriptions/[id]/route.ts:57` becomes automatic).
+
+**New tables (26 — full target set per the master prompt §20).** Existing tables keep their names; new columns are additive so `prisma db push` never destroys data:
+
+| Table | Purpose / key fields (beyond today's) |
+|---|---|
+| `Profile` | Customer identity: `id`, `email` (unique), `name`, `phone?`, `emailVerifiedAt?`, `marketingConsent?`, `createdAt`. Customers log in with email + one-time code (no passwords to store — see §F.1). Subscriptions/Bookings/Requests gain `profileId` (nullable during migration, backfilled by email match) |
+| `LoginCode` | `email`, `codeHash` (scrypt), `expiresAt` (10 min), `attempts`, `consumedAt` — powers passwordless customer auth |
+| `Project` | A customer's creative container: `profileId`, `title`, `description` |
+| `ProjectMember` | `projectId`, `profileId`, `role` (owner/editor/viewer) — RLS anchor |
+| `Production` | One film run: `projectId`, `targetDurationSec`, `style`, `status` (draft/manifested/running/completed/failed/cancelled), `manifestId` (selected version), `createdAt` |
+| `Script` | Versioned screenplay: `productionId`, `version`, `content`, `selectedAt?` |
+| `Character` | Character-bible row: `projectId`, `name`, `appearance`, `face`, `hair`, `clothing`, `accessories`, `voiceId`, `personality`, `movement`, `negativeTraits`, `consistencyInstructions`, `version` — scenes reference by ID, never re-describe (prompt §15) |
+| `CharacterReference` | `characterId`, `kind` (image/video/audio), `assetId`, `weight` |
+| `Voice` | `name`, `provider` (tts-engine), `voiceKey`, `sampleAssetId?`, `licenseNote` |
+| `Scene` | `productionId`, `index`, `plannedDurationSec`, `characterIds[]`, `locationId`, `camera`, `lighting`, `movement`, `prompt`, `audioPlanJson`, `modelPolicyJson`, `qcPlanJson` |
+| `SceneVersion` | Every generation attempt is preserved: `sceneId`, `version`, `jobId`, `assetId`, `status` (rejected/selected/pending) — the "v1 rejected, v3 selected" lineage (prompt §16) |
+| `Location` | `projectId`, `name`, `description`, `referenceAssetIds[]`, `consistencyInstructions` |
+| `ProductionManifest` | Immutable versioned JSON of the whole film (§B.2): `productionId`, `version`, `schemaVersion`, `contentJson`, `createdBy`, `createdAt` |
+| `Job` | The unified queue (§B.4): `type` (scene_render/audio/tts/qc/upscale/assemble), `sceneId?`, `productionId?`, `videoRequestId?` (legacy), `state`, `attempts`, `maxAttempts`, `leaseUntil`, `claimedByWorkerId`, `idempotencyKey` (unique), `priority`, `payloadJson`, `lastError` |
+| `JobAttempt` | Append-only: `jobId`, `workerId`, `startedAt`, `endedAt?`, `outcome`, `errorSummary`, `checkpointJson?` |
+| `Worker` | Registry (§C.1): `workerKey` (unique), `provider` (kaggle/local/paid-api), `gpuModel`, `gpuCount`, `vramGb`, `ramGb`, `capabilities` (text[]), `modelVersionsJson`, `workerVersion`, `status` (online/busy/offline/drained), `lastHeartbeatAt`, `currentJobId?`, `jobsCompleted`, `jobsFailed`, `lastError` |
+| `WorkerHeartbeat` | `workerId`, `at`, `gpuUtil`, `memUsedGb`, `currentStep`, `progressPct?` — time-series, pruned >7 days |
+| `ProductionEvent` | Append-only event log (§D.4): `productionId?`, `jobId?`, `type` (`production.started`, `scene.completed`, `worker.claimed`, …), `payloadJson`, `at` |
+| `Asset` | Every file with lineage (§D.2): `kind` (reference/render/audio/caption/thumbnail/master/upload), `storageKey`, `bytes`, `mimeType`, `checksumSha256`, `metaJson` (ffprobe results), `createdByJobId?`, `expiresAt?` |
+| `Render` | Final outputs: `productionId?`, `videoRequestId?`, `assetId`, `durationSec` (measured), `resolution`, `qcStatus` |
+| `ModelRegistry` | `name`, `version`, `provider`, `task`, `licenseName`, `licenseUrl`, `commercialUse` (bool/unknown), `territoryLimits`, `attributionRequired`, `hostedServiceRestrictions`, `outputRestrictions`, `gpuClass`, `maxDurationSec`, `resolutions`, `verifiedAt`, `verifiedBy`, `enabled`, `notes` — **a model cannot serve paid users unless `commercialUse=true` and `verifiedAt` < 90 days** (prompt §43) |
+| `CreditLedger` | Immutable (§E.1): `profileId`, `delta` (Int, signed, kobo-denominated or credit-denominated — choose credits), `type` (purchase/consumption/refund/promo/reversal/adjustment/expiration), `reason`, `refType?`, `refId?`, `idempotencyKey` (unique), `balanceAfter` |
+| `Payment` | `profileId?`, `bookingId?`, `subscriptionId?`, `provider` (paystack/flutterwave/paypal/stripe/manual), `providerRef` (unique per provider), `amountMinor`, `currency`, `status` (pending/verified/failed/refunded), `webhookEventId?` (unique — replay guard), `verifiedAt`, `rawJson` |
+| `QcResult` | `assetId`/`renderId`, `checksJson` (duration/codec/black-frames/silence/loudness/asr-dialogue), `passed`, `failureReason` |
+| `CostRecord` | `jobId?`, `model?`, `gpuMinutes` (measured server-side: lease end − start, not self-reported), `gpuClass`, `theoreticalCostMinor` (theoretical cost even when free — prompt §22), `provider` |
+| `FeatureFlag` | `key` (unique), `enabled`, `rolloutJson`, `note` — flags for `h3_film`, `paid_apis`, `new_providers` (prompt §69) |
+| `AuditLog` | `actorType` (admin/worker/system), `actorId`, `action`, `entityType`, `entityId`, `beforeJson?`, `afterJson?`, `ip?`, `at` — every admin mutation lands here |
+
+**RLS posture**: with Supabase, enable RLS on all tables; the app connects with the service role via Prisma (server-only), and **no Supabase client key ships to the browser** (today's architecture already has no client-side DB access — keep it that way; RLS is defense-in-depth for direct DB access, not a substitute for the API layer). `ProjectMember` + `profileId` columns make per-user isolation enforceable if direct Supabase access is ever introduced.
+
+**Migration order** (no destructive steps): add tables → backfill (`Profile` from distinct emails; `Job` from `VideoRequest`) → add FKs with `onDelete` → move money columns to `Decimal` → drop nothing until W4 (§H.6).
+
+## B.2 Production Manifest (versioned, §13 of prompt)
+
+One immutable JSON per production version, stored in `ProductionManifest.contentJson` and **validated by zod at write time** (first real use of the installed dependency). Schema v1:
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "productionId": "cuid",
+  "targetDurationSec": 60,          // planned; delivered duration is measured later
+  "style": "anime | realistic | cartoon | stickman | kids | custom:…",
+  "language": "en",
+  "characters": [{ "id": "char_amara", "name": "Amara", "voiceId": "…",
+                   "appearance": "…", "consistencyInstructions": "…", "negativeTraits": ["…"] }],
+  "locations":  [{ "id": "loc_lagos_rooftop", "description": "…", "references": ["asset:…"] }],
+  "scenes": [{
+    "index": 1, "plannedDurationSec": 6,
+    "characterIds": ["char_amara"], "locationId": "loc_lagos_rooftop",
+    "camera": "slow push-in, 35mm", "lighting": "golden hour rim", "movement": "gentle dolly",
+    "prompt": "…", "negativePrompt": "…",
+    "references": ["asset:plate_001.png"],
+    "audio": { "dialogue": [{ "characterId": "char_amara", "line": "One sentence. Sixty seconds. Done.",
+                               "voiceId": "voice_tongtong", "maxSec": 5.5 }],
+               "music": { "bed": "asset:music_drone", "duckUnderDialogue": true } },
+    "modelPolicy": { "preferred": "minimax-h3", "fallbacks": ["ltx-2", "kenburns"], "seed": 99 },
+    "qc": { "minDurationSec": 5.2, "requireSubjectPresence": true, "requireDialogueMatch": true }
+  }],
+  "audioPlan": { "musicBed": "…", "loudnessTargetLufs": -14, "ducking": true },
+  "editPlan":  { "transitions": "hard cut + 0.4s dip-to-black at scene 5",
+                 "captions": "burned-in, Archivo, bottom-center",
+                 "endCard": { "assetId": "asset:endcard", "durationSec": 5 } },
+  "qcPlan":    { "perScene": true, "finalAsr": true, "blackFrameCheck": true }
+}
+```
+Rules: manifests are never edited in place — a change creates `version+1`; the execution graph is derived deterministically from the selected manifest version; the final render stores `manifestId` so any film can be traced to the exact plan that produced it (prompt §70/§17 traceability).
+
+## B.3 Film compiler (§14 of prompt) — pipeline stages and where they run
+
+```
+idea → understanding → script (LLM, versioned) → character bible → storyboard text
+     → production manifest (validated JSON) → execution graph (jobs w/ deps)
+     → [execution plane renders scene jobs] → asset graph fills in
+     → edit graph (assembly ffmpeg chain) → audio (TTS + mix) → QC gates → master
+```
+- Stage outputs are **rows, not memories**: each arrow above writes a table (Script/Character/Scene/Job/Asset/QcResult), which is what makes every stage resumable and auditable.
+- The compile step is an API route (`POST /api/productions/:id/compile`) executed by the control plane using the configured LLM provider — behind a feature flag (`film_compiler_v1`) until it beats the manual pipeline in QA.
+- Failure isolation: a script revision or character change invalidates only downstream jobs of affected scenes (dependency edges stored in `Job.payloadJson.deps`).
+
+## B.4 Job system — explicit state machine
+
+States (prompt §11): `QUEUED → CLAIMED → RUNNING → CHECKPOINTED → UPLOADING → COMPLETED`, plus `FAILED → RETRYING`, `STALE`, `CANCELLED`.
+
+**Transition table (enforced in code, not by convention):**
+
+| From | Event | To | Guard |
+|---|---|---|---|
+| QUEUED | worker claim (atomic) | CLAIMED | `updateMany({where:{id,state:QUEUED}, …})` = 1 row (existing pattern kept) |
+| CLAIMED | worker first heartbeat/progress | RUNNING | lease extended |
+| RUNNING | periodic checkpoint | CHECKPOINTED→RUNNING | checkpoint blob stored on attempt |
+| RUNNING | upload start | UPLOADING | — |
+| UPLOADING | deliver OK + QC passed | COMPLETED | QC gate mandatory (§D.8) |
+| any of CLAIMED/RUNNING/UPLOADING | lease expired | STALE | reaper (§C.1) |
+| STALE | reaper | QUEUED (RETRYING implied) | if attempts < maxAttempts else FAILED |
+| RUNNING | worker fail (transient) | FAILED→RETRYING | attempts++ |
+| any | worker fail (permanent/moderation/invalid) | FAILED (terminal) | no requeue; reason recorded |
+| QUEUED/CLAIMED/RUNNING | admin/user cancel | CANCELLED | worker notified on next poll |
+
+**Failure taxonomy** (each maps to a distinct retry/credit policy): `transient` (network, provider 5xx) → retry ×3 with backoff; `model_failure` (generation garbage) → retry once with different seed, then fallback model (§C.4); `worker_failure` (crash/OOM) → STALE path, never counts against scene attempts beyond requeue limit; `moderation` → terminal, user-visible honest reason, credit reversal if charged (§E.1); `invalid_input` → terminal + validation fix requested; `storage_failure` → retry with different key prefix; `payment_failure` → no render started at all (pre-paid check).
+
+**Idempotency (prompt §12)**: every `Job` carries a unique `idempotencyKey` (e.g. `scene:{sceneId}:v{attempt}:seed`); a re-delivered result for a COMPLETED job is acknowledged and discarded; payment webhooks are deduped on `webhookEventId`; ledger writes carry `idempotencyKey` so a retried webhook can never double-credit (§E.1–E.2).
+
+**Legacy path**: the existing `VideoRequest` flow keeps working unchanged (single-scene productions under the hood): W1 maps `VideoRequest` → one `Production` + one `Scene` + one `Job` so both UIs ride the same queue (§H.6 W1).
+
+---
+# PART C — EXECUTION PLANE
+
+## C.1 Worker architecture & registry
+
+**Worker lifecycle** (prompt §7, all 13 steps mapped): start → authenticate (`WORKER_TOKEN`, Bearer header only — **drop the `?token=` query variant**, `src/lib/worker.ts:27`, tokens in URLs leak into access logs) → register (`POST /api/worker/register` new: GPU model/VRAM/RAM/capabilities/workerVersion → upserts `Worker`) → heartbeat every 60s (`POST /api/worker/heartbeat`: gpu util, current step, progress) → request work → claim (existing atomic route) → download inputs via short-lived signed URLs → process → report progress → upload result to storage (worker gets a **scoped upload URL**, no storage credentials) → complete job → loop or terminate.
+
+**Registry**: the `Worker` table (§B.1) is populated at register time. The scheduler (inside `POST /api/worker/claim`) filters jobs by required capability (e.g. `scene_render` needs capability `video_generation_small` + gpuClass ≥ T4; `tts` jobs can run on CPU workers; `assemble` needs `ffmpeg`), then applies priority-desc → FIFO — preserving the exact customer-facing queue math that exists today (`subs.ts:54–79`). Capability examples: `video_generation_small`, `video_generation_h3`, `image_generation`, `ffmpeg`, `whisper_asr`, `tts`, `lipsync_premium`, `upscale`.
+
+**Heartbeat & reaper (fixes M-6)**: control-plane reaper runs on every `GET /api/worker/status` + a cron tick: any job with `leaseUntil < now()` and state ∈ {CLAIMED, RUNNING, UPLOADING} → `STALE`; its worker is marked `offline` if `lastHeartbeatAt < now() − 3 min`. STALE jobs requeue automatically with attempts++ (§B.4). Lease = 10 min, renewed by each heartbeat and each progress call. Effect: a Kaggle session dying mid-scene costs exactly one scene requeue — the production continues (prompt §9–§10).
+
+## C.2 Worker trust boundaries
+
+- Workers can: claim, heartbeat, deliver to their own job, fail their own job with a reason.
+- Workers cannot: read other jobs, set `resultUrl` to arbitrary hosts (JSON deliver restricted to `{storage: true}` — the control plane uploads/validates; if raw URL delivery is ever needed, scheme+host allowlist, fixing M-5), touch payments/users/settings, or exceed `MAX_UPLOAD` 200MB (unchanged).
+- Worker code version is reported at register; admin can `drain` a worker (no new claims, finish current job) or disable it — per prompt §27 worker controls.
+- The render fleet today is one shared token; keep it but **rotate quarterly** (and now, per C-2), and give each launched kernel a distinct `workerKey` so the registry can attribute failures per account.
+
+## C.3 Model registry & license gates (prompt §5/§43)
+
+`ModelRegistry` rows are **facts with sources**, not vibes. Seeded from this research pass (verification status honest):
+
+| Model | Task | GPU class | Max duration | License (verified 2026-09-06) | Commercial use | Restrictions |
+|---|---|---|---|---|---|---|
+| **MiniMax H3** (Hailuo 3, open weights) | text/image→video | T4-class reported by community; **exact VRAM/resolution: NOT VERIFIED — verify from the official model card before enabling on T4 fleet** | NOT VERIFIED (community reports ~10s/pass) | Open-weight license; **reported to exclude certain territories (US; scope of exclusion NOT VERIFIED)**; prohibits using outputs to improve other models (reported) | **CONDITIONAL — verify the license text at the official repo before commercial enablement: huggingface.co/MiniMaxAI/MiniMax-H3 (license file) + minimax.io announcement** | Territory list must be checked against Nigeria (operator) and customer location; outputs-must-not-train-competitors clause affects fine-tuning plans |
+| **LTX-Video 0.9.x** (already running in `deyoung_worker.py`) | text/image→video, small | T4 (proven: it runs today at 768×512, 161 frames) | ~6.7s/pass @24fps | Lightricks open-weights license (community "Open-Weights License" files exist on HF; **exact commercial terms NOT VERIFIED — read the license file shipped with the weights**) | UNKNOWN until license text read — mark `commercialUse: unknown` in registry | LTX-2 announced open-source ("production-ready", globenewswire 2026); commercial licenses offered via ltx.io |
+| **ffmpeg stub renderer** | placeholder/fallback | CPU | any | N/A (we authored it) | YES | Label output as placeholder |
+| **TTS engines (current voice cast)** | speech | CPU | — | Per-provider ToS; **verify each voice's commercial/redistribution terms in the provider dashboard before paid use** | UNKNOWN per voice | Voice cloning of real persons forbidden (§G.5) |
+| Premium APIs (Kling via Atlas, Veo 3.1 via Evolink) | premium render/lipsync | API | per API docs | Provider ToS; **keys valid but currently EMPTY (402)** — worklog Task 30/31 | YES (paid) | Cost ~$0.153/s Kling v3-std i2v (quoted 2026-09-05, re-verify) |
+
+**Gate rule (enforced in the scheduler)**: a model serves paid renders only if `enabled && commercialUse == true && verifiedAt < 90 days`. Free-tier/demo renders may use `unknown`-license models **with output labeling** ("Made with DeYoung" + model name on the work page), never on paid orders. This single rule prevents the most expensive mistake in AI products: building revenue on a license you never read.
+
+## C.4 H3 integration plan (honest version)
+
+- **Feasibility**: the fleet's `minimax-h3-on-kaggle-t4-2-one-click-notebook` kernel exists (deyoungsltd, 2026-08-30) — H3 on T4 is at least runnable. It is **not yet proven at production quality/duration**; the 4 film kernels in flight (2026-09-06) are the actual proof. Do not promise H3-powered tiers until those outputs pass QC (§D.8).
+- **Integration shape**: H3 is just another entry in `ModelRegistry` + a renderer in `deyoung_worker.py v2` (`--renderer h3`) behind feature flag `h3_film`. Scene-level outputs feed the same asset graph as LTX — nothing downstream changes. That is the provider-abstraction payoff (prompt §5).
+- **T4 reality check**: T4 = 16GB VRAM; expect quantized/low-res internal renders + upscale steps, 5–10s clips per pass. 60-second films are produced by **scene chaining + last-frame conditioning** (first/last-frame pinning pattern documented in research R-1: OpenMontage uses it; clean-room implement, do not copy AGPL code).
+- **Fallback chain (prompt §64)**: `minimax-h3 → ltx-2 → kenburns(stills) → stub(placeholder, flagged honestly)`. On any fallback that materially changes quality, the customer sees it (event + status line), and credits follow §E.1 policy. Never fake a model result (prompt §64/§77).
+
+## C.5 Checkpointing (prompt §10)
+
+`JobAttempt.checkpointJson` (§B.1) stores: rendered segment files already uploaded (asset IDs), current frame/step, seed in use. A requeued job resumes from the last uploaded segment (`payload.resumeFrom` = asset ID) instead of from zero. Implementation order: (1) segment-based resume (scene jobs produce 5–10s segments; each completed segment is uploaded immediately — the H3 fleet already does this), (2) frame-level resume for LTX (skip if it complicates the renderer — segment-level is enough), (3) assembly jobs are naturally idempotent (re-run re-encodes from assets).
+
+---
+# PART D — MEDIA PLANE
+
+## D.1 Storage architecture (fixes C-4, the worst operational bug)
+
+**Object storage, private by default, signed URLs for delivery.** Provider abstraction (`src/lib/storage.ts`, interface: `put(key, stream) / signedUrl(key, ttl) / delete(key) / lifecycle()`):
+
+| Path | Free tier (verified where marked) | Paid exit |
+|---|---|---|
+| **Supabase Storage** (same project as DB — zero new vendor) | 1 GB storage, 2 GB egress/month free tier per Supabase docs — **current exact limits: NOT VERIFIED in this pass (search returned docs page only); verify at supabase.com/docs/guides/storage before relying on numbers** | Supabase Pro (volume pricing; Pro includes 100GB storage / 250GB bandwidth per pricing page snippet, re-verify) |
+| **Cloudflare R2** (recommended at first scale-up) | 10 GB storage, zero egress fees, Class A/B ops free allowances — **current numbers: NOT VERIFIED in this pass; verify at developers.cloudflare.com/r2/pricing** | Per-GB beyond free; no egress charge is the reason it beats S3 for video delivery |
+| Worker artifacts | R2 lifecycle rule: delete `tmp/` prefix after 3 days | — |
+
+Keys: `productions/{id}/scenes/{index}/v{version}.mp4`, `refs/…`, `audio/…`, `renders/…`, `tmp/…`. **Delivery**: `GET /api/files/:assetId` → authz (owner, or admin, or unlisted-with-signed-token) → 302 to a 10-minute signed URL. This replaces both the unauthenticated `/api/worker/file/:name` route (H-4) and the fragile static `/uploads/` path, and survives deploys forever (fixes C-4). Migration for existing rows: current `public/uploads` files are ephemeral anyway; new deliveries go to storage from W1.
+
+## D.2 Asset graph & traceability (prompt §17)
+
+Every file is an `Asset`; every `Asset` knows its producer (`createdByJobId`); every `Job` knows its scene; every scene knows its manifest version; every render knows its manifest. Traceability query = 4 joins. Practical rule: **no file is ever written outside the graph** (workers upload via control-plane-issued scoped URLs that stamp lineage), which is what makes "trace this final video to source assets + model versions" a query, not an investigation.
+
+## D.3 Character system (prompt §15–§16)
+
+`Character` rows are the single source of truth; scenes reference `characterIds`; prompts are compiled at job time by injecting the character's `consistencyInstructions` + reference image URLs (signed, expiring) — never by re-describing the character per scene. Versioning: a character edit creates a new version; scenes pin the version they were generated against (`Scene.characterVersionIds`), so a costume change never silently mutates already-planned scenes. Voice: `Voice` rows bind character → TTS engine + voiceKey (the 7-voice cast from film v5 becomes seed data).
+
+## D.4 Realtime events — real ones only (prompt §19)
+
+`ProductionEvent` rows are **the** source of truth (prompt: "Realtime is for delivery; database history is the source of truth"). Event taxonomy: `production.started/completed/failed`, `manifest.created`, `script.completed`, `character.created`, `scene.started`, `worker.claimed`, `scene.progress {pct?}` (only when the worker reports a real number — the LTX renderer's tqdm percentage is real; there is no other), `scene.completed`, `audio.started/completed`, `qc.started/passed/failed`, `render.started/completed`. **Forbidden**: any UI-generated percentage, any simulated crew chatter, any "Generating… 72%" without a backend event carrying 72.
+
+Delivery: `GET /api/events/stream?productionId=…` — Server-Sent Events (SSE) via a `ReadableStream` route handler polling the event table (Postgres LISTEN/NOTIFY upgrade later; SSE over polling is honest and works on Railway). The customer studio view renders event history on load (replay from DB) then appends live — refreshing the page never loses the story.
+
+## D.5 Live Studio UI (`/studio` — the "control room", prompt §18/§78)
+
+One new hash view (keep the single-page pattern): **CANVAS** (latest selected frame per scene), **STORYBOARD** (scene cards appear as scene.completed fires; rejected versions dimmed but visible), **TIMELINE** (measured durations; shots slot in automatically), **AI CREW** (roles derived from real events: Director = compile stage, Character AI = bible stage, Scene Workers = per-worker rows with real GPU/status from `Worker` table, Voice/Sound = audio jobs, Editor = assembly job, QC = qc events — each shows "working / waiting / done" driven by events, nothing else), **PRODUCTION LOG** (the event stream verbatim, timestamped), **WORKER STATUS** (human strings: "Scene 4 is rendering on a T4 worker — started 2 min ago"). Empty state = "No production running — start one" not a fake film set. Admin/advanced details (leases, attempts, seeds) collapse into an "advanced" drawer.
+
+## D.6 Audio pipeline (what already works, formalized)
+
+The v5 film proved the honest path: generated video cannot follow scripted dialogue → **dialogue is TTS post-dub, always** (until premium lip-sync APIs are enabled). Pipeline: TTS per line (`film_voices.mjs` logic → `tts` jobs) → speed-fit per segment (`atempo`) → loudnorm per clip → placement timeline (adelay) → voice bus amix → music bed with sidechain ducking → limiter → measured duration (`ffprobe`), never assumed. All of this moves into `audio`/`assemble` jobs on the same queue (currently `film_mix.py` runs on the operator's machine — formalize as a worker capability `ffmpeg`, runnable on CPU workers).
+
+## D.7 Editing pipeline
+
+Assembly = the proven chain (`v3_assemble.py`/`v5_assemble.py` lineage): normalize → per-scene trim/grade → captions burn (Archivo) → Ken Burns for still-fallback scenes → end card → loudness master → web encode (crf 26–27, hqdn3d, faststart, moov-first). Encode as an `assemble` job with `editPlan` from the manifest. Cache-busting (`?v=N` on the hero video) becomes automatic (asset checksum suffix).
+
+## D.8 QC gates (prompt §65) — automatic, blocking, honest
+
+`QcResult.checksJson` per render/asset; **a job cannot reach COMPLETED without QC pass** (or an explicit admin override recorded in `AuditLog`):
+1. container/codec sanity (ffprobe: exists, h264, faststart);
+2. duration within manifest tolerance (planned ±0.8s) — **the delivered duration is the measured duration; the "60-second film" is always the sum of measured scenes**;
+3. black-frame / frozen-frame ratio check (ffmpeg blackdetect/freezedetect thresholds);
+4. silence check for audio jobs; loudness within −16 to −12 LUFS band for masters;
+5. **dialogue match** for voiced scenes: ASR the clip (whisper on worker, capability `whisper_asr`) and require the scripted line to match above a threshold — this is `film_verify.mjs`'s proven ASR gate promoted to a platform check (it caught 8/8 hallucinated lines; it would have caught them before shipping if it had been a gate instead of a script);
+6. subject-presence (frame-difference heuristic; flagged "review", not auto-fail).
+QC failure → job `FAILED (model_failure)` → retry/fallback path (§C.4) → if terminal, the customer sees "This scene didn't pass our quality check — regenerating / credits preserved" (§E.1). Never deliver obviously broken output silently.
+
+---
+# PART E — MONEY & OPS
+
+## E.1 Credit ledger & cost engine (prompt §21–§22)
+
+**Ledger**: `CreditLedger` rows only; there is no `user.credits = 100` column anywhere. Invariant: `balanceAfter` of the newest row per profile = current balance; every row has `type`, `reason`, `idempotencyKey` (unique — replays are no-ops). Entry types: `purchase` (verified payment), `consumption` (render debit at claim time), `reversal` (failed/cancelled render), `promo`, `refund` (operator action), `adjustment` (support), `expiration`. Debits are **transactional with the claim**: the same DB transaction that flips a job to CLAIMED inserts the `consumption` row (row-locked `SELECT … FOR UPDATE` on the profile's balance); a rollback never loses both money and render.
+
+**Policy table (consumer-facing copy mirrors this exactly):**
+| Situation | Ledger action |
+|---|---|
+| Render fails terminally (any failure type) | `reversal` full credit back, automatic |
+| QC pass but customer rejects a scene | regenerate from credits if within plan allowance; else `consumption` again (stated in Terms §G.6) |
+| Duplicate payment detected (same providerRef) | second payment auto-`refund` path + audit log |
+| Plan price change | existing subscriptions keep their price — implemented via `Subscription.lockedPriceMinor` (fixes M-3; "rate locked" becomes a column, not a slogan) |
+
+**Cost engine**: every `Job` completion writes `CostRecord` with **server-measured** GPU-minutes (lease start→end, not worker self-report — fixes M-9) and `theoreticalCostMinor` computed from a per-model price table even when the GPU was free (Kaggle ≈ $0 theoretical out-of-pocket, but the table carries the replacement cost, e.g. T4 cloud ≈ $0.35–0.60/h — **current cloud pricing NOT VERIFIED; populate from provider pricing pages when cost reporting ships**). This is what makes FREE→CHEAP→PREMIUM migration a config change (§E.4), and it makes unit economics visible from day one.
+
+## E.2 Payment architecture (fixes H-6/H-7/H-8/M-4)
+
+**Providers**: Paystack + Flutterwave (Nigeria-first, researched fees below), PayPal + Stripe (existing manual rails), `manual` (bank transfer) — all behind one `payments` abstraction (`src/lib/payments/{provider}.ts` implementing `initiate`, `verify(ref)`, `parseWebhook(headers, body)`).
+
+**The flow (server-authoritative, prompt §23):**
+```
+USER PAYS → PROVIDER → (a) webhook POST /api/webhooks/{provider}  [primary]
+                     → (b) callback verify (existing endpoints)  [fallback]
+both paths → parseWebhook/verify (signature + amount + currency + ref) → Payment row (idempotent)
+         → Subscription activation / CreditLedger purchase → ProductionEvent → email receipt
+```
+- **Webhooks are primary**: `POST /api/webhooks/paystack` (verify `x-paystack-signature` HMAC-SHA512 with secret), `POST /api/webhooks/flutterwave` (verify `verif-hash` header against stored secret) — signature verification code per provider docs (hookdeck/paystack guide reviewed in this pass; **exact header algorithms: implement from the official docs pages and add contract tests, §H.1**). Both endpoints: raw-body read, 200-fast/queue-slow, duplicate `webhookEventId` ignored.
+- **Verify hardening**: bind `amount` **and `currency`** and expected `ref` prefix; reject `ref`s not matching a pending row (fixes H-7); PayPal: server-side capture via Orders API (client `onApprove` sends only the order ID; server captures and records — fixes M-4); Flutterwave client launcher: either load the official inline script or remove the option until it works (silent no-op is worse than absence).
+- **Secrets**: `paymentSecretKey` moves from the Settings DB row to Railway env vars (fixes H-8); admin UI keeps provider **on/off + public key** only. `Payment` rows store verified amounts in minor units.
+- **Refunds**: Paystack/Flutterwave refund APIs invoked from an admin-only action, mirrored as `Payment.status=refunded` + negative ledger row + email. No client-side refund claims (§G.7 policy copy).
+- **Fees (verified this pass, for the pricing model)**: Paystack Nigeria **local 1.5% + ₦100, fee waived under ₦2,500, capped ₦2,000** (paystack.com pricing, support pages, 2026 snippets agree); Flutterwave Nigeria **local 2.0% (1.4% transaction + 0.6% platform)** after the Apr-2025 increase (flutterwave.com help center). International card pricing differs — **verify exact international tiers before publishing any fee table to customers**.
+
+## E.3 Free-first infrastructure (prompt §24/§72 research table)
+
+| Component | Provider | Free? | No card? | Nigeria? | Current limit | Upgrade path | Source status |
+|---|---|---|---|---|---|---|---|
+| App hosting | **Railway** (existing) | trial credit only | no | yes (edge serving) | trial-limited | Hobby $5/mo → Pro | **NOT VERIFIED this pass — confirm current trial terms at railway.com/pricing** |
+| Postgres | **Supabase** (existing) | yes | yes | yes (region eu-central today) | free tier egress **5 GB/mo** (schematichq summary of official pricing, 2026-05); storage/disk free cap: **NOT VERIFIED — check supabase.com/pricing** | Pro ($25/mo) → dedicated | verified via 2026 secondary sources; primary page exists |
+| Object storage | Supabase Storage → **Cloudflare R2** | yes | yes (R2 requires CF account; card requirements NOT VERIFIED) | yes | R2 10GB/zero-egress — **NOT VERIFIED this pass; verify developers.cloudflare.com/r2/pricing** | per-GB | R2 pricing page exists; numbers to re-verify |
+| Free GPU | **Kaggle** (proven, in use) | yes | yes | yes (operator uses it daily) | **~30 GPU-h/week per account** (official Kaggle "Weekly Maximum GPU Usage" post; community-verified 2026); T4 ×2 / P100 options; session cap ~9–12h (**exact current cap NOT VERIFIED — Kaggle "increased session runtimes" post; check notebook docs**) | multiple accounts (current pattern: 8 tokens) → paid GPU (§E.4) | official posts verified |
+| Free GPU #2 | Lightning AI / SageMaker Studio Lab / Colab | partial | partial | partial | **NOT VERIFIED this pass** — evaluate only if Kaggle quota becomes the bottleneck; priority: email signup, Nigeria access, own-model runs (prompt §6) | per-provider | deliberately unverified → do not build on unverified platforms |
+| Email | **Resend** (proposed) + existing AgentMail | free tier exists | yes | yes (API) | **NOT VERIFIED this pass — confirm resend.com/pricing (search results were noise)**; AgentMail currently used owner-side | Resend paid tier | agentmail key must rotate first (C-1) |
+| Analytics | **PostHog** (proposed) | generous free tier | yes | yes | **NOT VERIFIED — confirm posthog.com/pricing**; if adopted: no prompts/media, product events only (§E.6) | usage-based | — |
+| Errors | **Sentry** (proposed) | free Developer tier | yes | yes | **NOT VERIFIED — confirm sentry.io/pricing** (official page found; numbers unread) | Team tier | — |
+| Payments | Paystack / Flutterwave | per-transaction | yes | **yes — Nigeria-primary** | fees §E.2 | volume tiers | verified |
+| Bot protection | Cloudflare Turnstile (proposed) | free | yes | yes | **NOT VERIFIED** — confirm before adding; only with honest consent copy (§F.5) | — | — |
+
+**Rule repeated from the prompt (§73):** every "NOT VERIFIED" above gets a verification task in §I.4 **before** the corresponding component ships; nothing builds on an unverified limit.
+
+## E.4 Free → paid migration paths (prompt §63)
+
+| Layer | Free today | First paid step | Dedicated step |
+|---|---|---|---|
+| GPU | Kaggle fleet (8 accounts ≈ 240 GPU-h/wk theoretical) | Atlas/Evolink top-up for Kling/Veo premium scenes (keys exist, empty) | dedicated T4/L4 VM (provider-agnostic worker — same binary, `provider: paid-api` or `provider: vm`) |
+| DB | Supabase free | Supabase Pro | dedicated Postgres (Prisma URL swap only) |
+| Storage | Supabase Storage | R2 (zero egress for video) | R2 + CDN pinning |
+| Queue | Postgres tables (current) | unchanged to ~10k jobs/day | Redis/BullMQ or a workflow engine **only when** Postgres queueing measurably hurts (keep the state machine, swap the transport) |
+| Email | AgentMail (owner notifications) | Resend free tier (customer receipts) | Resend paid |
+| Video | local/LTX/H3 free fleet | premium APIs per scene (manifest `modelPolicy`) | dedicated inference (model registry unchanged) |
+
+No architectural rewrite anywhere — the abstraction seams are the storage interface, the payments interface, the worker registry (`provider` field), and the model registry (`modelPolicy.fallbacks`).
+
+## E.5 Observability (prompt §28) & Admin Mission Control (prompt §27)
+
+- **Sentry**: frontend + route handlers + worker script (a tiny `/api/worker/telemetry` error forwarder or Sentry SDK in the kernel). Capture: render failures with job ID, webhook signature failures (security signal), deploy boot failures. **No prompt/media payloads** — IDs only.
+- **PostHog** (optional, behind a flag; if the owner prefers zero third-party JS, skip — honest default is *not* to add trackers without a need): events `signup`, `project_created`, `production_started`, `production_completed`, `generation_failed`, `export`, `purchase`, `subscription_cancelled`. No PII in properties.
+- **Admin Mission Control** (extend the existing /admin): Users, Projects, Active productions, Queue (exists — add lease/attempts columns), Workers (health, drain/disable), GPU health (heartbeat feed), Model usage + license status, Failures & retries, Credits (ledger viewer w/ filters), Payments/refunds, Storage usage, Estimated vs theoretical cost (`CostRecord` rollups), Security alerts (failed logins, webhook sig failures), **Compliance status panel (§I.2 dashboard)**. Every admin mutation → `AuditLog` row. Everything server-authorized (existing `guardAdmin`) and paginated.
+
+## E.6 Notification & upload plumbing
+
+- **/api/upload implementation (fixes C-5)**: `POST /api/upload` (admin) and `POST /api/files` (worker-scoped) → size cap per kind (image 8MB as the UI already promises; video 200MB), MIME sniffing (magic bytes, not extension), straight to object storage (§D.1), returns `assetId`. `next/image` remotePatterns: only our storage host, explicitly configured.
+- **Customer emails** (new — today customers get nothing): booking confirmed, payment receipt, production completed (with download link), refund notice. Transactional only; marketing is a separate explicit-consent list (§F.5). Provider: Resend behind `email_customer_v1` flag; AgentMail keeps owner notifications until rotated (C-1).
+
+---
+# PART F — TRUST PLANE (SECURITY · PRIVACY · ACCESSIBILITY)
+
+## F.1 Authentication & sessions
+
+1. **Rotate + purge the two committed secrets (C-1, C-2) before anything else** — §I.4 W0 has the exact runbook. This is the precondition for every other security fix: purged history + rotated keys.
+2. Session cookie: `secure: true` (the site is HTTPS-only), `httpOnly` stays, `sameSite: lax` stays, add `__Host-` prefix if feasible; 7-day TTL stays.
+3. Signing secret: Railway env var `AUTH_SECRET` (48+ random bytes generated once); delete the `db/.auth-secret` file path and **delete the deterministic fallback constant** (`auth.ts:25`) — if env is missing the server must fail to boot, not forge with a public constant (fixes H-3).
+4. Admin bootstrap: credentials from env (`ADMIN_EMAIL`/`ADMIN_PASSWORD`) on first boot; **remove the creds hint from the login screen** (`admin-app.tsx:215–218`); keep the `usingDefaultPassword` warning banner + a forced change flow (fixes C-3).
+5. Customer auth: passwordless one-time codes (10-minute expiry, 5-attempt lock, rate-limited) via `LoginCode` — no password DB to protect, no reset flows to abuse; profile created on first successful login; email verification = proof-of-login.
+6. `AuthSecret` rotation procedure documented (rotate → all sessions invalidated → acceptable).
+7. `WORKER_TOKEN`: Bearer header only (drop `?token=`, H-log risk); rotate now (C-2) and quarterly; per-kernel `workerKey` registration for attribution.
+
+## F.2 Authorization, rate limiting & abuse control
+
+- **Rate limiting**: Postgres-backed fixed-window counters (`RateLimit` table or in-`Settings` JSON) — no Redis needed at current scale. Limits (per IP + per route class): login 5/15min; one-time-code 3/10min; booking/subscription/contact 5/h; video-request 10/h; verify endpoints 10/h; file streaming 120/min. 429 with `Retry-After`. Rationale: kills brute force (H-1), spam, and quota-burn loops (H-5) with one mechanism.
+- **IDOR closure (H-4/H-5)**: `GET /api/requests/[id]` requires the **full request ID + verified email token** (issued once at submit, stored hashed); render downloads move behind signed, expiring URLs bound to the requesting profile/email (§D.1); submission against a subscription requires an active session profile match (not a bare email string).
+- **CSRF**: SameSite=lax covers POSTs for now; add double-submit token on all mutating browser routes when customer sessions land.
+- **Security headers** (next.config or middleware): `Strict-Transport-Security` (1y, preload), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()` (nothing on the site needs them — prompt §53), CSP starting `report-only` then enforcing (`self` + payment SDK hosts + inline-style nonce work).
+- **Audit trail**: every admin mutation writes `AuditLog` (§B.1); login attempts (success/fail) logged; webhook signature failures logged + surfaced in admin Security panel.
+
+## F.3 Secrets management (project-wide policy, aligned with the vault discipline)
+
+- Production secrets live **only** in Railway env vars: `DATABASE_URL`, `AUTH_SECRET`, `WORKER_TOKEN`, `AGENTMAIL_API_KEY`, payment provider secrets, storage credentials. Nothing secret in the DB `Settings` row (H-8), nothing secret in tracked files (C-1/C-2 lesson), nothing secret in the public repo.
+- Worker fleet credentials: local vault `workers/secrets/` (gitignored, 0600) + durable off-site backup = **private Kaggle dataset `deyoungsltd/deyoung-worker-vault`** (verified private 2026-09-06: foreign token → 403); recovery runbook in `BRAIN.md` §3. Rotation after any suspected exposure; `scripts/vault_backup.py` re-pushes after every vault edit.
+- Secret scanning in CI (§H.2) prevents regression — it would have caught both leaks.
+
+## F.4 Privacy program (Nigeria-first, honest)
+
+- **Governing law**: Nigeria Data Protection Act 2023 (NDPA) + NDPC implementation. Registration: NDPC operates a Data Controller/Processor registration regime; entities classified as "data controllers of major importance" (DCPMI) must register (NDPC portal; law-firm summaries in this pass agree). **Whether DeYoung qualifies as DCPMI at current scale: LEGAL REVIEW REQUIRED** (§I.3) — register anyway if review is inconclusive; the portal process is lightweight.
+- **Privacy Policy (replace the hash-route page)** — must describe the *actual* processors, which today are: Supabase (DB + storage, EU region), Railway (hosting/logs), AgentMail/Resend (notification transport), payment providers (Paystack/Flutterwave/PayPal/Stripe — receive payment data), the AI render providers (video models receive prompts/reference images — **name them per model registry**), error monitoring if adopted (§E.5). Never claim "we never share your data" (a processor list exists); never claim "zero retention" that providers don't offer.
+- **Data minimisation (prompt §32)**: collect name/email/phone (booking only), prompt text, uploaded references, payment metadata (no card data — providers hold it). Do **not** add IP-based analytics, fingerprinting, session recording, or camera/mic permissions (nothing uses them — codify in `Permissions-Policy`).
+- **Retention (prompt §57)**: accounts while active + 90d; productions/renders until user deletion + 30d grace (storage lifecycle); worker temp artifacts 3d; logs 30d; payment records 6y (fiscal retention norm — **LEGAL REVIEW REQUIRED** for exact Nigerian bookkeeping requirement); analytics events 12m.
+- **Rights (NDPA)**: access/correction/deletion/complaint channel → `privacy@deyoungltd.site` route (new inbox), with a documented 30-day handling runbook in the ops docs; deletion job clears profile + assets (ledger rows retained in anonymized form for financial audit — stated in the policy).
+- **International (prompt §56)**: if EU/UK/US customers are intentionally served → GDPR/UK-GDPR/state-law assessments **LEGAL REVIEW REQUIRED**; until then, geo-availability statement stays in Terms, no GDPR claims anywhere.
+
+## F.5 Cookies & consent
+
+Today the site sets exactly one cookie (the admin session) and runs **zero trackers** — say so truthfully: a short Cookie Policy listing `dy_admin` (necessary, admin login) is the *entire* honest requirement right now. If analytics/anti-bot (PostHog/Turnstile) are ever enabled, add a consent banner **before** they load: equal-prominence accept/reject, no pre-ticked boxes, reject as easy as accept, granular analytics vs marketing, consent logged with timestamp+policy version. No dark patterns (prompt §34), no silently activated trackers (§37), no cookie walls.
+
+## F.6 Logging hygiene (prompt §59)
+
+- `db.ts`: drop production query logging (H-9) — `log: NODE_ENV === 'development' ? ['query'] : []`.
+- Never log: passwords, tokens, provider secrets, raw payment payloads beyond refs/amounts, private media URLs (they're capability URLs).
+- Sentry (if adopted) scrubs `DATABASE_URL`-adjacent fields; add `beforeSend` denylist test in §H.1.
+
+## F.7 Accessibility remediation list (WCAG 2.2 AA — audit-verified items)
+
+| # | Issue (evidence) | Fix |
+|---|---|---|
+| A-1 | Showreel dot buttons 6px (`showreel.tsx:297`), arrows 32px | ≥24×24 CSS px hit areas (WCAG 2.2 SC 2.5.8 AA minimum; 44px recommended for primary controls) |
+| A-2 | Low-contrast text: `text-white/40` copyright, `text-white/60` hero bullets, `text-white/55` ticket stars, StatsStrip white-on-red ≈4.0:1 at small-bold | Raise to white/70+ on dark, ≥4.5:1 for body text, ≥3:1 for large/bold ≥18.66px; test both themes with a contrast checker in CI (§H.2) |
+| A-3 | Gallery lightbox: no focus trap, no Escape (`sections.tsx:126–148`) | Use a real dialog primitive (the repo already ships shadcn `dialog.tsx`): focus trap, Escape close, restore focus, `aria-modal` |
+| A-4 | Hash views `#book/#subscribe/#request/#privacy` have no `h1` (`sections.tsx:504` renders h2) | Add visually-styled h1 per view; verify heading order h1→h2→h3 |
+| A-5 | Hero film: no `<track kind="captions">` (`hero.tsx:194–203`) | Ship a WebVTT sidecar alongside the master (assembly already has caption text — emit .vtt); keep burned captions for visuals, VTT for AT |
+| A-6 | Keyboard: mobile menu lacks containment; header links rely on default outline | Keep visible focus (`focus-visible:ring` exists in shadcn), add focus containment to the open menu, tab order check in E2E |
+| A-7 | Forms are already well-labeled (`htmlFor` everywhere — keep); error messages must be `aria-live` | Add `aria-live="polite"` to form error/success regions |
+| A-8 | `prefers-reduced-motion` is handled in 3 layers (globals.css 256–268, 392–408; JS checks in motion.tsx/showreel.tsx) | Preserve during any motion refactor; add a reduced-motion E2E snapshot |
+| A-9 | New /studio view (§D.5) | Build to the same standard from day one: all live regions `aria-live="polite"`, canvas has text alternative (scene list IS the alternative), crew/log are real text |
+| A-10 | Android app | **No Android app exists in this repo** (manifest is a PWA). Prompt §52 requirements are recorded as **build-time requirements** (TalkBack labels, text scaling, touch targets, permission justifications) should a native app ever be produced — the PWA manifest should be updated (M-12) meanwhile |
+
+---
+# PART G — LEGAL PLANE (NIGERIA-FIRST)
+
+> Standing rule: this section reduces foreseeable risk; it does not claim legal certainty. Items marked **LEGAL REVIEW REQUIRED** are collected in §I.3 with the specific question to put to a Nigerian-qualified lawyer.
+
+## G.1 Content honesty (zero-fabrication program — prompt §39/§40/§62)
+
+Current violations to fix (evidence in §A.2 M-1/M-2):
+1. **Testimonials**: the three seeded quotes are fabricated personas presented under "Real clients" (`seed.ts:234–263`). Fix: either (a) remove entirely, or (b) relabel the section "Sample scenes & demo reactions — illustrative, not customer reviews" with visible labeling. Never present AI personas as customers; never invent press logos, ratings, or user counts (none exist today — keep it that way).
+2. **Capability claims** must match the renderer: remove "4K" until a 4K path exists (plans cap 1080p; worker renders 768×512 upscaled); "60 seconds single pass" is false as written — the truth is *stronger and honest*: "60-second films built scene-by-scene — we assemble up to 60s from real generated shots; single passes are up to ~10s on current models." The hero chips ("60S / 5 STYLES / 4K") become "60S FILMS / 5 STYLES / 1080P". The `assemble`-computed duration rule (§D.8) is what makes every published duration claim self-verifying.
+3. **Urgency copy** ("Founding prices… will go up", "rate locked forever") is allowed marketing, but (a) the rate-lock must be implemented (`Subscription.lockedPriceMinor`, §E.1) before the promise is made, and (b) a price increase must eventually happen or the claim ages into a deception — owner decision, calendar it.
+4. **No invented business facts**: no CAC/RC number exists → the footer says "DeYoung — AI film studio, Nigeria" with **no registration number** until the owner supplies one (prompt §41: mark NOT VERIFIED, never invent). StructuredData: remove the hardcoded 24/7 opening-hours claim or make it true and editable (`Settings` field).
+5. **AI disclosure**: keep "Made with DeYoung" badges on gallery works; add model attribution from the asset graph ("Generated with [model], edited and dubbed by DeYoung") on work pages — accurate, and it doubles as license-attribution hygiene (§G.2).
+
+## G.2 Copyright & asset licensing audit (prompt §42)
+
+| Asset class | Current status | Action |
+|---|---|---|
+| Brand marks (logo.svg, icons, og-image) | Generated in-house (Task 24) — owned | Record in an ASSETS.md ledger (owner, source, date) |
+| Gallery/character imagery | AI-generated in-house (z-ai image gen, Tasks 28/31) | Ledger entry + "AI-generated" label; **check the image provider's ToS for commercial use** — NOT VERIFIED this pass, verify before paid commercial-client deliverables |
+| Film footage | Generated (LTX/H3/z-ai video) + in-house assembly | Same; model license gate (§C.3) already covers the model side |
+| Music | `aevalsrc` synthesized drone (in-house) + `music.wav` slices (origin recorded in worklog as in-house) | Keep origin record; if any stock music is ever added → license file + URL in the ledger, else remove |
+| Fonts | Archivo (OFL — SIL Open Font License), JetBrains Mono (OFL), Geist (MIT) | OFL/MIT are commercial-safe; ship license texts in `public/fonts/LICENSES.md` |
+| Seeded photos/services copy | In-house seeds | Ledger |
+| Third-party embeds | none (verified) | — |
+
+Rule going forward: **unknown license = do not ship** (prompt §42); the ASSETS.md ledger is a launch-checklist item (§I.1). Generated-output ownership: Nigerian Copyright Act 2022 does not clearly define authorship for AI-generated works (commentaries reviewed in this pass agree); **what DeYoung can promise customers contractually: see §G.6 — do not promise "copyright-free" or "you own copyright" as a legal conclusion (prompt §44). LEGAL REVIEW REQUIRED** for the exact IP-assignment clause wording.
+
+## G.3 Model license register (prompt §43) — see §C.3 table
+
+`ModelRegistry` is the operational register; the license-verification gate (commercial renders only when verified) is the enforcement. The single most important open verification: **MiniMax H3's license territory list** (reported US exclusion; operator and customers are Nigeria/ROW — scope must be read from the actual license file at the official repo before any H3-rendered paid output).
+
+## G.4 User uploads & takedown (prompt §44)
+
+Upload attestation checkbox at every upload surface ("I have the rights to this material") — stored as `Upload.attestedAt`; repeat offenders (DMCA-style strikes, even without US law applying, is the operational pattern) blocked. **Complaint mechanism**: `copyright@deyoungltd.site` + a /report page capturing URL + description + contact; SLA: acknowledged 48h, actioned 7d; documented in the ops runbook. Never promise outputs are automatically copyright-free (prompt §44).
+
+## G.5 Likeness / voice / deepfake policy (prompt §45)
+
+Hard policy (Terms + upload attestation + content filter on prompts):
+- Forbidden: impersonation of real identifiable persons without documented consent; non-consensual intimate imagery; deceptive political/fraud content; unauthorized voice cloning; harassment targets.
+- Voice cloning of a **customer's own voice** only with in-product consent attestation; celebrity/character voices never.
+- Enforcement ladder: prompt-time blocklist + worker-side refusal + post-hoc takedown + account termination; every enforcement event → `AuditLog`.
+- This policy is a **business requirement for premium lip-sync/voice features** — enable the `lipsync_premium` capability flag only after the policy ships.
+
+## G.6 Terms & Conditions (prompt §37) — required sections skeleton
+
+Eligibility (18+, Nigeria-primary service; minors only via guardian — prompt §55: state minimum age, no child-directed features); accounts (accurate info, credential custody); acceptable use (incl. §G.5 policy, no abuse of free quotas); uploads & rights (attestation, license grant to process only); **AI-generated content disclaimer** (outputs may contain errors/artifacts; QC reduces but does not eliminate; no guarantee of specific artistic result; model behavior may change); **IP** (customer content remains customer's; generated outputs: contractual license/assignment clause — wording **LEGAL REVIEW REQUIRED**, §I.3); credits & subscriptions (ledger is authoritative; expiry if any stated here); payments (provider list, currency NGN-first, no card storage); **cancellation & refunds → §G.7**; suspension/termination (abuse, chargebacks); third parties (processor list per §F.4); disclaimers & liability (limitation drafted to be enforceable — no blanket waiver of non-excludable consumer rights, prompt §37); disputes (good-faith resolution first; governing law Nigeria; venue **LEGAL REVIEW REQUIRED**); changes (versioned, notice of material changes); contact (real email).
+
+## G.7 Refund & cancellation policy (prompt §38; FCCPC-aware)
+
+FCCPC publicly warns against blanket "no refund" practices (fccpc.gov.ng + 2024-2025 press). Policy must therefore be specific, not absolute:
+- **Subscriptions**: cancel anytime (self-serve); access until period end; pro-rata refunds only where work has not started on queued renders; no refund for consumed renders (that's the consumption model, stated clearly).
+- **Failed generations**: automatic credit reversal (§E.1) — this IS the refund path for renders; customer-visible copy: "If a render fails, your credits come back automatically."
+- **Duplicate payments**: auto-detected (same providerRef) → auto-refund path.
+- **Accidental purchases**: 48h window if no render consumed.
+- **Service failures** (site cannot render for >72h while subscription active): pro-rata credit extension.
+- Manual/bank payments: owner-confirmed refunds via original channel; processing time stated (5–10 business days).
+- Replace the single seeded FAQ refund sentence (`seed.ts:291`) with this policy as its own hash view + link in footer; the FAQ line remains consistent with it.
+
+## G.8 Business information (prompt §41)
+
+Publish exactly what is true: brand name "DeYoung", contact emails (owner's real inboxes), support hours (real ones), location "Nigeria" (city-level only if the owner consents), **no CAC number until real** (field marked "Registration: pending" or omitted entirely), no fabricated certifications/partnerships/regulator approvals — ever. Owner action item: decide whether to register a business name at CAC (cost/time **NOT VERIFIED** — check cac.gov.ng) before scaling paid volume; the Terms' "operator" language must match whichever legal identity exists.
+
+## G.9 Consumer-protection & advertising compliance (FCCPA 2018)
+
+Practical requirements drawn from FCCPC public materials (rightify/fccpc sources in this pass): accurate descriptions (§G.1 fixes), transparent pricing (already strong: slashed-price copy shows real before/after), functional complaint channel (new /report + support email), honest refund handling (§G.7), no deceptive urgency beyond a real deadline. **LEGAL REVIEW REQUIRED** items: whether DeYoung's subscription model triggers any FCCPC sectoral registration or consumer-data reporting duties at current scale.
+
+## G.10 International-law assessment (prompt §56)
+
+Today: Nigeria-primary; EU/UK/US users can technically reach the site. Recommended posture: state availability honestly in Terms ("available worldwide where lawful"), **do not claim GDPR compliance**, and trigger a jurisdictional review before any of: EU/UK marketing spend, EU entity customers, or cookie-bearing analytics (GDPR/UK consent applies then). US: the MiniMax H3 license territory question (§C.3) makes US-customer renders a **model-registry enforcement issue, not just a legal one** — the scheduler must be able to deny H3 for US-geolocated orders if the license requires it (**LEGAL REVIEW REQUIRED** on geofencing duty-of-care).
+
+---
+# PART H — ENGINEERING PLANE
+
+## H.1 Testing (prompt §66)
+
+Framework: **Vitest** (unit/integration) + **Playwright** (E2E, already proven via agent-browser patterns) + contract tests for webhooks. The `pati/` subtree has 46 passing pytest tests — that pattern (tests live next to the code, run in CI) is the house style to copy, not the current ad-hoc `scripts/qa_*.py` situation.
+
+| Suite | Covers | Non-negotiable cases |
+|---|---|---|
+| Unit | money math (ledger balances, kobo conversions), plan-limit enforcement, queue position math, manifest schema validation, capability scheduling | a ledger replay test: random sequence of purchase/consume/reverse/expire → balance always matches sum of deltas |
+| Integration | DB (both schemas — the sync test), storage adapter (signed URL round-trip), worker claim/deliver (the existing `qa_worker_plane.sh` flow becomes a test), webhook parsers (Paystack sig HMAC, Flutterwave hash, duplicate events, tampered signature → 403) | duplicate webhook = exactly one ledger row |
+| E2E | signup→project→production→generation→completion→export (happy path), subscribe→pay(mock)→request→deliver→download, admin flows | no console/page errors (existing qa_site.mjs standard) |
+| Failure injection | worker crash mid-render (lease expiry → requeue), provider timeout, OOM, duplicate webhook, duplicate claim, storage outage, payment failure | the state machine table (§B.4) is literally asserted row by row |
+| A11y | Playwright axe-core on all views; contrast assertions on the theme | WCAG 2.2 AA on every shipped view |
+| Security | rate-limit behavior, IDOR attempts (request-status with wrong email token, file access without signed URL), RLS if direct DB ever exposed | per §F.2 |
+
+## H.2 CI/CD (prompt §67) — GitHub Actions free tier (public repo = free minutes; verify concurrency limits at docs.github.com — **NOT VERIFIED this pass**)
+
+Pipeline (blocks merge AND blocks the push-to-deploy branch):
+1. install (bun, cached) → 2. `tsc --noEmit` (**first task: delete `ignoreBuildErrors: true`** — expect a cleanup wave, do it in W0) → 3. eslint with the 28 disabled rules re-enabled progressively (start with `no-unused-vars`, `no-explicit-any`) → 4. unit + integration (Postgres service container; run against **both** schema files + a drift test `schema.prisma ⇄ schema.postgres.prisma`) → 5. build → 6. E2E smoke against the standalone build → 7. **gitleaks/secret scan** (would have caught C-1/C-2) → 8. axe a11y → 9. dependency audit (`bun audit`) → 10. legal-page check (footer must link Terms/Privacy/Refunds; privacy page must list every processor found in `src/lib/*` — a simple grep-based test).
+Deploy: merge to main → Railway auto-deploy (existing) → post-deploy healthcheck assert (`/api/health` 200) → smoke E2E against the live URL from CI. Do not deploy when any critical check fails (prompt §67).
+
+## H.3 Backups (prompt §68)
+
+- **DB**: Supabase built-in snapshots on Pro; on free tier, a daily `pg_dump` cron to object storage (worker-cron on Kaggle CPU is fine) — 7-day rotation. Restore drill quarterly.
+- **Storage**: R2/Supabase bucket versioning on `renders/` + `masters/` (expensive classes only); lifecycle cleanup for `tmp/`.
+- **Config**: Railway env export + `railway.toml` + DNS records documented in the private ops doc (never in the public repo).
+- **Secrets**: the vault + private Kaggle dataset (already durable, verified) — the only approved secret backup channel.
+- **The film masters**: final masters additionally copied to the owner's storage (e.g. Google Drive via the existing rclone-ish flows) — a paid customer's film must survive any single-vendor incident.
+
+## H.4 Disaster recovery (prompt §53)
+
+Scenarios with runbooks (write as `docs/DR.md`): Railway outage (status page + customer notice template); Supabase outage (read-only mode banner; queue writes buffer to local disk on workers); storage loss (re-render from manifest — the asset graph makes re-rendering deterministic; ledger preserves what was paid); secret compromise (rotation runbooks per secret; the C-1/C-2 incident IS the template); bad deploy (Railway rollback + `db push` is additive-only so rollbacks are safe); data-deletion request mid-production (cancel jobs first, then purge).
+
+## H.5 Deployment hardening (prompt §54 + audit M-11/M-12/L-1)
+
+1. `deploy/start.sh`: seed only when `SEED_ON_BOOT=true` (default false in prod); run migrations (`prisma migrate deploy`) instead of `db push --accept-data-loss` once W1 migrations exist (keep push for dev only); guard `node scripts/seed.ts` behind a Node-version check or precompile seed to JS.
+2. Kill dead weight deps (L-1); delete vestigial `tailwind.config.ts` (L-2); self-host Geist Mono (L-3); delete `/api` stub (L-6).
+3. Fix SEO defects (M-12): absolute-URL sitemap generated from `NEXT_PUBLIC_SITE_URL` (which must be set in Railway to the custom domain), standard robots.txt, refreshed manifest description.
+4. Two-stage rollout for the new control-plane: feature flags (`film_compiler_v1`, `storage_v2`, `customer_auth_v1`, `h3_film`, `payments_webhooks`) — every flag has an emergency-off (§B.1 FeatureFlag).
+
+## H.6 Migration strategy — implementation waves (each independently shippable)
+
+| Wave | Scope | Exit criteria |
+|---|---|---|
+| **W0 — security emergencies** (days 1–3) | Rotate + purge C-1/C-2 secrets (incl. git history filter + force-push + Railway env updates); C-3 login-screen fix; F.1 cookie/secret fixes; rate limiting (F.2); delete query logging (F.6); implement or remove /api/upload (C-5) | audit C-items closed; secrets scan green; live site unaffected |
+| **W1 — data foundation** (week 1–2) | New tables (§B.1) + Profile/LoginCode + relations + Decimal money + Job mapping from VideoRequest; storage_v2 (object storage behind signed URLs) replaces /api/worker/file | dual-run: old and new queue both work; no deploy data loss (the C-4 class is dead) |
+| **W2 — jobs & workers** (week 2–3) | State machine + leases + reaper + attempts + checkpoints; worker v2 (register/heartbeat/capabilities); model registry + license gate; QC gate promoted to blocking | a killed worker self-heals in <lease+poll seconds; QC blocks a deliberately corrupted render (test) |
+| **W3 — studio & events** (week 3–4) | ProductionEvent + SSE + /studio control room; manifest compiler v1 behind flag; character bible seeded from film-v5 cast | a customer can watch a real production assemble in real time; refresh-safe |
+| **W4 — money** (week 4–5) | CreditLedger + transactional debit + CostRecords; payment webhooks + hardening (§E.2); locked pricing column; refund policy live (§G.7) | duplicate-webhook test = single ledger row; a forced render failure auto-reverses credits |
+| **W5 — legal & launch** (week 5–6) | All §G pages live (Terms/Refunds/Cookies/A11y/Privacy rewrite), testimonial relabel, claim fixes (4K→1080P), consent flow if any tracker adopted, compliance dashboard populated, launch checklist §I.1 signed | §75 self-audit answers all-green or explicitly LEGAL REVIEW REQUIRED |
+
+Ordering rationale: W0 first because leaked credentials make every other control moot; W1 before W2 because the state machine needs the Job table; money (W4) after jobs (W2) because debits hook into claims; legal (W5) last-but-blocking because it must describe the system that actually exists (prompt §31: the policy reflects the implementation, not aspirations).
+
+---
+# PART I — TABLES, DASHBOARDS, REGISTERS, ACTION PLAN
+
+## I.1 Final launch checklist (prompt §70 item 56 + §75 self-audit)
+
+**Technical**
+- [x] Can a worker disappear without destroying a production? — Yes: leases + reaper + requeue (§C.1); failure-injection test asserts it (§H.1)
+- [x] Can another provider replace Kaggle? — Yes: `Worker.provider` + provider-agnostic worker binary + paid-API adapters (§E.4)
+- [x] Can another video model replace H3? — Yes: ModelRegistry + `modelPolicy.fallbacks` + QC-neutral asset graph (§C.3–C.4)
+- [x] Can the system generate a 60-second film from multiple shots? — Yes: manifest scenes → scene jobs → measured assembly (§B.2/D.7); duration always measured (§D.8)
+- [x] Can users see real production activity? — Yes: DB events + SSE + studio (§D.4–D.5); fake progress is forbidden and untestable-by-absence
+- [x] Can failed jobs be retried? — Yes: attempts + taxonomy (§B.4) | Can jobs be resumed? — Yes: segment checkpoints (§C.5)
+- [x] Can credits be audited? — Yes: immutable ledger + idempotency keys (§E.1)
+- [x] Can final videos be traced to source assets? — Yes: asset graph joins (§D.2)
+
+**Security** — cross-user access: closed by signed URLs + email-token status + profile binding (§F.2) · credits manipulation: impossible without a ledger row; ledger writes are server-transactional (§E.1) · fake payment success: requires provider signature (§E.2) · admin escalation: single-admin + rate-limited + no public hint (§F.1) · worker secret exposure: Bearer-only, rotation runbook, scoped uploads (§C.2) · signed-URL abuse: 10-min TTL + bound to asset + audited (§D.1)
+**Legal** — fake reviews: removed/relabelled (§G.1) · unsupported claims: fixed to renderer truth (§G.1) · unknown image licenses: none shipped without ledger entry (§G.2) · model licenses verified: gate enforced (§C.3) · privacy accurately described: processor list from code, not wishes (§F.4) · cookies/tracking disclosed: §F.5 · consent where required: §F.5 · refunds explained: §G.7 · terms accessible: footer links + hash views · real business details: §G.8 (registration number explicitly absent until real)
+**Accessibility** — keyboard, alt text, contrast, labels, forms: §F.7 remediation list; TalkBack/Android: build-time requirements recorded (§F.7 A-10)
+**Operations** — replaceable free infra: §E.4 table · GPU scaling: fleet + registry (§C.1) · worker drain: §C.2 · job recovery: §B.4 · costs measured: CostRecords (§E.1) · monitoring: §E.5
+
+**Ship blockers before scaling paid volume**: W0 closed; Terms/Privacy/Refunds live; storage_v2 (no ephemeral deliverables); payment webhooks; ledger; testimonial relabel; model-license gate on for paid renders.
+
+## I.2 Compliance dashboard (prompt §61) — current honest status
+
+| Area | Status | Evidence / gap | Required action |
+|---|---|---|---|
+| PRIVACY | **FAIL** | hash-route only; contradicted by IDOR reality (H-4/H-5); processor list missing | F.4 rewrite post-W1 |
+| COOKIES | PASS (trivially) | exactly one first-party admin cookie; honest single-cookie policy suffices | §F.5 page |
+| TRACKING | PASS (zero trackers) | grep-verified | keep zero unless consented (§F.5) |
+| CONSUMER PROTECTION | **FAIL** | no complaint channel; urgency claims without implemented price-lock | §G.1/§G.9 + lockedPriceMinor |
+| REFUNDS | **FAIL** | one FAQ sentence; no policy page; no auto-reversal | §G.7 + §E.1 |
+| COPYRIGHT | PARTIAL | assets in-house; ledger missing; "Made with" labels exist | ASSETS.md ledger (§G.2) |
+| MODEL LICENSES | **FAIL (blocking paid use)** | H3 territory + LTX commercial terms unread | §C.3 verification tasks |
+| ACCESSIBILITY | **FAIL** | §F.7 list (targets, contrast, dialog, headings, captions) | §F.7 fixes |
+| SECURITY | **FAIL** | C-1..C-5 + H-1..H-10 open | W0 + F.1–F.3 |
+| PAYMENTS | PARTIAL | server verify exists (good); webhooks/currency/binding missing | §E.2 |
+| BUSINESS INFORMATION | PARTIAL | real brand/contact; no entity number (honestly absent) | owner CAC decision (§G.8) |
+
+## I.3 LEGAL REVIEW REQUIRED register (for a Nigerian-qualified lawyer)
+
+1. NDPC/DCPMI registration duty & threshold for this service at current scale (NDPA 2023 + NDPC guidance) — §F.4.
+2. IP clause: what can be contractually promised about ownership/licensing of AI-generated outputs under the Copyright Act 2022 (AI authorship is unsettled) — §G.2/§G.6.
+3. Retention period for payment/financial records (6-year assumption unverified) — §F.4.
+4. Refund policy wording vs FCCPC expectations for prepaid subscription services — §G.7.
+5. Terms: governing law/venue + enforceable limitation-of-liability that preserves non-excludable consumer rights — §G.6.
+6. Geofencing duty-of-care for model-territory license restrictions (H3) — §G.10.
+7. Whether any FCCPC sectoral registration/reporting applies at launch scale — §G.9.
+
+## I.4 Immediate 14-day action plan (operator + implementing AI)
+
+**Days 1–3 (W0, security)** — do these in order, same day if possible:
+1. Rotate AgentMail key (owner, agentmail.to) → set `AGENTMAIL_API_KEY` in Railway → delete the key from `scripts/agentmail_setup.py` → `git filter-repo` purge + force-push → old key revoked.
+2. Rotate `WORKER_TOKEN` on Railway → update worker launcher → purge `worklog.md:355` + history the same way.
+3. Owner changes admin password; remove creds hint from login UI; `AUTH_SECRET` env; cookie `secure:true`.
+4. Rate limiting shipped (§F.2 numbers); query logging off; `/api/upload` implemented or removed (C-5).
+5. Enable secret scanning (gitleaks in CI) so this class of incident is impossible to reintroduce.
+**Days 4–7**: storage_v2 (object storage + signed URLs + /api/files) → kills C-4; start W1 tables; verify model licenses (read H3 + LTX license files at their official repos — 1 hour, unblocks §C.3); verify Supabase/R2/Resend/PostHog/Sentry current limits (§E.3 NOT VERIFIED cells).
+**Days 8–11**: W2 state machine + reaper + QC gate; wire film_verify ASR as blocking check.
+**Days 12–14**: W3 events + /studio skeleton; legal pages drafts (§G) to owner for review; compliance dashboard v0 in admin.
+**Parallel operator track**: film v10 fleet outputs land → fetch via `scripts/fleet_brain.py` → rebuild the v10 assembly toolchain (lost in sandbox reset — inventory + assemble + refs chain) → publish with honest claims only.
+
+## I.5 Research source register (this pass, 2026-09-06)
+
+Saved under `download/research/` (t01–t21 JSON): MiniMax H3 official announcement (minimax.io) + HF model hub (MiniMaxAI/MiniMax-H3) + territory-exclusion analyses (we0.ai, explainx.ai 2026-08) · LTX-2 open-source release (globenewswire) + ltx.io commercial licensing · Kaggle official posts: "Weekly Maximum GPU Usage" (30h/wk), T4 options, session-runtime increases, concurrent-session limits · Supabase pricing page + 2026 secondary analyses (5GB egress free tier) · Paystack pricing pages (NGN 1.5%+₦100, waived <₦2,500, cap ₦2,000) · Flutterwave help center (NGN 2.0% local after Apr-2025 increase) · NDPC portal (registration regime; DCPMI categorization via Aluko & Oyebode analysis) · FCCPC site (rights, refund-practice warnings) · Copyright Act 2022 AI commentaries (Dentons ACAS, SSRN) · WCAG 2.2 (w3.org, What's New in WCAG 2.2) · Sentry/PostHog/Resend/R2 pricing pages located, numbers pending verification (§E.3). Every NOT VERIFIED cell in this document maps to one of these follow-up reads.
+
+---
+
+*End of specification. This document is the operating contract between the current codebase and the target AI Film Production Studio; every claim is either verified, marked NOT VERIFIED, or marked LEGAL REVIEW REQUIRED. Change it through versioned revisions, never by silent edits.*
+
+## I.6 Compliance index — the 56 required items (prompt §70) mapped to this document
+
+| # | Required item | Here | # | Required item | Here |
+|---|---|---|---|---|---|
+| 1 | Current architecture | A.1 | 29 | Upgrade paths | E.4 |
+| 2 | Current-code audit | A.2 | 30 | Admin Mission Control | E.5 |
+| 3 | Gap analysis | A.3 | 31 | Monitoring | E.5 |
+| 4 | Target architecture | A.4 | 32 | Analytics | E.5–E.6 |
+| 5 | Why each component exists | A.5 | 33 | Email | E.6 |
+| 6 | Full database architecture | B.1 | 34 | Security | F.1–F.3 |
+| 7 | Production Manifest | B.2 | 35 | Privacy | F.4 |
+| 8 | Film Compiler | B.3 | 36 | Cookies | F.5 |
+| 9 | Job system | B.4 | 37 | Tracking | F.5 |
+| 10 | Worker architecture | C.1 | 38 | Consent | F.5 |
+| 11 | Worker heartbeat | C.1 | 39 | Accessibility | F.7 |
+| 12 | Worker capabilities | C.1–C.2 | 40 | Copyright | G.2 |
+| 13 | Checkpointing | C.5 | 41 | Model licensing | C.3, G.3 |
+| 14 | Retry system | B.4 | 42 | User-upload rights | G.4 |
+| 15 | Model registry | C.3 | 43 | AI/deepfake/likeness policy | G.5 |
+| 16 | H3 integration | C.4 | 44 | Terms | G.6 |
+| 17 | Model fallback | C.4 | 45 | Refund policy | G.7 |
+| 18 | Storage architecture | D.1 | 46 | Business information | G.8 |
+| 19 | Asset graph | D.2 | 47 | Consumer protection | G.9 |
+| 20 | Character system | D.3 | 48 | Nigerian legal review | G + I.3 |
+| 21 | Live production UI | D.5 | 49 | International-law assessment | G.10 |
+| 22 | Realtime events | D.4 | 50 | Testing | H.1 |
+| 23 | Audio pipeline | D.6 | 51 | CI/CD | H.2 |
+| 24 | Editing pipeline | D.7 | 52 | Backups | H.3 |
+| 25 | QC | D.8 | 53 | Disaster recovery | H.4 |
+| 26 | Credit ledger | E.1 | 54 | Deployment | H.5 |
+| 27 | Payment architecture | E.2 | 55 | Migration strategy | H.6 |
+| 28 | Free-first infrastructure | E.3 | 56 | Final launch checklist | I.1 |

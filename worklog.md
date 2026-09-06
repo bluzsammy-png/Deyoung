@@ -391,3 +391,24 @@ Stage Summary:
 - OpenMontage = mature, hugely popular AGPLv3 "agent-as-orchestrator" desktop video factory: Python tools + YAML manifests + Markdown skills driven by a coding assistant; not a server queue
 - Not directly embeddable (license + architecture), but 8 concrete patterns identified for DeYoung (provider router scoring, graceful provider degradation, pre-delivery ffmpeg QA gate, per-job cost governor, first/last-frame pinning, word-level captions, stage checkpoints with schema validation, >5s last-frame segment chaining)
 - Full structured report delivered in R-1 final message; evidence log includes all file paths read
+
+---
+Task ID: 33
+Agent: main (Super Z)
+Task: "Follow the prompt for upgrades" — execute the DeYoung master upgrade prompt (research → audit → markdown.md.txt spec); plus owner request: permanent token vault + permanent brain + always-on fleet monitor
+
+Work Log:
+- Corrected stale session summary: v10 toolchain (v10_finish.sh etc.) does NOT exist on disk (sandbox reset); real state = Task 32 PATI worker plane. Verified via disk + git
+- Verified fleet is REAL: deyoungsltd/deyoung-h3-e,e2 + teslaprime/deyoung-h3-f,f2 RUNNING since ~05:50Z (outputs empty; ~11h elapsed = completion/timeout imminent); teslaprime/deyoung-worker-c COMPLETE (Sep 5 DB-worker run, scripts archived). 6 of 8 tokens unmapped to accounts (Kaggle v1 has no /me)
+- Token vault: workers/secrets/kaggle_tokens.json (0600, gitignored) — 8 tokens with account mapping/roles; DURABLE BACKUP = private Kaggle dataset deyoungsltd/deyoung-worker-vault (created via official CLI; verified: foreign token 403, owner 200); refresh via scripts/vault_backup.py; recovery runbook in BRAIN.md §3
+- Permanent brain: BRAIN.md (current state, infra map, secrets discipline, fleet, runbooks, upgrade tracker, session protocol) + AGENTS.md (operator charter, non-negotiables) + brain/state.json + scripts/fleet_brain.py (idempotent fleet monitor: auto-discovers deyoung-* kernels, status, output fetch to campaign/v10/, state+events; --loop 60 for always-on mode)
+- Deep audit (Explore agent, full repo): 5 CRITICAL (leaked AgentMail key in tracked scripts/agentmail_setup.py:6; leaked WORKER_TOKEN in tracked worklog.md:355; default creds on login screen; ephemeral storage wipes paid renders per deploy; /api/upload ghost route) + 10 HIGH (no rate limit, secure:false cookie, public auth-secret fallback, IDORs, no webhooks, plaintext payment secret in DB, prod query logging, no CI) + 12 MEDIUM (fake testimonials, 4K/60s claims vs 768×512 LTX reality, client-trusted PayPal, dead Flutterwave launcher, no heartbeat/reaper, Float money...) + a11y list
+- Research: 21 web-search result sets saved to download/research/ (MiniMax H3 = real open model, license reportedly excludes US/EU territories, outputs-must-not-train-others clause; Kaggle 30 GPU-h/wk official; Paystack NGN 1.5%+₦100 cap ₦2,000; Flutterwave NGN 2.0%; Supabase free 5GB egress; NDPA 2023 DCPMI registration; FCCPC anti-no-refund stance; WCAG 2.2)
+- DELIVERED markdown.md.txt (720 lines, ~92KB): 9 parts (A current state/audit/gaps/target/rationale; B database+manifest+compiler+job state machine; C workers/heartbeat/registry/checkpoint/retry/model registry/H3/fallback; D storage/asset graph/characters/studio UI/SSE events/audio/edit/QC; E ledger/payments/free-first tables/upgrade paths/admin/observability/email; F security/privacy/cookies/consent/WCAG 2.2 AA; G copyright/licenses/uploads/likeness/terms/refunds/business info/consumer protection/international; H testing/CI/backups/DR/deploy/migration waves W0–W5; I research tables + compliance dashboard + 7-item LEGAL REVIEW register + 14-day action plan + §70 index of all 56 items). 26x NOT VERIFIED + 13x LEGAL REVIEW REQUIRED honesty markers; zero full secrets (2 truncated ID prefixes only for incident cross-ref)
+- Fleet brain passes ran between every spec chunk: 4 film kernels still RUNNING at last check
+
+Stage Summary:
+- Upgrade prompt phases 1–4 DONE; phase 5 (implementation) sequenced into waves W0–W5; W0 = rotate+purge the two leaked secrets FIRST (spec §I.4)
+- Tokens can never be lost again (local vault + private Kaggle dataset backup + recovery runbook)
+- Permanent brain live: any future session reads BRAIN.md first, runs fleet_brain.py, continues tracker
+- No push performed (no PAT stored by design); everything committed locally
