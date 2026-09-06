@@ -102,7 +102,17 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 | 2 | Existing-code audit (stack, routes, auth, payments, worker plane, content/claims, trackers, a11y, tests) | **DONE** (5 CRITICAL + 10 HIGH + 12 MEDIUM findings, incl. leaked AgentMail key + WORKER_TOKEN in git-tracked files — see spec §A.2) |
 | 3 | Write `markdown.md.txt` (56 sections incl. research tables, NOT VERIFIED / LEGAL REVIEW REQUIRED discipline) | **DONE** — deliverable at `download/markdown.md.txt` + repo-root copy; 720 lines, all 56 items mapped in §I.6 |
 | 4 | Validate spec against codebase (prompt §75 checklist) | **DONE** (§I.1 self-audit) |
-| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | **W0 EXECUTED 2026-09-07** (see below) — W1 storage_v2 + RateLimit table next |
+| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | **W0 EXECUTED 2026-09-07** (see below) — **W1 storage_v2 + RateLimit EXECUTED 2026-09-07** (see below) |
+
+**W1 state (2026-09-07, Task 35):**
+- ✅ Supabase credentials vaulted (`workers/secrets/supabase.json`, 0600) + offline backup VERDICT PASS; vault_backup.py now backs up the WHOLE vault dir (fixed latent PATH bug).
+- ✅ **CRITICAL: the Supabase project is SHARED with another app** (33 trading tables in `public`). All DeYoung tables live in the dedicated **`deyoung` schema** (pushed, E2E-verified; `public` untouched). Any DeYoung Postgres URL MUST carry `?schema=deyoung` — `deploy/start.sh` auto-injects it (guard prevents `--accept-data-loss` from dropping the other app's tables on a bare URL).
+- ✅ storage_v2 E2E ALL PASS (11/11) against real Supabase via the real adapter: put/sign/round-trip/private-reject/stat/delete + local fallback + RateLimit + :6543 pgbouncer. Private bucket `deyoung-media`. Known artifact: GET may serve deleted bytes for a short CDN window — authoritative deletion proof = 2nd DELETE returns `NoSuchKey`.
+- ✅ RateLimit table (both schemas) + Postgres-backed limiter with in-memory fallback; `guard()` async, 8 route call sites converted. C-5 /api/upload + /api/files/:id delivery (signed URLs, Range) were already in place pre-reset; now proven end-to-end.
+- ✅ **C-6 leak found + purged**: OLD Supabase project ref + DB password (reused on the new project!) hardcoded in 4 diag scripts + worklog → rewritten env-driven, full-history filter-repo purge, triple-verified (pickaxe 0 / per-commit grep 0 / markers only).
+- ⚠️ **OWNER ACTION (new)**: check whether the OLD Supabase project (aws-0-eu-central-1) still exists — if yes, rotate its DB password or delete the project (password reuse).
+- ⚠️ **OWNER NOTE**: gitleaks CI has never actually run — the repo has no `origin` remote yet; it fires on first push (along with the W0 force-push).
+- ⏳ Remaining W1 week-1–2 items (spec §I.5): Profile/LoginCode tables + relations + Decimal money + Job mapping from VideoRequest; fixing the 21 pre-existing tsc errors (still exactly 21, 0 new).
 
 **W0 state (2026-09-07, Task 34):**
 - ✅ C-1/C-2 secrets purged from ALL 33 commits (git filter-repo; verified 0 hits, full-history blob scan). Working tree de-leaked (agentmail_setup.py env-only, qa_worker_plane.sh env-based, worklog redacted, tool-results/ untracked).
