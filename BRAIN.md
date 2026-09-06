@@ -57,9 +57,15 @@ manifests, credit ledger, Nigerian-law compliance, WCAG 2.2 AA). See tracker in 
 ## 4. Render fleet (Kaggle)
 
 - **Tokens**: 8 in vault (`w1`–`w8`). `w1` = account **deyoungsltd**, `w2` = **teslaprime**
-  (both verified 2026-09-06). `w3`–`w8` = reserve, account names unknown (Kaggle v1 has no
+  (verified 2026-09-06; RE-VERIFIED 2026-09-07 — w1 proven by downloading the private offsite
+  vault dataset with it). `w3`–`w8` = reserve, account names unknown (Kaggle v1 has no
   /me endpoint — account is discoverable at next kernel launch; record it in vault + state
   when that happens).
+- **2026-09-07 vault recovery**: sandbox restore wiped all gitignored files incl. the vault;
+  owner re-provided all 8 KGAT tokens in chat → vaulted, identities reconciled 1:1 against
+  the offsite backup (downloaded with w1 → exact match, 8/8). Offsite backup refreshed →
+  VERIFY PASS. Brain loop REVIVED. Campaign dir (incl. h3-kernel-src copy) still lost —
+  re-pull kernel source from Kaggle when relaunching (`kaggle kernels pull <ref>`).
 - **Monitor/fetch (idempotent, one pass)**: `python3 scripts/fleet_brain.py`
   (loop mode: `python3 scripts/fleet_brain.py --loop 60`). Writes `brain/state.json`
   (loop-owned `fleet` section) + appends `brain/events.log`.

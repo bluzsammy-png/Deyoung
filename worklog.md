@@ -521,3 +521,22 @@ Stage Summary:
 - W1 COMPLETE: storage_v2 + Postgres RateLimit + 0 tsc errors + seeded production DB + latent checkout bug fixed. All secrets gitignored+0600; git tree clean of secrets.
 - BLOCKED ON OWNER: (1) re-provide deyoungsltd KGAT token → restores vault kaggle_tokens.json from offsite dataset + revives brain loop; (2) Railway env per vault supabase.json; (3) WORKER_TOKEN cutover; (4) force-push purged history (PAT); (5) revoke old AgentMail key; (6) old Supabase project (eu-central-1) password rotation/deletion.
 - Dev server: healthy on :3000 (seeded sqlite preview). Brain loop: intentionally DOWN (no KGAT).
+
+---
+Task ID: 37
+Agent: Super Z (main)
+Task: Owner re-provided 8 KGAT tokens → vault restore + offsite recovery + brain loop revival
+
+Work Log:
+- Vaulted 8 owner-provided KGAT tokens into workers/secrets/kaggle_tokens.json (0600, gitignored, check-ignore verified) with unknown-account placeholders.
+- Wrote scripts/identify_owner_token.py: probes each token against the private offsite dataset (deyoungsltd/deyoung-worker-vault) — download success = owner proof. Token #7 (w1) = deyoungsltd OWNER; the successful download RECOVERED the offsite backup (original kaggle_tokens.json + supabase.json).
+- Reconciliation: ALL 8 user tokens match the recovered vault 1:1 — w1=deyoungsltd, w2=teslaprime, w3–w8=reserves (account names discoverable at next kernel launch per vault notes). Marked w1 account_verified 2026-09-07 (dataset-download proof).
+- Consolidated vault: restored original worker_plane section (staged WORKER_TOKEN dyw_62bf… + full cutover runbook — still pending Railway cutover); REMOVED the duplicate wt_… re-stage I had put in supabase.json during earlier recovery (supabase.json now points at kaggle_tokens.json as single source of truth for worker_plane).
+- vault_backup.py re-run: dataset-version UPDATED → owner-list YES, round-trip YES, foreign-read blocked (404), VERIFY VERDICT: PASS. Backup now carries BOTH kaggle_tokens.json + supabase.json.
+- ~/.kaggle/access_token = owner token (0600). Brain loop REVIVED via brain_boot.sh (pid 4549, 60s cadence, first pass logged). Manual fleet_brain.py pass: "changes: none" — 4 film kernels still cancelAcknowledged/empty (v10 renders lost to 12h cap, unchanged); deyoung-worker-c complete = source-code files only (already fetched pre-wipe, matches repo).
+- BRAIN.md §4 updated (re-verification + recovery note; campaign/ incl. h3-kernel-src still lost → re-pull kernel source from Kaggle at relaunch).
+
+Stage Summary:
+- Fleet auth FULLY RESTORED: vault (0600, gitignored) + offsite backup (VERIFY PASS) + brain loop alive. Nothing token-related touched git (verified via staged-diff scan).
+- Cutover runbook (in vault) remains pending: Railway WORKER_TOKEN set → old token 401.
+- NEXT (per BRAIN.md §4 flag): v10 relaunch needs the SHRUNK/checkpointed render plan (12h-cap blocker) — blind re-push rejected; kernel source re-pullable from Kaggle.
