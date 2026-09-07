@@ -35,6 +35,7 @@ export const LIMITS = {
   request: { max: 10, windowSec: 60 * 60 }, // video render requests
   verify: { max: 10, windowSec: 60 * 60 },
   stream: { max: 120, windowSec: 60 },
+  premiere: { max: 5, windowSec: 60 * 60 }, // W2.2: user premiere requests
 } as const;
 
 export type LimitClass = keyof typeof LIMITS;

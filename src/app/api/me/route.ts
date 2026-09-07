@@ -69,6 +69,7 @@ export async function GET() {
       resultUrl: true,
       gpuMinutes: true,
       createdAt: true,
+      premiere: { select: { status: true } },
     },
   });
 

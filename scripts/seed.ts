@@ -369,6 +369,47 @@ async function main() {
   }
   console.log("seed: video FAQs present");
 
+  // ---- W2.2 Premiere Wall (added separately so existing installs also get it) ----
+  // Honest launch content: three real DeYoung works that already ship on the
+  // site (the produced web film + two showreel clips). No fake durations, no
+  // fake entries — the fleet's delivered renders join via the admin panel.
+  const premieres = [
+    {
+      title: "The DeYoung Film",
+      logline: "The short that started the studio — written, rendered and cut by the DeYoung pipeline.",
+      category: "ai-film",
+      videoUrl: "/video/deyoung-film-web.mp4",
+      posterUrl: "/img/film-poster.jpg",
+      featured: true,
+      durationSec: 0,
+    },
+    {
+      title: "Cartoon Gag — Reel Cut",
+      logline: "A stylized gag rendered in the cartoon look, straight from the showreel.",
+      category: "style-lab",
+      videoUrl: "/showreel/clip-cartoon.mp4",
+      posterUrl: "/showreel/style-cartoon.png",
+      featured: false,
+      durationSec: 0,
+    },
+    {
+      title: "Doors, Split Screen",
+      logline: "Style Lab experiment: one beat, two looks, split down the middle.",
+      category: "style-lab",
+      videoUrl: "/showreel/clip-doors.mp4",
+      posterUrl: "/showreel/style-split.png",
+      featured: false,
+      durationSec: 0,
+    },
+  ];
+  for (const p of premieres) {
+    const exists = await prisma.premiere.findFirst({ where: { title: p.title } });
+    if (!exists) {
+      await prisma.premiere.create({ data: { ...p, status: "published", source: "admin" } });
+    }
+  }
+  console.log("seed: premieres present");
+
   console.log("seed done.");
 }
 

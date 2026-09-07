@@ -18,6 +18,7 @@ import { SignInView, SignUpView } from "@/components/site/auth-view";
 import { DashboardView } from "@/components/site/dashboard-view";
 import { StudioView } from "@/components/site/studio-view";
 import { AdminApp } from "@/components/site/admin/admin-app";
+import { PremiereWall } from "@/components/site/premiere-wall";
 
 export default function Page() {
   const route = useHashRoute();
@@ -145,6 +146,7 @@ export default function Page() {
           <Services services={data?.services ?? []} currency={settings?.currency || "USD"} />
           <Parade variant="b" />
           <Gallery photos={data?.photos ?? []} />
+          <PremiereWall />
           <About settings={settings} />
           <Testimonials testimonials={data?.testimonials ?? []} />
           <FaqSection faqs={data?.faqs ?? []} />

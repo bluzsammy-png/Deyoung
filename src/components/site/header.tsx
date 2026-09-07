@@ -11,6 +11,7 @@ import type { PublicSettings } from "@/lib/types";
 const LINKS = [
   { label: "Video Plans", href: "#plans" },
   { label: "Services", href: "#services" },
+  { label: "Premieres", href: "#premieres" },
   { label: "Work", href: "#gallery" },
   { label: "About", href: "#about" },
   { label: "FAQ", href: "#faq" },

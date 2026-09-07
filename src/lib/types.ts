@@ -159,6 +159,19 @@ export type VideoRequest = {
   updatedAt: string;
 };
 
+// W2.2 Premiere Wall — one entry on the public wall (published only).
+export type Premiere = {
+  id: string;
+  title: string;
+  logline: string;
+  category: string;
+  durationSec: number;
+  featured: boolean;
+  posterUrl: string;
+  postedAt: string;
+  videoSrc: string;
+};
+
 export function money(amount: number, currency: string): string {
   const symbols: Record<string, string> = {
     USD: "$",

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3, CalendarCheck, Camera, Chrome, Clapperboard, Film, Image as ImageIcon, LayoutDashboard, Lock, LogOut,
-  Mail, MessageSquareQuote, Settings as SettingsIcon, ShieldAlert, Sparkles, UserCog, Users, Wand2, Wallet,
+  Mail, MessageSquareQuote, Popcorn, Settings as SettingsIcon, ShieldAlert, Sparkles, UserCog, Users, Wand2, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,13 +19,14 @@ import {
 } from "./admin-settings";
 import { AdminPlans, AdminRequests, AdminSubscribers } from "./admin-subs";
 import { AdminUsers } from "./admin-users";
+import { AdminPremieres } from "./admin-premieres";
 import { StudioView } from "../studio-view";
 
 type Me = { authenticated: boolean; email?: string; usingDefaultPassword?: boolean };
 
 type TabKey =
   | "overview" | "plans" | "subscribers" | "users" | "requests" | "bookings" | "messages" | "photos" | "services"
-  | "studio" | "content" | "payments" | "settings" | "security";
+  | "premieres" | "studio" | "content" | "payments" | "settings" | "security";
 
 const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -36,6 +37,7 @@ const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "bookings", label: "Bookings", icon: CalendarCheck },
   { key: "messages", label: "Messages", icon: Mail },
   { key: "photos", label: "Photos", icon: ImageIcon },
+  { key: "premieres", label: "Premieres", icon: Popcorn },
   { key: "services", label: "Services", icon: Camera },
   { key: "content", label: "Reviews & FAQ", icon: MessageSquareQuote },
   { key: "payments", label: "Payments", icon: Wallet },
@@ -147,6 +149,7 @@ export function AdminApp() {
           {tab === "bookings" && <AdminBookings />}
           {tab === "messages" && <AdminMessages />}
           {tab === "photos" && <AdminPhotos />}
+          {tab === "premieres" && <AdminPremieres />}
           {tab === "services" && <AdminServices />}
           {tab === "content" && <AdminContentTab />}
           {tab === "payments" && <AdminPayments />}

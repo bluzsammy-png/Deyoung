@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api } from "@/lib/types";
+import { toast } from "sonner";
 import { go } from "@/components/site/hash";
 import { useSessionBadge } from "@/components/site/use-session";
 import { AgentStream } from "@/components/site/agent-stream";
@@ -16,6 +21,7 @@ import {
   Plus,
   Radio,
   Sparkles,
+  Star,
 } from "lucide-react";
 
 type Me = {
@@ -51,6 +57,7 @@ type Me = {
     resultUrl: string;
     gpuMinutes: number;
     createdAt: string;
+    premiere?: { status: string } | null;
   }[];
   projects: { id: string; title: string; niche: string; status: string; updatedAt: string }[];
 };
@@ -126,6 +133,11 @@ export function DashboardView() {
   const [me, setMe] = useState<Me | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [watchId, setWatchId] = useState<string | null>(null); // live-run console requestId
+  const [premiereReq, setPremiereReq] = useState<{ id: string; prompt: string } | null>(null);
+  const [premiereTitle, setPremiereTitle] = useState("");
+  const [premiereLogline, setPremiereLogline] = useState("");
+  const [premiereCategory, setPremiereCategory] = useState("ai-film");
+  const [premiereBusy, setPremiereBusy] = useState(false);
   const badge = useSessionBadge();
 
   const load = useCallback(() => {
@@ -133,6 +145,29 @@ export function DashboardView() {
       .then(setMe)
       .catch((e) => setErr(e instanceof Error ? e.message : "Could not load dashboard"));
   }, []);
+
+  async function submitPremiereRequest() {
+    if (!premiereReq) return;
+    setPremiereBusy(true);
+    try {
+      await api("/api/premieres", {
+        method: "POST",
+        body: JSON.stringify({
+          requestId: premiereReq.id,
+          title: premiereTitle,
+          logline: premiereLogline,
+          category: premiereCategory,
+        }),
+      });
+      toast.success("Premiere requested — the owner reviews every submission");
+      setPremiereReq(null);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not request premiere");
+    } finally {
+      setPremiereBusy(false);
+    }
+  }
 
   useEffect(() => {
     load();
@@ -328,9 +363,34 @@ export function DashboardView() {
                     </Button>
                   )}
                   {r.status === "done" && r.resultUrl && (
-                    <a href={r.resultUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-bold text-primary hover:underline">
-                      Watch your film →
-                    </a>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <a href={r.resultUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
+                        Watch your film →
+                      </a>
+                      {r.premiere ? (
+                        r.premiere.status === "published" ? (
+                          <span className="flex items-center gap-1 text-xs font-bold text-amber-300">
+                            <Star className="h-3.5 w-3.5" aria-hidden /> On the Premiere Wall
+                          </span>
+                        ) : r.premiere.status === "pending" ? (
+                          <span className="text-xs font-bold text-amber-300/80">Premiere pending review</span>
+                        ) : (
+                          <span className="text-xs text-white/35">Premiere declined</span>
+                        )
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setPremiereReq({ id: r.id, prompt: r.prompt });
+                            setPremiereTitle(r.prompt.slice(0, 80));
+                            setPremiereLogline("");
+                            setPremiereCategory("ai-film");
+                          }}
+                          className="flex items-center gap-1 text-xs font-bold text-amber-300 hover:underline"
+                        >
+                          <Star className="h-3.5 w-3.5" aria-hidden /> Request premiere
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -366,6 +426,67 @@ export function DashboardView() {
           </div>
         </div>
       </div>
+
+      {/* W2.2 — request a premiere of a delivered render */}
+      <Dialog open={premiereReq !== null} onOpenChange={(open) => !open && setPremiereReq(null)}>
+        <DialogContent className="border-white/10 bg-[#111] text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-black uppercase tracking-wide">
+              <Star className="h-4 w-4 text-amber-300" aria-hidden /> Request premiere
+            </DialogTitle>
+            <DialogDescription className="text-white/50">
+              Your finished film could screen on the public Premiere Wall. The owner reviews every request before it goes live.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="premiere-title" className="text-white/70">Title</Label>
+              <Input
+                id="premiere-title"
+                value={premiereTitle}
+                onChange={(e) => setPremiereTitle(e.target.value)}
+                maxLength={120}
+                placeholder="Give your film a title"
+                className="border-white/15 bg-white/[0.04] text-white placeholder:text-white/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="premiere-logline" className="text-white/70">Logline (optional)</Label>
+              <Textarea
+                id="premiere-logline"
+                value={premiereLogline}
+                onChange={(e) => setPremiereLogline(e.target.value)}
+                maxLength={280}
+                rows={2}
+                placeholder="One line that sells the film"
+                className="border-white/15 bg-white/[0.04] text-white placeholder:text-white/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="premiere-category" className="text-white/70">Category</Label>
+              <select
+                id="premiere-category"
+                value={premiereCategory}
+                onChange={(e) => setPremiereCategory(e.target.value)}
+                className="w-full rounded-md border border-white/15 bg-[#181818] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="ai-film">AI Film</option>
+                <option value="style-lab">Style Lab</option>
+                <option value="studio">Studio</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </div>
+            <Button
+              onClick={submitPremiereRequest}
+              disabled={premiereBusy || premiereTitle.trim().length === 0}
+              className="w-full bg-primary font-bold text-white hover:bg-[#B91C1C]"
+            >
+              {premiereBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Star className="h-4 w-4" aria-hidden />}
+              Submit for review
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
