@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-07 (RAILWAY CUTOVER DONE: all 8 env vars incl. new WORKER_TOKEN live on the green deployment dc6d060a (token vaulted in railway.json); Railway code = stale Sep-6 build until owner pushes GitHub; v2 relaunch autonomous: canary running, gate armed in brain loop; owner actions in §6)
+Last updated: 2026-09-07 (GITHUB PUSH DONE: purged history force-pushed + W0/W1 code LIVE on Railway via auto-deploy 52c13f7f — gitleaks CI green on a932791; PAT vaulted in workers/secrets/github.json; Railway cutover DONE (8 vars incl. WORKER_TOKEN); v2 relaunch autonomous: canary running, gate armed in brain loop; remaining owner actions in §6)
 
 ---
 
@@ -87,9 +87,13 @@ manifests, credit ledger, Nigerian-law compliance, WCAG 2.2 AA). See tracker in 
 
 ## 5. Workflow runbooks
 
-- **Deploy**: commit → push to GitHub (needs the owner's PAT — *none stored by design*;
-  ask owner when a push is required) → Railway auto-builds (`railway.toml`: prisma generate
+- **Deploy**: commit → push to GitHub → Railway auto-builds (`railway.toml`: prisma generate
   postgres schema → next build → standalone; `deploy/start.sh`: db push + seed + :6543 switch + serve).
+  Push mechanics (Task 41 verified): `git push [force] "https://x-access-token:$PAT@github.com/bluzsammy-png/Deyoung.git" main:main`
+  — PAT lives in `workers/secrets/github.json` (0600; chat-exposed → owner rotates at github.com/settings/tokens);
+  token used one-shot in the URL, never saved to remotes/credential helpers. Pre-push gate:
+  `python3 scripts/prepush_secret_scan.py` (vault-literal + pattern sweep over full history, exit 1 = do not push).
+  Every push fires: gitleaks CI (secret-scan.yml) + Railway auto-deploy (commit status written back to GitHub).
 - **Launch a new Kaggle GPU worker**: `KAGGLE_API_TOKEN=<token> python3 scripts/kaggle_launch.py
   --token <WORKER_TOKEN> --watch` (see `docs/WORKERS.md`). After launch, discover which
   account the token owns (kernel author) and record it in the vault.
@@ -123,8 +127,8 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 
 **W0 state (2026-09-07, Task 34):**
 - ✅ C-1/C-2 secrets purged from ALL 33 commits (git filter-repo; verified 0 hits, full-history blob scan). Working tree de-leaked (agentmail_setup.py env-only, qa_worker_plane.sh env-based, worklog redacted, tool-results/ untracked).
-- ⚠️ **OWNER ACTION: force-push** — local history is rewritten; pushes need the owner's PAT (none stored by design). After push, GitHub shows the purged history; old key revocation at agentmail.to still required.
-- ✅ WORKER_TOKEN CUTOVER **DONE 2026-09-07** (Task 40): owner re-provided a Railway project token (vaulted `workers/secrets/railway.json`; the 8cb7de14-… predecessor died with the sandbox wipe — no git leak, only a truncated prefix ever committed). Applied ALL 8 prod vars via GraphQL API (`scripts/railway_apply.py` — the v4 CLI rejects project tokens) to service 1a50a560… (project "QuantEdge Terminal" 99f9348d, production env a3f81c18…): `DATABASE_URL` (:5432 session +schema=deyoung), `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_DRIVER=supabase`, `AUTH_SECRET`, `ADMIN_BOOTSTRAP_PASSWORD`, `WORKER_TOKEN`=dyw_62bf… — now LIVE on green deployment dc6d060a. **Contract learned the hard way**: `deploy/start.sh` requires DATABASE_URL = SESSION :5432 (it rewrites runtime to :6543 itself) — setting :6543 directly hangs db push on pgbouncer advisory locks and fails the deploy (attempt 1; Railway kept the old release serving). Vault `_meta.railway_boot_contract` records this. Untouched: AGENTMAIL_API_KEY, NEXT_PUBLIC_SITE_URL. ⚠️ Railway still runs the stale Sep-6 BUILD (redeploy reuses the image) — W0/W1 code (rate-limit v2, storage_v2, paymentKey fix) goes live when the owner pushes GitHub (needs PAT).
+- ✅ **GITHUB FORCE-PUSH DONE 2026-09-07 (Task 41)**: owner provided a PAT (vaulted `workers/secrets/github.json`, 0600). Pre-push scan `scripts/prepush_secret_scan.py` = CLEAN; junk pycache/brain-runtime blobs untracked + gitignored (UUID auto-snapshot commits stripped from tip); purged history force-pushed (`1545df1 → 9c6a105 forced`) then allowlist fix `a932791`. gitleaks CI: first run FAILED on a `generic-api-key` FALSE POSITIVE ("wikeyoung5" account name contains "key" + colon in prose) → allowlisted account-name stopwords in `.gitleaks.toml` + reworded BRAIN quota line → **CI SUCCESS on a932791**. Railway auto-deployed BOTH pushes (deployments b44723fe→removed, 52c13f7f→SUCCESS): **W0/W1 code now LIVE** (rate-limit v2, storage_v2, paymentKey fix, secret-scan.yml). Railway writes commit status back: a932791 = success → 52c13f7f. Old key revocation at agentmail.to still required.
+- ✅ WORKER_TOKEN CUTOVER **DONE 2026-09-07** (Task 40): owner re-provided a Railway project token (vaulted `workers/secrets/railway.json`; the 8cb7de14-… predecessor died with the sandbox wipe — no git leak, only a truncated prefix ever committed). Applied ALL 8 prod vars via GraphQL API (`scripts/railway_apply.py` — the v4 CLI rejects project tokens) to service 1a50a560… (project "QuantEdge Terminal" 99f9348d, production env a3f81c18…): `DATABASE_URL` (:5432 session +schema=deyoung), `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_DRIVER=supabase`, `AUTH_SECRET`, `ADMIN_BOOTSTRAP_PASSWORD`, `WORKER_TOKEN`=dyw_62bf… — now LIVE on green deployment dc6d060a. **Contract learned the hard way**: `deploy/start.sh` requires DATABASE_URL = SESSION :5432 (it rewrites runtime to :6543 itself) — setting :6543 directly hangs db push on pgbouncer advisory locks and fails the deploy (attempt 1; Railway kept the old release serving). Vault `_meta.railway_boot_contract` records this. Untouched: AGENTMAIL_API_KEY, NEXT_PUBLIC_SITE_URL. ~~⚠️ Railway still runs the stale Sep-6 BUILD~~ → **superseded by Task 41**: the GitHub force-push shipped W0/W1; current green build = 52c13f7f (a932791).
 - ✅ Login: public creds hint removed; bootstrap password = `ADMIN_BOOTSTRAP_PASSWORD` env or random-once-in-deploy-log; session secret = `AUTH_SECRET` env → file → **fail closed** (no public fallback); cookie `secure` in production.
 - ✅ Rate limiting v2 (`src/lib/ratelimit.ts`, Postgres `RateLimit` table in `deyoung` schema, §F.2 numbers, async guard() at all 8 sites, opportunistic 24h prune, in-memory fallback when DB unreachable).
 - ✅ Prod Prisma query logging OFF (F.6). ✅ gitleaks CI (`.github/workflows/secret-scan.yml`; fires on first push — repo has no origin remote yet).

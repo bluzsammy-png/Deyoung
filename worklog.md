@@ -598,3 +598,24 @@ Stage Summary:
 - CUTOVER COMPLETE: production now runs the full env set incl. WORKER_TOKEN = staged dyw_62bf… (old dyw_a71c… is now dead weight — optional owner check: old token should 401). Site green on Railway; custom domain deyoungltd.site attached to the green deployment.
 - Remaining owner actions: (1) PAT -> push purged history + current code to GitHub (ships W0/W1 to Railway), (2) revoke old AgentMail key, (3) admin password change on first login, (4) old Supabase eu-central-1 project disposition.
 - Render fleet: canary still running; gate armed in brain loop (Task 39).
+
+---
+Task ID: 41
+Agent: Super Z (main)
+Task: Owner provided GitHub PAT -> force-push purged history + ship W0/W1 to production
+
+Work Log:
+- Vaulted the PAT (workers/secrets/github.json, 0600, gitignored; note records chat-exposure -> rotate after push wave).
+- Repo hygiene BEFORE push: two UUID auto-snapshot commits at the tip had committed scripts/__pycache__/*.pyc + brain/relaunch_watcher.out. Soft-reset past them, `git rm --cached` all pyc + brain out, extended .gitignore (__pycache__/, *.pyc, /brain/*.out), re-committed the real Task 40 content (railway_apply.py, railway_introspect.py, BRAIN/worklog) as one clean commit 02db970. One older benign .pyc blob remains in mid-history (compiled public source, no secrets - accepted).
+- Built scripts/prepush_secret_scan.py (W0 playbook): sweeps `git log --all -p` for EVERY vault literal (kaggle tokens, service key, db password, auth secret, admin password, worker token, railway token, PAT) + credential patterns (ghp_/KGAT_/dyw_/JWT/credentialed-db-URLs/private keys/AKIA/am_). First run: 5 hit-classes ALL false positives (admin email, railway service_id, env-var NAME lists, dyw_xxxx doc placeholder); tightened scanner (structural-key skip + repeated-char placeholder filter) -> CLEAN verdict.
+- FORCE-PUSH done: `git push --force https://x-access-token:$PAT@github.com/bluzsammy-png/Deyoung.git main:main` (token one-shot in URL, no remote credential storage; remote was 1545df1 -> 9c6a105 forced). Added tokenless origin remote for convenience. SHA-match verified via ls-remote.
+- gitleaks CI fired on 9c6a105 and FAILED (2 findings, --redact): local gitleaks 8.24.3 repro -> Rule generic-api-key on BRAIN.md line 76, "Secret" = `deyoungsltd/teslaprime` — the Kaggle ACCOUNT NAME. Mechanism: "wikeyoung5" contains "key", then ".Quota model:" parses as `key...: value`. FALSE POSITIVE. Fix: (a) allowlist stopwords for the 6 public account names in .gitleaks.toml (real KGAT/dyw tokens cannot contain them), (b) reworded "Quota model: deyoungsltd/teslaprime" -> "Quota model — deyoungsltd + teslaprime". Local re-scan: no leaks. Pushed a932791 (fast-forward) -> CI SUCCESS.
+- Railway auto-deploy VERIFIED end-to-end: deployments b44723fe (00:48:38Z, 9c6a105) and 52c13f7f (00:52:33Z, a932791) appeared seconds after each push -> Railway IS repo-connected; both built and 52c13f7f = SUCCESS (Railway healthcheck = deploy-success precondition per Task 27 precedent), b44723fe superseded->REMOVED. GitHub-side confirmation: Railway wrote commit status a932791 -> success -> 52c13f7f, and GitHub Deployments list shows a932791/9c6a105/1545df1 all "Deployed to Railway". => W0/W1 code (rate-limit v2, storage_v2, paymentKey checkout fix, secret-scan.yml) is LIVE on production (deyoungltd.site + deeyoung-production-72ef.up.railway.app) with the Task 40 env set intact.
+- Built scripts/railway_watch.py + scripts/gql_introspect.py (Railway GraphQL introspection had schema drift: `meta{...}` subfields 400 on this token type; proven query = deployments(first:N, input:{serviceId,projectId,environmentId}); buildLogs/deploymentLogs root queries exist but rejected — evidence gathered via GitHub statuses instead).
+- Brain: canary deyoungsltd/deyoung-v2-s01 still RUNNING (files 0, checked 00:58Z), relaunch gate phase=waiting, loop pid 5555 alive, no ground stop.
+
+Stage Summary:
+- CHAIN CLOSED: owner PAT -> pre-push scan CLEAN -> force-push purged history -> gitleaks CI green -> Railway auto-deploy green -> W0/W1 LIVE in production.
+- PAT vaulted but chat-exposed: owner should rotate at github.com/settings/tokens when convenient (rotating does not affect already-deployed anything; future pushes just need the new token vaulted).
+- Remaining owner actions: (1) rotate chat-exposed GitHub PAT, (2) revoke old AgentMail key at agentmail.to, (3) change admin password on first login (bootstrap ADMIN_BOOTSTRAP_PASSWORD), (4) old Supabase eu-central-1 project disposition (C-6).
+- Next autonomous milestone: canary output ~02:10Z -> gate auto-pushes wave 2 (6 kernels) -> harvest.
