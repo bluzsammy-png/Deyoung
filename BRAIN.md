@@ -151,8 +151,13 @@ Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root
 
 ## 7. Session protocol (the "AI in charge" loop)
 
+0. **IF the sandbox was rebuilt** (vault/`.env.local`/brain missing): `bash scripts/selfheal.sh
+   "<vault passphrase>"` — restores workers/secrets + .env.local from the tracked encrypted
+   blob `vault/vault.enc`, installs the kaggle CLI, boots the brain. The passphrase is held
+   by the OWNER and repeated in agent chat history — never stored in any tracked file.
+   Nothing else may be treated as lost: the repo carries all durable state (Task 46).
 1. Read `BRAIN.md` (this file) + last 2 worklog entries.
-2. `bash scripts/brain_boot.sh` — ensure the always-on fleet loop is running (every minute). **BLOCKED 2026-09-07**: needs owner KGAT token re-provisioned into vault first.
+2. `bash scripts/brain_boot.sh` — ensure the always-on fleet loop is running (every minute).
 3. Run `python3 scripts/fleet_brain.py` once — record fleet deltas into the conversation.
 4. If fleet outputs landed → follow §4 film v10 chain (rebuild tooling first if missing).
 5. Continue the highest **PENDING/IN PROGRESS** item in §6.
@@ -170,6 +175,28 @@ Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root
   (Atlas/Evolink keys valid but EMPTY until owner tops up).
 - Owner wants: permanent memory (this brain), fleet autonomy, upgrades driven by the master
   prompt, everything free-first.
+
+## Task 46 — Durability model: rebuilds may never break anything again (2026-09-07)
+
+The platform periodically REBUILDS the sandbox: tracked (committed) files are restored from
+the repo; gitignored files and processes are WIPED. That is how the vault, .env.local and
+the brain loop "vanished" twice on 2026-09-07. The fix — everything durable lives in the
+repo:
+
+- `vault/vault.enc` (TRACKED): AES-256-CBC / PBKDF2-600k encrypted tar of `workers/secrets/*`
+  + `.env.local`. Plaintext secrets are still NEVER committed (repo is PUBLIC — verified).
+- ONE passphrase unlocks it (owner + agent chat history only; generated 2026-09-07, owner
+  instructed to save it out-of-band). Recovery order: (1) selfheal with passphrase, (2)
+  offsite Kaggle dataset `deyoungsltd/deyoung-worker-vault` via any fleet KGAT token + the
+  CLI access_token recipe (raw HTTP datasets API returns 403 datasets.get — KGAT scope).
+- `scripts/selfheal.sh "<passphrase>"`: restore vault -> ensure kaggle CLI -> boot brain ->
+  status. Idempotent; tested by simulating a full wipe (restore verified byte-identical).
+- `campaign/v10/` TRACKED (job definitions + kernel metadata are reproducible work product).
+- `brain/state.json` tracked + committed on real changes (auto-checkpoint); events.log stays
+  ignored (churn). Seed the canary jobs back with `scripts/h3v2_make.py` if ever needed.
+- Fleet note: Kaggle GPU quota is 30 GPU-hours/week PER ACCOUNT — deyoungsltd exhausted its
+  window (v1's 12h burn); canary now lives on youngwilly (fresh quota). Push a kernel there
+  only after checking status; never assume quota on a used account.
 
 ## W2.1 — Live film simulator + render notifications (Task 43, 2026-09-07)
 - SSE agent trace: GET /api/studio/stream?requestId= (session auth owner-or-admin; 2s ticks; end-event on done/failed/cancelled; 30-min cap). Engine: src/lib/agenttrace.ts (deterministic; REAL queue position + REAL claim time from worker notes; pacing simulated inside phases only — UI labels it).

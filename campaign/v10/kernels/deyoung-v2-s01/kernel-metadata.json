@@ -1,0 +1,13 @@
+{
+  "id": "deyoungsltd/deyoung-v2-s01",
+  "title": "deyoung-v2-s01",
+  "code_file": "deyoung-v2-s01.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
