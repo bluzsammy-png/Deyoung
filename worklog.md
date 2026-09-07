@@ -733,3 +733,19 @@ Stage Summary:
 - Prod database now matches the code schema for the first time since W2 shipped — Premiere Wall API serves the 3 seeds; studio/dashboard/admin DB paths unblocked.
 - deploy/start.sh boot bug fixed permanently (env-var form), verified by a full redeploy.
 - Next: watch canary to completion (auto), then wave-2 supply check; Google OAuth remains the last queued task (needs GOOGLE_CLIENT_ID/SECRET from owner).
+
+---
+Task ID: 45
+Agent: Super Z (main)
+Task: Owner directive — AI Studio must be FULLY FREE on the admin login (no user account, no subscription, nothing)
+
+Work Log:
+- ROOT CAUSE: studio routes (render/enhance/script/projects/stream) + /api/me all resolved ONLY user sessions (dy_user cookie); the ADMIN panel login lives on dy_admin (role "admin" token), so the owner saw "The studio needs you signed in" + "Choose a plan" inside the admin panel's "AI Studio (Free)" tab. The Task-42 owner tier (synthetic admin-free subscription) was unreachable for pure panel sessions.
+- FIX: new getStudioSession() in src/lib/users.ts — user session OR admin panel session. Admin sessions verify via getSession()+Admin-row (revoked admin = access gone) and ride a SHADOW USER ROW (upsert email=admin email, role admin, status active — mirrors the ADMIN_EMAILS Google auto-promote seat), keeping StudioProject.userId (required FK), /api/me projects, and the render owner tier (unlimited, priority 100, no watermark, 1080p+audio) working unchanged. All six routes swapped.
+- QA 10/10 (dev sqlite; scripts/qa_admin_studio_45.sh): admin login -> me.unlimited=True plan=None; projects list/save via shadow user; enhance LLM OK; render QUEUED at prio 100 / watermark false / 1080p / audio / qp 1; live SSE trace streams ("The agent is building your film"); anon 401s; regular user unlimited=False + 403 subscribe-gate INTACT. QA rows retired from dev DB.
+- SECURITY INCIDENT (contained, pre-push): the background auto-checkpoint committed scripts/identify_tokens_44c.py with the 8 KGAT token literals into a LOCAL-ONLY commit (never pushed; gitleaks on GitHub stayed green). Prepush scan caught it; script rewritten to read tokens from an untracked file, the three local snapshot commits + the studio commit were soft-reset into ONE clean commit, git gc --prune=now dropped the orphaned objects, scan CLEAN -> push -> gitleaks CI success -> Railway deploy SUCCESS (aed8f9e).
+- Dev admin note: dev sqlite Admin password reset to the vault bootstrap value for QA (dev-only file).
+
+Stage Summary:
+- PRODUCTION: logging into the admin panel and opening "AI Studio (Free)" now runs the full studio with zero gates — no account, no subscribe prompt; renders go out as owner tier (unlimited, priority 100, no watermark, 1080p+audio) and the live agent console streams. Regular users unaffected (subscribe gate verified intact).
+- Standing hygiene: never put credential literals in tracked files (auto-checkpoint commits the working tree); token-supply flows go through untracked temp files or the vault.
