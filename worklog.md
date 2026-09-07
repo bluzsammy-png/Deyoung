@@ -874,3 +874,17 @@ Work Log:
 
 Stage Summary:
 - The storyboard column is now boot-proof at the schema level (the real fix, not another manual DDL). Fleet kernels can write storyboards at render completion.
+
+---
+Task ID: 50
+Agent: main (Super Z)
+Task: Lip-sync dialogue pass for site renders (owner approved "Begin" after the recommendation list).
+
+Work Log:
+- Designed the pass INTO the site-worker drain kernel (v4): after the H3 i2v scene render, if the scene has a spoken `line` and the render has audio -> (1) edge-tts voices the line with a per-CHARACTER neural voice (deterministic name-hash -> same character = same voice every scene; kids-cartoon bank leads with en-US-AnaNeural, a real child voice), (2) Wav2Lip (GAN weights) re-renders the speaking character's mouth to the voice (RetinaFace detection, pads 0/14/0/8, --nosmooth), (3) ffmpeg mixes dialogue OVER the H3 soundscape ducked to 28% (aformat-normalized 44.1k stereo, adelay 150ms, amix normalize=0). Owner tier renders (withAudio) get talking characters; renders without audio skip lip-sync honestly.
+- FAIL-SAFE: lipsync_pass never raises — any failure (no face in wide shots, weights, network) logs + notes the row and ships the clean H3 render anyway. Lip-sync can only add, never break.
+- Engine QA: Wav2Lip repo pinned (justinjohn0306 fork — already librosa-compatible, uses batch-face RetinaFace; mobilenet.pth from its releases, wav2lip_gan.pth from HF EraSpire mirror — both URLs verified 200). Local QA scripts/qa50_lipsync_local.py ALL PASS: voice mapping deterministic + niche banks, edge-tts synthesis (child voice verified), 16k-mono wav contract, dialogue-over-soundscape mix (duration sane, aac track, dialogue loud over ducked bed) — this local QA CAUGHT a real bug: amix needs aformat sample-rate normalization (16k mono dialogue vs 44.1k soundscape) — fixed in kernel too.
+- Push blocked initially (Kaggle 2-GPU-session cap; v3 kernels still draining after the cancelled E2E test) -> scripts/lipsync50_orchestrate.py runs the whole sequence unattended: wait for v3 exit -> push v4 (retries) -> queue a REAL owner-tier test scene ("The Talking Machine" — Robo's first words, 8s close-up, dialogue "Hello world! I can talk now!", withAudio, prio100) -> watch the row to delivery. Result lands in brain/lipsync50_result.json; the finished film appears in the OWNER's studio.
+
+Stage Summary:
+- Site renders now speak: dialogue lines are voiced per character and lip-synced onto the H3 motion. E2E proof pending GPU slot — orchestrator watching (brain/lipsync50.log).
