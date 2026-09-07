@@ -768,3 +768,21 @@ Work Log:
 Stage Summary:
 - Status answer: (1) AI Studio free-on-admin-login is LIVE (deployed, verified); (2) canary failed for a quota reason, not a code reason — relaunched on youngwilly with fresh quota, RUNNING now; (3) wave-2 auto-fires on canary success; (4) vault/env/brain fully restored after the 2nd rebuild.
 - Owner action item (unchanged): deyoungsltd needs GPU quota headroom — wait for the weekly reset or free Kaggle quota is per-account; fresh accounts carry the fleet meanwhile. Standing hygiene: rotate the chat-exposed GitHub PAT + admin password when fleet is stable.
+
+---
+Task ID: 46-b
+Agent: Super Z (main)
+Task: Owner directive — rebuilds must NEVER wipe/clear anything again ("it should work with the repo")
+
+Work Log:
+- ROOT EXPLANATION: the platform periodically REBUILDS the sandbox — git-tracked files are restored from the repo, gitignored files + processes are wiped. Secrets were deliberately gitignored because bluzsammy-png/Deyoung is PUBLIC (verified: raw.githubusercontent 200 anon). So every rebuild nuked exactly the files that mattered (vault, .env.local) while the repo stayed secret-safe. Twice today, same story.
+- FIX = DURABILITY IN THE REPO (ciphertext, so public is safe): vault/vault.enc — AES-256-CBC, PBKDF2 600k iterations, tar of workers/secrets/* + .env.local. ONE passphrase generated this session and handed to the owner in chat (save out-of-band); it lives ONLY in owner memory + agent chat history, never in any tracked file. gitleaks CI: success on eb5c180 (ciphertext clean, full-history scan CLEAN).
+- scripts/selfheal.sh "<passphrase>": restore vault -> ensure kaggle CLI -> boot brain -> status. IDEMPOTENT and WIPE-TESTED this session: moved workers/secrets away, deleted .env.local, ran self-heal -> restored byte-identical, brain untouched (no double-start).
+- BRAIN.md session protocol step 0 added (self-heal ritual after any rebuild) + "Task 46 Durability model" section; recovery order documented: repo blob first, offsite Kaggle dataset second (CLI access_token recipe — raw HTTP datasets API 403s with KGAT scope).
+- campaign/v10/ now TRACKED (jobs_s01.json + kernel metadata + kernel source) — reproducible render work product survives rebuilds; big media stays ignored via /campaign/* + !/campaign/v10.
+- Canary migration to fresh quota (deyoungsltd weekly 30 GPU-hours exhausted — v1's 12h burn; push rejected with quota error, explaining the 38s CANCEL_ACKNOWLEDGED): jobs recovered from the pushed kernel source via kernels pull -> JOBS_B64 decode; rebuilt via h3v2_make.py; pushed as youngwilly/deyoung-v2-c01 v1 (fresh account, full quota); fleet_brain.py CANARY_REF repointed + state gate reset (un-grounded). Status RUNNING, brain tracking it.
+- SHIPPED: prepush scan CLEAN -> eb5c180 -> push aed8f9e..eb5c180 -> gitleaks CI success. Offsite dataset deyoungsltd/deyoung-worker-vault versioned with current vault (github.json included). Temp token/passphrase files shredded.
+
+Stage Summary:
+- The "AI brain" can no longer be wiped by a rebuild: every durable byte (secrets as ciphertext, env, job definitions, brain state, docs) is IN the repo; one passphrase (owner-held) turns any fresh sandbox into a fully restored operation with a single command. Verified by an actual wipe test.
+- Fleet: canary youngwilly/deyoung-v2-c01 RUNNING on fresh quota; wave-2 auto-fires on success. deyoungsltd waits for its weekly GPU window to reset.
