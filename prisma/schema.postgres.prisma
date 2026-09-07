@@ -263,16 +263,20 @@ model Premiere {
 // scenes) and render linkage. scriptJson shape: { title, logline, characters:
 // [{name, look, voice}], scenes: [{ id, title, seconds, line, visual }] }.
 model StudioProject {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  title      String
-  niche      String   @default("")
-  brief      String   @default("")
-  scriptJson String   @default("{}")
-  status     String   @default("draft") // draft | scripted | rendering | done
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  title          String
+  niche          String   @default("")
+  brief          String   @default("")
+  scriptJson     String   @default("{}")
+  // fleet-generated character sheets + scene keyframes (JSON) — W2.48/49 storyboard.
+  // MUST exist in THIS file: start.sh db-pushes schema.postgres.prisma in prod;
+  // leaving it only in schema.prisma makes every boot DROP the column (49 lesson).
+  storyboardJson String?
+  status         String   @default("draft") // draft | scripted | rendering | done
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([userId])
 }

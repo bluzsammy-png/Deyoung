@@ -861,3 +861,16 @@ Work Log:
 Stage Summary:
 - The site AI now has real film school: scripts are directed (not just generated), the storyboard explains itself, and consistency is enforced by the per-film visual bible + on-brief casting. Render fleet consumes the enriched visuals verbatim (SDXL keyframes + H3 i2v) — better prompts in, better renders out.
 - Fleet/campaign: canary youngwilly/deyoung-v2-c01 RUNNING, site-drain workers teslaprime+wikeyoung5 RUNNING, brain healthy, render queue clear for the campaign per owner order.
+
+---
+Task ID: 49-b
+Agent: main (Super Z)
+Task: Root-cause the recurring storyboardJson drops — the 49 fix was not durable.
+
+Work Log:
+- After 4164c7f deployed, prod check showed storyboardJson MISSING AGAIN. First theory (stale image) was WRONG.
+- TRUE ROOT CAUSE: start.sh db-pushes prisma/schema.postgres.prisma in prod, but Task 48 added the column only to prisma/schema.prisma (dev sqlite schema). EVERY prod boot therefore dropped the column — Task 48's manual DDL was wiped by the next boot, and the drain kernels' storyboard writes would have failed at render completion.
+- FIX: added storyboardJson String? to schema.postgres.prisma StudioProject (with a comment explaining the two-schema trap). Verified by running the EXACT start.sh db push (env-var form, --accept-data-loss, schema=deyoung) against prod — "database is now in sync" in 7.92s. Column PRESENT, deyoung_fleet grants SELECT+UPDATE confirmed. Grant loss was a side effect of the column being dropped; pushes that add the column do not touch grants.
+
+Stage Summary:
+- The storyboard column is now boot-proof at the schema level (the real fix, not another manual DDL). Fleet kernels can write storyboards at render completion.
