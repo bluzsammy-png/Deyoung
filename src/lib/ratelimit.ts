@@ -28,6 +28,8 @@ let lastRowPrune = 0;
 
 export const LIMITS = {
   login: { max: 5, windowSec: 15 * 60 },
+  signup: { max: 5, windowSec: 15 * 60 }, // W2: user registration
+  ai: { max: 30, windowSec: 60 * 60 }, // W2: studio AI (enhance/script) calls
   code: { max: 3, windowSec: 10 * 60 },
   submit: { max: 5, windowSec: 60 * 60 }, // booking / subscription / contact
   request: { max: 10, windowSec: 60 * 60 }, // video render requests

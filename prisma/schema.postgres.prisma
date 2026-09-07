@@ -51,6 +51,7 @@ model Photo {
   title     String
   alt       String   @default("")
   url       String
+  category  String   @default("work") // work | ai-film | style-lab (gallery filter)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 }
@@ -146,8 +147,12 @@ model Subscription {
   provider    String    @default("manual")
   paymentRef  String    @default("")
   notes       String    @default("")
+  userId      String? // W2: set when created by a signed-in user (registration flow)
+  user        User?     @relation(fields: [userId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 // One video generation job bought with subscription quota. Queue-first by design.
@@ -201,4 +206,43 @@ model RateLimit {
   updatedAt DateTime @updatedAt
 
   @@index([resetAt])
+}
+
+// W2 (Task 42): site user - signs up, subscribes, runs the AI Film Studio.
+// Google-only accounts have a null passwordHash. status gates every guarded
+// route: banned/deactivated users fail closed with their reason surfaced.
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String           @default("")
+  passwordHash   String? // null for Google-only accounts
+  provider       String           @default("credentials") // credentials | google
+  googleId       String?          @unique
+  image          String           @default("")
+  role           String           @default("user") // user | admin
+  status         String           @default("active") // active | banned | deactivated
+  banReason      String           @default("")
+  lastLoginAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  subscriptions  Subscription[]
+  studioProjects StudioProject[]
+}
+
+// W2: saved AI Film Studio work - brief, niche, generated script (characters +
+// scenes) and render linkage. scriptJson shape: { title, logline, characters:
+// [{name, look, voice}], scenes: [{ id, title, seconds, line, visual }] }.
+model StudioProject {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  title      String
+  niche      String   @default("")
+  brief      String   @default("")
+  scriptJson String   @default("{}")
+  status     String   @default("draft") // draft | scripted | rendering | done
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 }

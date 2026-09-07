@@ -9,7 +9,11 @@ export type Route =
   | { name: "request" }
   | { name: "privacy" }
   | { name: "thanks"; bookingId?: string; paid?: boolean }
-  | { name: "admin" };
+  | { name: "admin" }
+  | { name: "signin"; error?: string }
+  | { name: "signup"; planCode?: string }
+  | { name: "dashboard" }
+  | { name: "studio"; projectId?: string };
 
 /** Tiny hash router — the whole app lives on `/` (preview-friendly). */
 export function parseHash(hash: string): Route {
@@ -35,6 +39,14 @@ export function parseHash(hash: string): Route {
     }
     case "admin":
       return { name: "admin" };
+    case "signin":
+      return { name: "signin", error: params.get("error") || undefined };
+    case "signup":
+      return { name: "signup", planCode: params.get("plan") || undefined };
+    case "dashboard":
+      return { name: "dashboard" };
+    case "studio":
+      return { name: "studio", projectId: params.get("p") || undefined };
     default:
       return { name: "home" };
   }

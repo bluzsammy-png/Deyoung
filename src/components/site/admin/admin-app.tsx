@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  BarChart3, CalendarCheck, Camera, Clapperboard, Film, Image as ImageIcon, LayoutDashboard, Lock, LogOut,
-  Mail, MessageSquareQuote, Settings as SettingsIcon, ShieldAlert, Sparkles, Users, Wallet,
+  BarChart3, CalendarCheck, Camera, Chrome, Clapperboard, Film, Image as ImageIcon, LayoutDashboard, Lock, LogOut,
+  Mail, MessageSquareQuote, Settings as SettingsIcon, ShieldAlert, Sparkles, UserCog, Users, Wand2, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +18,20 @@ import {
   AdminContentTab, AdminPayments, AdminSettings, AdminSecurity,
 } from "./admin-settings";
 import { AdminPlans, AdminRequests, AdminSubscribers } from "./admin-subs";
+import { AdminUsers } from "./admin-users";
+import { StudioView } from "../studio-view";
 
 type Me = { authenticated: boolean; email?: string; usingDefaultPassword?: boolean };
 
 type TabKey =
-  | "overview" | "plans" | "subscribers" | "requests" | "bookings" | "messages" | "photos" | "services"
-  | "content" | "payments" | "settings" | "security";
+  | "overview" | "plans" | "subscribers" | "users" | "requests" | "bookings" | "messages" | "photos" | "services"
+  | "studio" | "content" | "payments" | "settings" | "security";
 
 const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "plans", label: "Plans", icon: Clapperboard },
   { key: "subscribers", label: "Subscribers", icon: Users },
+  { key: "users", label: "Users", icon: UserCog },
   { key: "requests", label: "Video Queue", icon: Film },
   { key: "bookings", label: "Bookings", icon: CalendarCheck },
   { key: "messages", label: "Messages", icon: Mail },
@@ -36,6 +39,7 @@ const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "services", label: "Services", icon: Camera },
   { key: "content", label: "Reviews & FAQ", icon: MessageSquareQuote },
   { key: "payments", label: "Payments", icon: Wallet },
+  { key: "studio", label: "AI Studio (Free)", icon: Wand2 },
   { key: "settings", label: "Site & Profile", icon: SettingsIcon },
   { key: "security", label: "Security", icon: Lock },
 ];
@@ -138,6 +142,7 @@ export function AdminApp() {
           {tab === "overview" && <Overview onNavigate={setTab} />}
           {tab === "plans" && <AdminPlans />}
           {tab === "subscribers" && <AdminSubscribers />}
+          {tab === "users" && <AdminUsers />}
           {tab === "requests" && <AdminRequests />}
           {tab === "bookings" && <AdminBookings />}
           {tab === "messages" && <AdminMessages />}
@@ -145,6 +150,11 @@ export function AdminApp() {
           {tab === "services" && <AdminServices />}
           {tab === "content" && <AdminContentTab />}
           {tab === "payments" && <AdminPayments />}
+          {tab === "studio" && (
+            <div className="-mx-4 -my-8 md:-mx-6">
+              <StudioView />
+            </div>
+          )}
           {tab === "settings" && <AdminSettings />}
           {tab === "security" && <AdminSecurity onDone={() => setDefaultPwWarn(false)} />}
         </div>
@@ -212,6 +222,17 @@ function LoginForm({ onDone }: { onDone: () => void }) {
               {busy ? "Checking…" : "Enter Admin Panel"}
             </Button>
           </form>
+          <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-widest text-neutral-400">
+            <span className="h-px flex-1 bg-neutral-200" /> or <span className="h-px flex-1 bg-neutral-200" />
+          </div>
+          <Button asChild variant="outline" className="w-full h-11 font-bold">
+            <a href="/api/auth/google">
+              <Chrome className="h-4 w-4" aria-hidden /> Continue with Google
+            </a>
+          </Button>
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            Works instantly for the owner seat (deyoungsltd@gmail.com) once Google credentials are configured.
+          </p>
           <p className="mt-4 text-xs text-muted-foreground text-center">
             Access is restricted. The owner account is created on first boot — its
             credentials are shown once in the deploy log and never published here.

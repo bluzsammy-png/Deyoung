@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { bad, guardAdmin, ok, str } from "@/lib/api";
 import { guard } from "@/lib/ratelimit";
+import { getUserSession } from "@/lib/users";
 
 /** Admin: list every subscription. Public: create a pending subscription (checkout step 1). */
 export async function GET() {
@@ -25,6 +26,11 @@ export async function POST(req: Request) {
   const plan = await db.plan.findUnique({ where: { code: planCode } });
   if (!plan || !plan.active) return bad("Pick a valid plan");
 
+  // W2: bind the subscription to the signed-in account when the registration
+  // flow created it — the dashboard reads subscriptions by userId/email.
+  const session = await getUserSession();
+  const sessionUser = session.kind === "ok" ? session.user : null;
+
   const sub = await db.subscription.create({
     data: {
       name,
@@ -35,6 +41,7 @@ export async function POST(req: Request) {
       currency: plan.currency,
       provider: str(body.provider, 30) || "manual",
       notes: str(body.notes, 2000),
+      userId: sessionUser && sessionUser.email === email ? sessionUser.id : null,
     },
   });
 

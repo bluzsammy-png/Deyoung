@@ -14,6 +14,9 @@ import { RequestView } from "@/components/site/request-view";
 import { PlansSection } from "@/components/site/plans";
 import { Parade } from "@/components/site/parade";
 import { PrivacyView, ThankYouView } from "@/components/site/thank-you-privacy";
+import { SignInView, SignUpView } from "@/components/site/auth-view";
+import { DashboardView } from "@/components/site/dashboard-view";
+import { StudioView } from "@/components/site/studio-view";
 import { AdminApp } from "@/components/site/admin/admin-app";
 
 export default function Page() {
@@ -100,6 +103,34 @@ export default function Page() {
       view = (
         <main className="flex-1">
           <AdminApp />
+        </main>
+      );
+      break;
+    case "signin":
+      view = (
+        <main className="flex-1">
+          <SignInView error={route.error} />
+        </main>
+      );
+      break;
+    case "signup":
+      view = (
+        <main className="flex-1">
+          <SignUpView planCode={route.planCode} />
+        </main>
+      );
+      break;
+    case "dashboard":
+      view = (
+        <main className="flex-1">
+          <DashboardView />
+        </main>
+      );
+      break;
+    case "studio":
+      view = (
+        <main className="flex-1">
+          <StudioView projectId={route.projectId} />
         </main>
       );
       break;

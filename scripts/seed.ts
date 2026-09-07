@@ -223,15 +223,51 @@ async function main() {
   if (photoCount === 0) {
     await prisma.photo.createMany({
       data: [
-        { title: "Portrait work", alt: "Studio portrait sample in black and red", url: "/img/gallery-1.png", sortOrder: 1 },
-        { title: "Brand identity", alt: "Brand design sample with white and red layout", url: "/img/gallery-2.png", sortOrder: 2 },
-        { title: "Editorial shoot", alt: "Editorial photo sample, dark tones with red accent", url: "/img/gallery-3.png", sortOrder: 3 },
-        { title: "Event coverage", alt: "Event photo sample with red and white styling", url: "/img/gallery-4.png", sortOrder: 4 },
-        { title: "Studio session", alt: "Studio work sample in white and black", url: "/img/gallery-5.png", sortOrder: 5 },
-        { title: "Commercial campaign", alt: "Commercial campaign sample, black with red accents", url: "/img/gallery-6.png", sortOrder: 6 },
+        { title: "Portrait work", alt: "Studio portrait sample in black and red", url: "/img/gallery-1.png", category: "work", sortOrder: 1 },
+        { title: "Brand identity", alt: "Brand design sample with white and red layout", url: "/img/gallery-2.png", category: "work", sortOrder: 2 },
+        { title: "Editorial shoot", alt: "Editorial photo sample, dark tones with red accent", url: "/img/gallery-3.png", category: "work", sortOrder: 3 },
+        { title: "Event coverage", alt: "Event photo sample with red and white styling", url: "/img/gallery-4.png", category: "work", sortOrder: 4 },
+        { title: "Studio session", alt: "Studio work sample in white and black", url: "/img/gallery-5.png", category: "work", sortOrder: 5 },
+        { title: "Commercial campaign", alt: "Commercial campaign sample, black with red accents", url: "/img/gallery-6.png", category: "work", sortOrder: 6 },
       ],
     });
     console.log("seed: 6 photos");
+  }
+
+  // ---- W2: expanded premium gallery (AI film stills + style lab) ----
+  const aiFilmCount = await prisma.photo.count({ where: { category: { in: ["ai-film", "style-lab"] } } });
+  if (aiFilmCount === 0) {
+    await prisma.photo.createMany({
+      data: [
+        { title: "The 60s film", alt: "DeYoung AI film poster — 60 seconds in one pass", url: "/img/film-poster.jpg", category: "ai-film", sortOrder: 10 },
+        { title: "Cartoon lead", alt: "AI-generated cartoon boy character in red lighting", url: "/showreel/style-cartoon.png", category: "ai-film", sortOrder: 11 },
+        { title: "Anime cut", alt: "AI anime style frame from the film pipeline", url: "/showreel/style-anime.png", category: "ai-film", sortOrder: 12 },
+        { title: "Real-toon hybrid", alt: "Ultra-realistic AI character frame", url: "/showreel/style-real.png", category: "ai-film", sortOrder: 13 },
+        { title: "Kids show frame", alt: "Playful kids-cartoon AI frame", url: "/showreel/style-kids.png", category: "ai-film", sortOrder: 14 },
+        { title: "Stick-man runner", alt: "Hand-drawn stick-man animation test", url: "/showreel/style-stickman.png", category: "style-lab", sortOrder: 15 },
+        { title: "Split style study", alt: "Side-by-side AI style comparison frame", url: "/showreel/style-split.png", category: "style-lab", sortOrder: 16 },
+        { title: "The lineup", alt: "Full DeYoung character lineup", url: "/showreel/style-lineup.png", category: "style-lab", sortOrder: 17 },
+        { title: "Brand systems", alt: "Brand design work sample", url: "/img/work/brand.png", category: "work", sortOrder: 18 },
+        { title: "Commercial set", alt: "Commercial production sample", url: "/img/work/commercial.png", category: "work", sortOrder: 19 },
+        { title: "Editorial frame", alt: "Editorial shoot sample", url: "/img/work/editorial.png", category: "work", sortOrder: 20 },
+        { title: "Live event", alt: "Event coverage sample", url: "/img/work/event.png", category: "work", sortOrder: 21 },
+        { title: "Portrait series", alt: "Portrait session sample", url: "/img/work/portrait.png", category: "work", sortOrder: 22 },
+        { title: "Studio session", alt: "Studio photography sample", url: "/img/work/studio.png", category: "work", sortOrder: 23 },
+      ],
+    });
+    console.log("seed: 14 gallery works added (AI film + style lab + studio)");
+  }
+
+  // ---- W2: owner admin seat (deyoungsltd@gmail.com) — passwordless via Google ----
+  const ownerAdmin = await prisma.admin.findUnique({ where: { email: "deyoungsltd@gmail.com" } });
+  if (!ownerAdmin) {
+    const env = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+    const password = env && env.length >= 10 ? env : crypto.randomBytes(12).toString("base64url");
+    await prisma.admin.create({
+      data: { email: "deyoungsltd@gmail.com", passwordHash: hashPassword(password) },
+    });
+    if (!env) console.log("seed: owner admin deyoungsltd@gmail.com / (one-time password in log)");
+    else console.log("seed: owner admin deyoungsltd@gmail.com created (bootstrap password)");
   }
 
   // ---- testimonials ----

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X, Clapperboard } from "lucide-react";
+import { Menu, X, Clapperboard, LogOut, LayoutDashboard, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoMark } from "./logo";
 import { go } from "./hash";
+import { signOutUser, useSessionBadge } from "./use-session";
 import type { PublicSettings } from "@/lib/types";
 
 const LINKS = [
@@ -19,6 +20,7 @@ const LINKS = [
 export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const session = useSessionBadge();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -28,6 +30,46 @@ export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
   }, []);
 
   const name = settings?.siteName || "DeYoung";
+  const user = session?.user ?? null;
+  const admin = session?.admin ?? null;
+
+  async function handleSignOut() {
+    await signOutUser();
+    setOpen(false);
+    go("#/");
+    window.location.reload(); // re-render every section with the fresh session
+  }
+
+  const authButtons = user ? (
+    <>
+      <Button
+        onClick={() => go("#dashboard")}
+        className="hidden sm:inline-flex border border-white/15 bg-white/5 font-bold text-neutral-900 hover:bg-white/10"
+        variant="outline"
+      >
+        <LayoutDashboard className="h-4 w-4" aria-hidden />
+        Dashboard
+      </Button>
+      <Button
+        onClick={handleSignOut}
+        variant="outline"
+        className="hidden sm:inline-flex border-white/15 bg-white/5 text-neutral-700 hover:bg-white/10 hover:text-neutral-900"
+        aria-label={`Sign out ${user.email}`}
+      >
+        <LogOut className="h-4 w-4" aria-hidden />
+        Sign out
+      </Button>
+    </>
+  ) : (
+    <Button
+      onClick={() => go("#signin")}
+      variant="outline"
+      className="hidden sm:inline-flex border-white/15 bg-white/5 font-bold text-neutral-700 hover:bg-white/10 hover:text-neutral-900"
+    >
+      <LogIn className="h-4 w-4" aria-hidden />
+      Sign in
+    </Button>
+  );
 
   return (
     <header
@@ -58,6 +100,7 @@ export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          {authButtons}
           <Button
             onClick={() => go("#subscribe")}
             className="hidden sm:inline-flex bg-primary hover:bg-[#B91C1C] text-white font-bold"
@@ -88,15 +131,54 @@ export function SiteHeader({ settings }: { settings: PublicSettings | null }) {
               {l.label}
             </a>
           ))}
+          {user ? (
+            <>
+              <Button
+                onClick={() => {
+                  setOpen(false);
+                  go("#dashboard");
+                }}
+                className="mt-3 w-full bg-primary hover:bg-[#B91C1C] text-white font-bold"
+              >
+                <LayoutDashboard className="h-4 w-4" aria-hidden />
+                Dashboard &amp; Studio
+              </Button>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="mt-2 w-full border-neutral-200 text-neutral-700"
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => {
+                setOpen(false);
+                go("#signin");
+              }}
+              variant="outline"
+              className="mt-3 w-full border-neutral-200 text-neutral-700 font-bold"
+            >
+              <LogIn className="h-4 w-4" aria-hidden />
+              Sign in
+            </Button>
+          )}
           <Button
             onClick={() => {
               setOpen(false);
               go("#subscribe");
             }}
-            className="mt-3 w-full bg-primary hover:bg-[#B91C1C] text-white font-bold"
+            className="mt-2 w-full bg-primary hover:bg-[#B91C1C] text-white font-bold"
           >
             Subscribe
           </Button>
+          {admin && (
+            <p className="mt-2 text-center text-xs font-bold uppercase tracking-widest text-primary">
+              Owner signed in · {admin.email}
+            </p>
+          )}
         </nav>
       )}
     </header>

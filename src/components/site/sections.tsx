@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Star, Clock, ArrowRight, Mail, Phone, MapPin, Instagram, Twitter, Facebook, Youtube, Send, X, PenLine, Clapperboard, Download, ChevronRight } from "lucide-react";
 import { LogoMark } from "./logo";
@@ -81,18 +81,54 @@ export function Services({ services, currency }: { services: Service[]; currency
 
 /* ---------------- Gallery ---------------- */
 
+const GALLERY_FILTERS = [
+  { key: "all", label: "All work" },
+  { key: "ai-film", label: "AI Film" },
+  { key: "style-lab", label: "Style Lab" },
+  { key: "work", label: "Studio Work" },
+];
+
 export function Gallery({ photos }: { photos: Photo[] }) {
   const [active, setActive] = useState<Photo | null>(null);
+  const [filter, setFilter] = useState("all");
+
+  const shown = useMemo(
+    () => (filter === "all" ? photos : photos.filter((p) => (p.category || "work") === filter)),
+    [photos, filter]
+  );
 
   return (
     <section id="gallery" className="scroll-mt-20 py-16 md:py-24 bg-[var(--brand-black)] text-white">
       <div className="mx-auto max-w-6xl px-4">
         <SectionHead kicker="Recent work" title="The Work Speaks" dark />
-        {photos.length === 0 ? (
+        {photos.length > 0 && (
+          <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Gallery categories">
+            {GALLERY_FILTERS.map((f) => {
+              const count = f.key === "all" ? photos.length : photos.filter((p) => (p.category || "work") === f.key).length;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={f.key}
+                  role="tab"
+                  aria-selected={filter === f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`rounded-full border px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-colors ${
+                    filter === f.key
+                      ? "border-primary bg-primary text-white"
+                      : "border-white/20 text-white/60 hover:border-white/40 hover:text-white"
+                  }`}
+                >
+                  {f.label} · {count}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {shown.length === 0 ? (
           <p className="text-white/60">New work is being uploaded — check back soon.</p>
         ) : (
           <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-3">
-            {photos.map((p, i) => (
+            {shown.map((p, i) => (
               <Reveal key={p.id} delay={(i % 3) * 80}>
               <button
                 onClick={() => setActive(p)}

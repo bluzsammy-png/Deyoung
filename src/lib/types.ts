@@ -42,6 +42,7 @@ export type Photo = {
   title: string;
   alt: string;
   url: string;
+  category?: string; // work | ai-film | style-lab
   sortOrder: number;
   createdAt?: string;
 };

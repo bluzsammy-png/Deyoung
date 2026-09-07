@@ -6,10 +6,14 @@ import path from "path";
 import { db } from "@/lib/db";
 
 export const SESSION_COOKIE = "dy_admin";
-const SESSION_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
+export const SESSION_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
 const SECRET_FILE = path.join(process.cwd(), "db", ".auth-secret");
 
 /** Persisted per-install secret so sessions survive restarts. */
+export function authSecret(): string {
+  return getSecret();
+}
+
 function getSecret(): string {
   // W0 fix (C-3/§F.1): never fall back to a public deterministic value — that let
   // anyone forge admin sessions. Order: env → per-install file → fail closed.
@@ -53,7 +57,9 @@ export function verifyPassword(password: string, stored: string): boolean {
 
 /* ---------- session token (HMAC-signed, stateless) ---------- */
 
-type SessionPayload = { sub: string; email: string; exp: number };
+// W2 (Task 42): role added. Legacy tokens (no role) predate user accounts —
+// isAdmin() falls back to checking the Admin table for those.
+type SessionPayload = { sub: string; email: string; exp: number; role?: "admin" | "user" };
 
 function b64url(input: string | Buffer): string {
   return Buffer.from(input).toString("base64url");
@@ -85,7 +91,12 @@ export function verifyToken(token: string): SessionPayload | null {
 
 export async function createSession(admin: { id: string; email: string }): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const token = signToken({ sub: admin.id, email: admin.email, exp: now + SESSION_TTL_SEC });
+  const token = signToken({
+    sub: admin.id,
+    email: admin.email,
+    exp: now + SESSION_TTL_SEC,
+    role: "admin",
+  });
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -113,7 +124,16 @@ export async function getSession(): Promise<SessionPayload | null> {
 
 /** Guard for admin API routes. Returns true when the current request is the owner. */
 export async function isAdmin(): Promise<boolean> {
-  return (await getSession()) !== null;
+  const s = await getSession();
+  if (!s) return false;
+  if (s.role === "user") return false; // user sessions must never pass admin guards
+  if (s.role === "admin") return true;
+  // legacy token without a role claim — confirm the account is still an Admin row
+  const row = await db.admin.findFirst({
+    where: { OR: [{ id: s.sub }, { email: s.email.toLowerCase() }] },
+    select: { id: true },
+  });
+  return row !== null;
 }
 
 /* ---------- admin bootstrap ---------- */

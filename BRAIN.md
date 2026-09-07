@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-07 (GITHUB PUSH DONE: purged history force-pushed + W0/W1 code LIVE on Railway via auto-deploy 52c13f7f — gitleaks CI green on a932791; PAT vaulted in workers/secrets/github.json; Railway cutover DONE (8 vars incl. WORKER_TOKEN); v2 relaunch autonomous: canary running, gate armed in brain loop; remaining owner actions in §6)
+Last updated: 2026-09-07 (W2 PLATFORM SHIPPED: user auth + Google OAuth (deyoungsltd@gmail.com = owner seat), subscription-with-registration, dashboard w/ GPU life, AI Film Studio (storyboard + prompt enhancer + script writer → real render queue), admin user control (ban/activate/deactivate), 20-work gallery; gitleaks CI green; canary wave-2 gate armed; owner actions: GOOGLE_CLIENT_ID/SECRET, rotate PAT, revoke old AgentMail key, admin password on first login)
 
 ---
 
@@ -124,6 +124,15 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 - ⚠️ **OWNER ACTION (new)**: check whether the OLD Supabase project (aws-0-eu-central-1) still exists — if yes, rotate its DB password or delete the project (password reuse).
 - ⚠️ **OWNER NOTE**: gitleaks CI has never actually run — the repo has no `origin` remote yet; it fires on first push (along with the W0 force-push).
 - ⏳ Remaining W1 week-1–2 items (spec §I.5): Profile/LoginCode tables + relations + Decimal money + Job mapping from VideoRequest; fixing the 21 pre-existing tsc errors (still exactly 21, 0 new).
+
+
+**W2 state (2026-09-07, Task 42):**
+- ✅ User platform LIVE: User/StudioProject models (both schemas), dy_user cookie sessions (separate from dy_admin — owner can hold both), fail-closed status gates (banned/deactivated w/ reason), Google OAuth manual flow w/ ADMIN_EMAILS auto-promotion (owner seat deyoungsltd@gmail.com, also seeded as Admin row w/ bootstrap password), rate-limit classes signup+ai.
+- ✅ Subscription-with-registration: signup → #subscribe funnel; Subscription.userId bound server-side when session email matches.
+- ✅ Dashboard + AI Film Studio: GPU-life ring (plan budget vs gpuMinutesUsed, 15s live), studio pipeline Brief→Script→Scenes→Render→Delivery; /api/studio/enhance + /script (z-ai LLM, JSON-shaped) + /render (tier limits; admin = synthetic admin-free sub, priority 100, unlimited, no watermark). Renders land in the REAL queue → Kaggle worker plane claims them (/api/worker/claim) — supply depends on wave-2 fleet.
+- ✅ Admin: Users tab (ban w/ reason / activate / deactivate / make-admin / revoke-admin; owner seat protected 403) + AI Studio (Free) tab.
+- ✅ Gallery: 20 works, category chips (AI Film / Style Lab / Studio Work), seeded idempotently at prod boot.
+- ⏳ OWNER: GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET on Railway (redirect URI https://deyoungltd.site/api/auth/google/callback) → Google buttons go live for users AND owner login.
 
 **W0 state (2026-09-07, Task 34):**
 - ✅ C-1/C-2 secrets purged from ALL 33 commits (git filter-repo; verified 0 hits, full-history blob scan). Working tree de-leaked (agentmail_setup.py env-only, qa_worker_plane.sh env-based, worklog redacted, tool-results/ untracked).

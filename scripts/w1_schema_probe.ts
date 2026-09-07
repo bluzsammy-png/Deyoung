@@ -4,7 +4,7 @@
  * workers/secrets/supabase.json — never hardcoded here. */
 import { PrismaClient } from "../prisma/pg-client-tmp";
 
-const base = process.env.DATABASE_URL;
+const base = process.env.DATABASE_URL ?? "";
 if (!base) {
   throw new Error("Set DATABASE_URL (no ?schema= needed; base URL). Values live in workers/secrets/supabase.json.");
 }
@@ -30,6 +30,10 @@ async function probe(schema: string) {
 }
 
 async function main() {
+  if (!base) {
+    console.error("FAIL: set DATABASE_URL (env-driven diagnostic, no defaults)");
+    process.exit(1);
+  }
   const current = new URL(base).searchParams.get("schema") || "public";
   await probe(current);
   if (current !== "public") await probe("public");
