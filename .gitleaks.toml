@@ -13,6 +13,18 @@ paths = [
   '''(^|/)spec_parts/''',
   '''worklog\.md$''',
 ]
+# W41: Kaggle ACCOUNT NAMES are public identifiers (profiles), not secrets.
+# "wikeyoung5" contains the substring "key" which trips generic-api-key when a
+# colon follows in prose ("...wikeyoung5. Quota model: deyoungsltd/teslaprime").
+# Real KGAT_/dyw_ tokens can never contain these strings.
+stopwords = [
+  "deyoungsltd",
+  "teslaprime",
+  "jimcreat",
+  "bittrexminingltd",
+  "youngwilly",
+  "wikeyoung5",
+]
 regexes = [
   # negative-test dummy in the QA script (deliberately invalid)
   '''dyw_dummy-negative-test''',
