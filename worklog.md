@@ -640,3 +640,19 @@ Stage Summary:
 - The site is now a full platform: accounts (Google ready), subscription-at-registration, film-simulator dashboard with GPU life, an AI Film Studio where the agent writes scripts/storyboards and feeds the real render queue (Kaggle worker plane claims via existing /api/worker/claim), complete admin control, owner seat = deyoungsltd@gmail.com (passwordless Google + password fallback), premium 20-work gallery.
 - Owner actions to unlock Google auth: create OAuth client (console.cloud.google.com), set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET on Railway (redirect URI https://deyoungltd.site/api/auth/google/callback), redeploy.
 - AI render submission → queue → Kaggle worker claim is LIVE end-to-end; production renders depend on wave-2 fleet supply.
+
+---
+Task ID: 42-b
+Agent: Super Z (main)
+Task: Verify W2 platform production deployment + fleet check (English report turn)
+
+Work Log:
+- Fleet: brain loop pid 5555 healthy (60s cadence), phase=waiting, canary deyoungsltd/deyoung-v2-s01 still RUNNING at 02:12Z (past ~02:10Z ETA, within GPU variance); transient URLError burst 23:57-00:03Z self-healed. Gate will auto-verify canary mp4 then fire wave 2 (6 kernels) unattended.
+- Discovered W2 platform commit f5688a8 already pushed to GitHub (remote main == f5688a8).
+- Verified via GitHub API: commit f5688a8 status = success (context "QuantEdge Terminal - Deeyoung", Railway deployment created 02:05:10Z) => W2 platform LIVE on production (deyoungltd.site) with Task 40 env set.
+- Local HEAD fec7fa6 = 2 benign auto-snapshots (brain/state.json runtime state only, no secrets) left unpushed intentionally; will ride with next real commit.
+- GOOGLE_CLIENT_ID/SECRET not yet in prod env (expected) — Google auth buttons will show google_unconfigured until owner creates the OAuth client.
+
+Stage Summary:
+- PRODUCTION = full platform: user auth (+Google-ready), subscription-at-registration, dashboard w/ GPU life, AI Film Studio (enhancer/script-writer/storyboard -> real render queue via /api/worker/claim), admin panel w/ user control, owner seat deyoungsltd@gmail.com, 20-work gallery.
+- Only owner unlock left for Google sign-in: GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET on Railway, redirect URI https://deyoungltd.site/api/auth/google/callback, redeploy.
