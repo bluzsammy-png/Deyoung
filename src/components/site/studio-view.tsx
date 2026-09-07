@@ -48,7 +48,32 @@ type Script = {
   title: string;
   logline: string;
   characters: { name: string; look: string; voice: string }[];
-  scenes: { id: string; title: string; seconds: number; line: string; visual: string }[];
+  scenes: {
+    id: string;
+    title: string;
+    seconds: number;
+    line: string;
+    visual: string;
+    direction?: {
+      shot: string;
+      move: string;
+      light: string;
+      composition: string;
+      emotion: string;
+      sound: string;
+      principle: string;
+      note: string;
+    };
+  }[];
+  bible?: {
+    styleAnchor: string;
+    palette: string;
+    lightPhilosophy: string;
+    lensFeel: string;
+    directorVoice: string;
+    kidPromise: string;
+    bibleLine: string;
+  };
 };
 
 /** Character sheets + per-scene keyframes produced by the render fleet.
@@ -556,6 +581,12 @@ export function StudioView({ projectId }: { projectId?: string }) {
                     </Button>
                   )}
                 </div>
+                {script.bible && (
+                  <div className="rounded-xl border border-primary/25 bg-primary/[0.06] p-4">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-primary">The Director's Brain — this film's visual bible</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/70">{script.bible.bibleLine}</p>
+                  </div>
+                )}
                 {script.scenes.map((sc) => {
                   const r = render[sc.id];
                   return (
@@ -576,6 +607,27 @@ export function StudioView({ projectId }: { projectId?: string }) {
                       </div>
                       <p className="mt-2 text-sm text-white/70">{sc.visual}</p>
                       {sc.line && <p className="mt-1 text-sm italic text-primary/90">“{sc.line}”</p>}
+                      {sc.direction && (
+                        <div className="mt-2 space-y-1">
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              sc.direction.shot,
+                              sc.direction.move,
+                              sc.direction.emotion ? `feeling: ${sc.direction.emotion}` : "",
+                              sc.direction.principle?.split(" — ")[0] ? `principle: ${sc.direction.principle.split(" — ")[0]}` : "",
+                            ]
+                              .filter(Boolean)
+                              .map((badge) => (
+                                <span key={badge as string} className="rounded-full border border-white/15 bg-white/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/70">
+                                  {badge}
+                                </span>
+                              ))}
+                          </div>
+                          <p className="text-xs leading-relaxed text-white/45">
+                            <span className="font-black uppercase tracking-wide text-primary/80">Director&apos;s note:</span> {sc.direction.note}
+                          </p>
+                        </div>
+                      )}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                     {storyboard?.keyframes?.find((k) => k.scene === sc.id) && (
                       // eslint-disable-next-line @next/next/no-img-element

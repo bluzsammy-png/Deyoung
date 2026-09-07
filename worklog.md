@@ -841,3 +841,23 @@ Stage Summary:
 - Films are no longer stuck at 15s: owner selects up to 120s (10x12s scenes); per-scene renders are ~2.3h GPU each on free Kaggle — parallel fleet rendering is the speed model, brain coordination for site workers is the next upgrade.
 - ComfyUI answer: the fleet has ALWAYS rendered through ComfyUI (MiniMax-H3 headless); now it also draws the storyboard through it (SDXL) — keyframe-anchored i2v is how characters stay consistent across scenes.
 - Lip sync: H3 generates the soundscape; dialogue lip-sync pass is a queued upgrade, not shipped.
+
+---
+Task ID: 49
+Agent: main (Super Z)
+Task: Owner order — cancel his personal render, focus the fleet on the campaign video; "go wild" upgrades: give the site AI a broad film/animation knowledge (kid-thinking + director-thinking), connect it deeper to the site.
+
+Work Log:
+- Owner render CANCELLED per order: E2E re-queue cmtr0b1c62c4191e45ff9c5b0819 (queued) -> cancelled with note; verified 0 queued/processing VideoRequest rows remain — fleet focuses on the campaign.
+- FOUND + FIXED a live regression: prod StudioProject.storyboardJson column was MISSING again (dropped by a boot of the pre-48 release image; watcher had been erroring since 16:05Z). Re-added column + re-applied all deyoung_fleet scoped grants (with correct mixed-case quoting); verified present. Deploy health confirmed via GitHub commit statuses: Railway context SUCCESS on ef3e083 + HEAD 99def2c — the live build contains the column in its schema, so future boots ADD, never drop.
+- SHIPPED THE DIRECTOR'S BRAIN (src/lib/cinema.ts): broad filmmaking/animation knowledge core — 12-shot grammar (purpose + kid-feel per shot), 12 camera moves with when-to-use, 12 lighting philosophies, 8 composition rules, 8 color-script palettes with emotions, ALL 12 principles of animation (craft + kid phrasing), kid-lens rules (wonder-first: tiny heroes, transformations, running gags, gentle peril + reassurance, callbacks), per-beat sound design, director voices per niche (Pixar-heart, Apple-minimal, rhythm-king, quiet-luxury...), age-band calibration.
+- Director's pass wired into the ENGINE: every film now gets ONE visual bible (style anchor + palette + light philosophy + lens feel + kid promise = the consistency contract), and EVERY scene gets full direction (shot, move, light, composition, emotion, sound, animation principle + a director's note blending director-craft with kid-thinking). Applied to the local engine AND the LLM path (attachDirection) so direction is guaranteed regardless of provider.
+- Prompt enhancer upgraded: bible lens + composition craft now flow into every enhanced prompt.
+- CAST NOW ON-BRIEF: when the brief has no named characters, the brief's own subjects become the cast ("a brave tiny robot and a shy firefly..." -> Robot & Firefly, verified 3/3 runs) via subjectPool (adjective-flagged + SEED_STOP filtered, y-length heuristic keeps firefly/butterfly); focus de-duplicated (never "Robot ... and the robot"); archetype cap respects on-brief seeds.
+- STUDIO UI: storyboard now shows "The Director's Brain — this film's visual bible" panel + per-scene direction badges (shot / move / feeling / principle) + the director's note under every scene. The owner SEES the kid+director thinking per scene, next to the fleet-drawn keyframes.
+- QA: new scripts/qa49_directors_brain.sh — 23/23 PASS (3/4/6/10-scene shapes: direction on every scene, seconds sum === total for 15/30/60/120, bible present, shot language woven into visuals, enhancer craft language, 4-niche smoke). Full qa47 regression: ALL PASS. tsc clean, eslint 0 errors, next build OK.
+- Pushed -> CI -> deploy; verified via GitHub status API.
+
+Stage Summary:
+- The site AI now has real film school: scripts are directed (not just generated), the storyboard explains itself, and consistency is enforced by the per-film visual bible + on-brief casting. Render fleet consumes the enriched visuals verbatim (SDXL keyframes + H3 i2v) — better prompts in, better renders out.
+- Fleet/campaign: canary youngwilly/deyoung-v2-c01 RUNNING, site-drain workers teslaprime+wikeyoung5 RUNNING, brain healthy, render queue clear for the campaign per owner order.

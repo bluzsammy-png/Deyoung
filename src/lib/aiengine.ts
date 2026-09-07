@@ -1,5 +1,6 @@
 import "server-only";
 import crypto from "crypto";
+import { buildVisualBible, directScene, COMPOSITION_CRAFT, type VisualBible, type Direction } from "./cinema";
 
 /**
  * W2.47 — Production AI engine for the studio (prompt enhancer + script writer).
@@ -42,7 +43,17 @@ export type ScriptShape = {
   title: string;
   logline: string;
   characters: { name: string; look: string; voice: string }[];
-  scenes: { id: string; title: string; seconds: number; line: string; visual: string }[];
+  scenes: {
+    id: string;
+    title: string;
+    seconds: number;
+    line: string;
+    visual: string;
+    /** W2.49 Director's Brain: per-scene direction (shot/move/light/... + note). */
+    direction?: Direction;
+  }[];
+  /** W2.49: the film's consistency contract — one visual bible for every scene. */
+  bible?: VisualBible;
 };
 
 /* ------------------------------- tiny RNG --------------------------------- */
@@ -479,11 +490,14 @@ export async function enhancePrompt(prompt: string, niche: Niche): Promise<strin
   const r = rng();
   const st = STYLES[niche];
   const brief = analyzeBrief(prompt);
+  /* W2.49: the Director's Brain joins the enhancer — bible lens + composition craft. */
+  const bible = buildVisualBible(niche, prompt, r);
+  const comp = pick(r, COMPOSITION_CRAFT);
   const camera = pick(r, st.camera);
   const light = coherentLight(pick(r, st.light), brief.timeOfDay ?? (/night|midnight|dusk/i.test(prompt) ? "night" : null), r);
-  const palette = pick(r, st.palette);
+  const palette = bible.palette;
   const mood = pick(r, st.mood);
-  const style = pick(r, st.style);
+  const style = bible.styleAnchor;
   const setting = brief.setting ? `a ${niche === "kids cartoon" ? "storybook " : ""}${brief.setting}` : pick(r, st.settings);
   const tod = brief.timeOfDay ?? pick(r, ["golden hour", "blue hour", "bright midday", "atmospheric night"]);
   const topic = brief.nouns.slice(0, 3).join(", ") || prompt.slice(0, 60);
@@ -496,9 +510,9 @@ export async function enhancePrompt(prompt: string, niche: Niche): Promise<strin
   const opener = openers[0].length > 12 ? openers[0] : pick(r, openers.slice(1));
 
   const shapes = [
-    `${opener}. ${capitalize(camera)}, ${setting}, ${tod}. ${capitalize(light)}; ${palette} palette. ${capitalize(mood)} atmosphere, ${style}.`,
-    `${opener} — told through a ${camera} in ${setting}. ${capitalize(tod)}, ${light}, ${palette} palette. The mood is ${mood}, shot as ${style}.`,
-    `${opener}. Camera: ${camera} across ${setting} at ${tod}. Lighting: ${light}. Look: ${palette}, ${mood}, finished as ${style}.`,
+    `${opener}. ${capitalize(camera)}, ${setting}, ${tod}. ${capitalize(light)}; ${palette} palette, ${comp.name} (${comp.why}). ${capitalize(mood)} atmosphere, ${style} — ${bible.lensFeel}.`,
+    `${opener} — told through a ${camera} in ${setting}. ${capitalize(tod)}, ${light}, ${palette} palette, ${comp.name}. The mood is ${mood}, shot as ${style}.`,
+    `${opener}. Camera: ${camera} across ${setting} at ${tod}. Lighting: ${light}. Look: ${palette}, ${mood}, ${style}, framed with ${comp.name}.`,
   ];
   const out = pick(r, shapes).replace(/\s+/g, " ").trim();
   return out.length >= 40 ? out : `${out} Rich detail, cinematic depth, film-grade motion.`;
@@ -509,19 +523,22 @@ export async function enhancePrompt(prompt: string, niche: Niche): Promise<strin
 /** Write a full shot-by-shot script (characters + scenes) from a brief. */
 export async function writeScript(briefText: string, niche: Niche, seconds: number): Promise<ScriptShape> {
   const viaLLM = await llmJSON(
-    "You are DeYoung's AI screenwriter. Write a shot-by-shot script. Respond with VALID JSON ONLY matching: " +
+    "You are DeYoung's AI screenwriter, directed by a film-craft brain. Write a shot-by-shot script. Respond with VALID JSON ONLY matching: " +
       '{"title":string,"logline":string,"characters":[{"name":string,"look":string,"voice":string}],' +
       '"scenes":[{"id":string,"title":string,"seconds":number,"line":string,"visual":string}]}. ' +
-      "Rules: 2-10 scenes, seconds sum <= total, every scene 5-12s, scene.visual = one concrete shot (camera + action + setting), scene.line = ONE spoken line <= 12 words, 1-3 characters, ids s1, s2, ...",
+      "Rules: 2-10 scenes, seconds sum <= total, every scene 5-12s, scene.visual = one concrete shot (camera + action + setting), scene.line = ONE spoken line <= 12 words, 1-3 characters, ids s1, s2, ... " +
+      "Direct like a filmmaker: open wide to establish the world, move closer for feelings, save the most dramatic shot for the climax; keep every character's look description IDENTICAL in every scene for consistency.",
     `Total seconds: ${seconds}. Niche: ${niche}. Brief: ${briefText}`,
     1200
   );
-  if (isShape(viaLLM)) return sanitizeShape(viaLLM, seconds);
+  if (isShape(viaLLM)) return attachDirection(sanitizeShape(viaLLM, seconds), niche, briefText);
 
   const r = rng();
   const st = STYLES[niche];
   const brief = analyzeBrief(briefText);
   const total = Math.min(120, Math.max(15, seconds));
+  /* W2.49: ONE visual bible per film — the consistency contract every scene signs. */
+  const bible = buildVisualBible(niche, briefText, r);
   const count =
     total <= 20 ? 3 : total <= 30 ? 4 : total <= 45 ? 5 : total <= 60 ? 6 :
     total <= 75 ? 7 : total <= 90 ? 8 : total <= 105 ? 9 : 10;
@@ -550,43 +567,58 @@ export async function writeScript(briefText: string, niche: Niche, seconds: numb
   }
   if (remaining > 0) sceneSecs[sceneSecs.length - 1] += remaining; // never truncates the film
 
-  /* cast */
+  /* cast — W2.49: the brief's OWN subjects become the cast when no names are
+     given ("a robot and a firefly" must star a robot and a firefly, not
+     generic archetypes). Archetypes then fill personality, or round out the
+     sidekick slot when the brief names fewer characters. */
   const characters: ScriptShape["characters"] = [];
-  for (const name of brief.cast) {
+  /* nouns that are NOT adjective-flagged ("brave", "tiny" are adjectives; robot/firefly are the real subjects).
+     SEED_STOP keeps quality-words like "brave"/"shy" from becoming characters. */
+  const SEED_STOP = new Set(["brave", "shy", "tiny", "little", "big", "small", "giant", "old", "young", "dark", "bright", "quiet", "loud", "happy", "sad", "sleepy", "magic", "magical", "secret", "lost", "sleeping", "hidden"]);
+  const subjectPool = brief.nouns.filter((n) =>
+    (!brief.adjectives.includes(n) || (n.endsWith("y") && n.length >= 6)) /* firefly/butterfly are nouns, not qualities */
+    && !SEED_STOP.has(n) && n.length >= 3 && !isVerbForm(n)
+  );
+  const castSeeds = brief.cast.length
+    ? brief.cast
+    : subjectPool.slice(0, 2);
+  for (const name of castSeeds) {
     if (characters.length >= 3) break;
     const arch = pick(r, st.castFallback);
-    characters.push({ name, look: arch.look.replace(/the hero item/gi, name), voice: arch.voice });
+    characters.push({ name: capitalize(name), look: arch.look.replace(/the hero item/gi, name), voice: arch.voice });
   }
+  const archetypeCap = castSeeds.length === 0 ? 3 : Math.max(2, castSeeds.length);
   for (const arch of shuffled(r, st.castFallback)) {
-    if (characters.length >= 3) break;
+    if (characters.length >= archetypeCap) break;
     if (characters.some((c) => c.name === arch.name)) continue;
     characters.push({ ...arch });
   }
 
-  /* scenes */
+  /* scenes — directed by the W2.49 Director's Brain: bible-anchored light/palette/style,
+     per-beat shot grammar + camera move + composition, kid-lens + director-craft notes */
   const scenes = beats.map((beat, i) => {
     const secs = sceneSecs[i];
-    const camera = pick(r, st.camera);
-    const palette = pick(r, st.palette);
-    const style = pick(r, st.style);
+    const dir = directScene(beat, i, bible, r, brief.subject);
     const setting = brief.setting ? `a ${brief.setting}` : pick(r, st.settings);
     const tod = brief.timeOfDay ?? pick(r, ["golden hour", "soft morning light", "bright midday", "moody dusk", "neon-lit night"]);
     const light = coherentLight(pick(r, st.light), tod, r);
     const actor = characters[i % characters.length]?.name ?? characters[0]?.name ?? "The shot";
     const verb = pick(r, ["moves through", "discovers", "steps into", "turns toward", "reaches for", "pauses inside"]);
-    const focus = brief.nouns[(i + 1) % Math.max(1, brief.nouns.length)] ?? brief.subject;
+    /* focus pool: the brief's subjects minus the current actor (never "Robot ... and the robot") */
+    const focusPool = subjectPool.filter((n) => capitalize(n) !== actor);
+    const focus = focusPool.length ? focusPool[(i + 1) % focusPool.length] : brief.subject;
     const focusPhrase = /^(the|a|an|his|her|their|its)\s/i.test(focus) ? focus : `the ${focus}`;
 
     const visualBank = [
-      `${capitalize(camera)} — ${actor} ${verb} ${setting} at ${tod}; ${light}, ${palette} palette, ${style}.`,
-      `${capitalize(camera)} on ${actor} and ${focusPhrase}; ${setting}, ${tod}, ${light}. ${capitalize(style)}.`,
-      `${capitalize(camera)}: ${actor} ${verb} ${setting} while ${focusPhrase} fills the frame — ${light}, ${palette}, ${style}.`,
+      `${capitalize(dir.shot)} with a ${dir.move} — ${actor} ${verb} ${setting} at ${tod}; ${light}, ${bible.palette} palette, ${bible.styleAnchor} look.`,
+      `${capitalize(dir.shot)} on ${actor} and ${focusPhrase}, ${dir.move}; ${setting}, ${tod}, ${light}. ${capitalize(bible.styleAnchor)} finish.`,
+      `${capitalize(dir.shot)}: ${actor} ${verb} ${setting} while ${focusPhrase} fills the frame — ${dir.move}, ${light}, ${bible.palette}, ${bible.styleAnchor}.`,
     ];
     const visual = pick(r, visualBank).slice(0, 380);
 
     const line = fill(pick(r, LINE_TEMPLATES[beat]), brief, setting);
     const title = pick(r, BEAT_TITLES[beat]);
-    return { id: `s${i + 1}`, title, seconds: secs, line, visual };
+    return { id: `s${i + 1}`, title, seconds: secs, line, visual, direction: dir };
   });
 
   /* title — grammatical shapes built on ONE strong noun (47 QA: never
@@ -602,7 +634,7 @@ export async function writeScript(briefText: string, niche: Niche, seconds: numb
   const title = pick(r, titleShapes).slice(0, 110);
   const logline = `A ${pick(r, st.mood)} ${niche} piece about ${strongNouns.slice(0, 3).map(capitalize).join(", ") || briefText.slice(0, 50)} — ${pick(r, ["told in one breath.", "shot like a memory.", "built scene by scene.", "from first spark to final frame."])}`.slice(0, 280);
 
-  return { title, logline, characters: characters.slice(0, 3), scenes };
+  return { title, logline, characters: characters.slice(0, 3), scenes, bible };
 }
 
 /* ------------------------------ helpers ----------------------------------- */
@@ -638,4 +670,19 @@ function sanitizeShape(s: ScriptShape, seconds: number): ScriptShape {
     })),
     scenes,
   };
+}
+
+/** W2.49: give ANY script (LLM or local) the Director's Brain treatment — a bible
+ *  + per-scene direction, so the storyboard UI and render fleet always get craft. */
+function attachDirection(s: ScriptShape, niche: Niche, briefText: string): ScriptShape {
+  const r = rng();
+  const bible = s.bible ?? buildVisualBible(niche, briefText, r);
+  const beats = beatsFor(s.scenes.length);
+  const scenes = s.scenes.map((sc, i) => {
+    if (sc.direction?.shot && sc.direction?.note) return sc;
+    const beat = beats[Math.min(i, beats.length - 1)];
+    const dir = directScene(beat, i, bible, r);
+    return { ...sc, direction: dir };
+  });
+  return { ...s, scenes, bible };
 }
