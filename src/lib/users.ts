@@ -106,6 +106,53 @@ export async function getUserSession(): Promise<UserSession> {
   };
 }
 
+/**
+ * W2.3 (owner directive): the AI Film Studio must be FULLY FREE on the admin
+ * login — no user account, no subscription, nothing to create. This resolver
+ * accepts a USER session (exactly as getUserSession) OR an ADMIN panel session
+ * (dy_admin cookie). Admin sessions ride a shadow User row (role "admin",
+ * status active) keyed by the admin email — same seat semantics as the
+ * ADMIN_EMAILS Google auto-promote — so StudioProject.userId (a required FK),
+ * the /api/me projects list and the render route's owner tier (priority 100,
+ * no watermark, 1080p+audio, unlimited) all work unchanged.
+ * Revoked admins (Admin row deleted) lose studio access automatically.
+ */
+export async function getStudioSession(): Promise<UserSession> {
+  const s = await getUserSession();
+  if (s.kind !== "anon") return s;
+  const { getSession } = await import("@/lib/auth");
+  const p = await getSession();
+  if (!p || p.role === "user") return { kind: "anon" };
+  // role "admin" tokens pass on the token claim; legacy role-less tokens must
+  // still map to a real Admin row (same rule as isAdmin()).
+  const admin = await db.admin.findFirst({
+    where:
+      p.role === "admin"
+        ? { id: p.sub }
+        : { OR: [{ id: p.sub }, { email: (p.email || "").toLowerCase() }] },
+    select: { id: true, email: true },
+  });
+  if (!admin) return { kind: "anon" };
+  const email = admin.email.toLowerCase();
+  const shadow = await db.user.upsert({
+    where: { email },
+    update: { role: "admin", status: "active", banReason: "" },
+    create: { email, name: "Owner", role: "admin", status: "active", provider: "credentials" },
+  });
+  return {
+    kind: "ok",
+    user: {
+      id: shadow.id,
+      email: shadow.email,
+      name: shadow.name,
+      image: shadow.image,
+      role: "admin",
+      status: shadow.status,
+      provider: shadow.provider,
+    },
+  };
+}
+
 /* ---------- account creation / lookup ---------- */
 
 export async function findUserByEmail(email: string) {

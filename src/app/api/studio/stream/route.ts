@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bad } from "@/lib/api";
-import { getUserSession } from "@/lib/users";
+import { getStudioSession } from "@/lib/users";
 import { buildAgentTrace } from "@/lib/agenttrace";
 import { queuePositionFor } from "@/lib/subs";
 
@@ -23,7 +23,7 @@ const MAX_LIFETIME_MS = 30 * 60 * 1000; // hard cap per connection — no runawa
  * may watch anything.
  */
 export async function GET(req: Request) {
-  const s = await getUserSession();
+  const s = await getStudioSession();
   if (s.kind === "anon") return bad("Sign in required", 401);
   if (s.kind === "blocked") return bad(`Account ${s.status}: ${s.reason}`, 403);
 

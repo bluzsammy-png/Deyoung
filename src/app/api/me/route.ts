@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bad, ok } from "@/lib/api";
-import { getUserSession } from "@/lib/users";
+import { getStudioSession } from "@/lib/users";
 import { activeSubForEmail, planByCode, periodUsage, usageWindowStart } from "@/lib/subs";
 
 /**
@@ -9,7 +9,7 @@ import { activeSubForEmail, planByCode, periodUsage, usageWindowStart } from "@/
  * Admins get the same shape with unlimited:true and no subscription requirement.
  */
 export async function GET() {
-  const s = await getUserSession();
+  const s = await getStudioSession();
   if (s.kind === "anon") return bad("Sign in required", 401);
   if (s.kind === "blocked") return ok({ blocked: { status: s.status, reason: s.reason } }, 200);
 

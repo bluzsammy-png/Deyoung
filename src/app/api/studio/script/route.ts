@@ -1,6 +1,6 @@
 import { bad, ok, str } from "@/lib/api";
 import { guard } from "@/lib/ratelimit";
-import { getUserSession } from "@/lib/users";
+import { getStudioSession } from "@/lib/users";
 import ZAI from "z-ai-web-dev-sdk";
 
 const NICHES = [
@@ -27,7 +27,7 @@ type ScriptShape = {
 export async function POST(req: Request) {
   const limited = await guard(req, "ai");
   if (limited) return limited;
-  const s = await getUserSession();
+  const s = await getStudioSession();
   if (s.kind === "anon") return bad("Sign in required", 401);
   if (s.kind === "blocked") return bad(`Account ${s.status}: ${s.reason}`, 403);
 

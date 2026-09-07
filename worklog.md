@@ -714,3 +714,22 @@ Stage Summary:
 - PREMIERE WALL IS LIVE IN PRODUCTION (deyoungltd.site) — public curated wall + user premiere requests + admin curation, seeded with 3 real premieres at boot.
 - Owner inputs now needed: (1) Kaggle API tokens per fleet account (kaggle.com -> Settings -> API -> Create New Token; accounts in brain/state.json: jimcreat, bittrexminingltd, youngwilly, wikeyoung5, teslaprime, deyoungsltd) to restore workers/secrets/kaggle_tokens.json and revive wave-2; (2) for the LAST queued task (Google OAuth): GOOGLE_CLIENT_ID + GOOGLE_SECRET on Railway, redirect URI https://deyoungltd.site/api/auth/google/callback.
 - Security standing items: rotate THIS chat-exposed PAT after the fleet vault is restored; revoke old AgentMail key; change admin password on first prod login.
+
+---
+Task ID: 44-c
+Agent: Super Z (main)
+Task: Owner supplied 8 Kaggle tokens -> restore fleet vault, revive brain, fix prod schema gap
+
+Work Log:
+- TOKEN MAPPING: no labels supplied -> wrote scripts/identify_tokens_44c.py (CLI kernels-list --mine + HTTP fallback; tokens masked everywhere). 4/8 identified live (jimcreat, bittrexminingltd x2, deyoungsltd); 4 returned valid-but-empty lists (fresh accounts have no kernels).
+- OFFSITE VAULT RECOVERY WORKED AS DESIGNED: with the deyoungsltd token, downloaded private dataset deyoungsltd/deyoung-worker-vault -> original kaggle_tokens.json (w1-w8 with accounts + verification notes dated today) + supabase.json + railway.json. Cross-check: the 4 independently identified tokens match the recovered vault 100%. All 8 owner tokens = original vault tokens. Vault restored in full (kaggle/supabase/railway/github, chmod 600, gitignored).
+- BRAIN SELF-HEALED: pid 5267 picked up the vault on its next pass — fleet checks refreshed across all 6 accounts at 09:37Z (youngwilly + wikeyoung5 tokens verified live for the first time). Clean passes since ("no changes").
+- CANARY: deyoung-v2-s01 STILL RUNNING (~8h, past ETA; Kaggle 9h session cap forces resolution ~11Z). Gate has no stale-canary timeout; on COMPLETE it auto-verifies mp4/result.json and pushes wave 2 (6 kernels) unattended; on ERROR it grounds wave 2 (by design).
+- PROD SCHEMA GAP FOUND + FIXED: deyoung schema was missing Asset, RateLimit, Premiere, StudioProject. Root cause: deploy/start.sh passed `--url "$DB_PUSH_URL"` to prisma db push — with prisma 6.19.2 that form prints the help page instead of pushing, and the `|| echo WARNING` swallow hid it on EVERY deploy boot (healthcheck = SELECT 1, so deploys stayed green). Fix: pass DATABASE_URL as env var (verified: push completed 17.5s against prod); also pinned seed to the same session-pooler URL. Manual push + seed run against prod: all 16 tables present, 3 seed premieres published (The DeYoung Film featured + Doors, Split Screen + Cartoon Gag — Reel Cut), plans 3, photos 20, admins 2.
+- SHIPPED: prepush scan CLEAN -> commit fcf3a0d -> push (vault PAT, not persisted) -> Railway deploy SUCCESS in ~2min; post-deploy DB counts verified unchanged/correct.
+
+Stage Summary:
+- Fleet vault fully restored; brain loop healthy and polling every 60s; wave 2 auto-fires when the canary completes (or grounds if it fails — owner will be told either way).
+- Prod database now matches the code schema for the first time since W2 shipped — Premiere Wall API serves the 3 seeds; studio/dashboard/admin DB paths unblocked.
+- deploy/start.sh boot bug fixed permanently (env-var form), verified by a full redeploy.
+- Next: watch canary to completion (auto), then wave-2 supply check; Google OAuth remains the last queued task (needs GOOGLE_CLIENT_ID/SECRET from owner).

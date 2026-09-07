@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 import { bad, ok, str } from "@/lib/api";
-import { getUserSession } from "@/lib/users";
+import { getStudioSession } from "@/lib/users";
 import { guard } from "@/lib/ratelimit";
 
 /** W2: list the signed-in user's studio projects (dashboard + studio restore). */
 export async function GET() {
-  const s = await getUserSession();
+  const s = await getStudioSession();
   if (s.kind === "anon") return bad("Sign in required", 401);
   if (s.kind === "blocked") return bad(`Account ${s.status}: ${s.reason}`, 403);
   const projects = await db.studioProject.findMany({
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const limited = await guard(req, "submit");
   if (limited) return limited;
-  const s = await getUserSession();
+  const s = await getStudioSession();
   if (s.kind === "anon") return bad("Sign in required", 401);
   if (s.kind === "blocked") return bad(`Account ${s.status}: ${s.reason}`, 403);
   try {
