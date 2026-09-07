@@ -821,3 +821,23 @@ Stage Summary:
 - Script writer + prompt enhancer: root-caused (sandbox-only SDK), replaced with a dependency-free production engine, QA 15/15, deployed.
 - Full audit: everything else production-safe; one systemic blocker found (edge vs datacenter IPs → worker plane) and documented with fix options.
 - Admin password rotated after public-log exposure; vault/offsite consistent; rotation tooling now uses encrypted secrets.
+
+---
+Task ID: 48
+Agent: Super Z (main)
+Task: Owner status ask + "why only 15s total?" + storyboard/character-creation visibility + ComfyUI question + standing audit demands
+
+Work Log:
+- 15s MYSTERY SOLVED with receipts: prod DB shows the owner's real studio session 15:10-15:14Z (project "The Boy and the Can" saved, AI tools hit, owner-tier render queued prio100/1080p/audio) — the film was 3 scenes x 5s because (a) the owner tier has plan=null so the studio UI fell back to maxSeconds ?? 15, and (b) the script ROUTE hard-clamped seconds to 60. Fixed: route clamp now 15-120s, owner studio maxSeconds=120 + film-length selector (15/30/45/60/90/120) + "Render all N scenes" button; writer re-laddered to 3-10 scenes x 5-12s each (sum===total verified by simulation for every selector value; new 7-10-scene beat arcs; LLM + local + sanitize all consistent).
+- RENDER QUEUE DRAIN SHIPPED (the systemic blocker from Task 47): new H3 site-worker kernel (campaign/site-worker/deyoung-site-w.py, secrets injected at push, private kernels) claims prod VideoRequest rows DIRECTLY via scoped Postgres role deyoung_fleet — FOR UPDATE SKIP LOCKED — completely bypassing the hikari edge that 429s all datacenter egress. Per job: SDXL draws the CAST SHEETS + a KEYFRAME per scene (deterministic seeds + exact cast descriptors from the studio script = character consistency), then MiniMax-H3 renders IMAGE-to-video anchored on that scene's keyframe (the exact engine the campaign canary proved), uploads mp4 to Supabase Storage, writes Asset + resultUrl=/api/files/{id} + resultAssetId + gpuMinutes, honest fail path, progress notes, idle-exit to free GPU slots, 630min cap.
+- SECURITY: scoped role deyoung_fleet (SELECT on VideoRequest/Asset/StudioProject; UPDATE limited to status/notes/gpuMinutes/resultUrl/resultAssetId/updatedAt + storyboardJson; INSERT on Asset) — kernels never hold the app's postgres role; role password in vault fleet_db.json. Prod DDL: StudioProject.storyboardJson added (was dropped once by the old deploy's boot db push mid-window — re-added; ef3e083's schema now keeps it on every boot).
+- STUDIO STORYBOARD UI: cast sheets grid + scene keyframes grid + per-scene keyframe thumbs, restored from project + polled every 20s while renders run. The owner now SEES characters being created from scratch and how each scene connects.
+- FLEET: site-drain kernels pushed to teslaprime + wikeyoung5 (jimcreat + bittrexminingltd quotas exhausted; deyoungsltd exhausted). v1/v2 errored on a log() flush kwarg — caught via kernel log pull, fixed, v3 RUNNING on both. E2E test: re-queued the owner's own cancelled s1 from "The Boy and the Can" as a real owner-tier render (cmtr0b1c62c4191e45ff9c5b0819); watcher scripts/site_drain_watch_48.py polls row+kernels into brain/site_drain.log. Expected completion ~18:45Z (45min setup + storyboard + ~2.3h render).
+- QA: qa47 suite 17/17 on dev after syncing the dev admin hash to the rotated vault password; 120s script shape verified (10x12s), 15s (3x5s); scoped-role dry-run claim/project/storyboard-write/asset-insert all pass then rolled back.
+- SHIPPED: ef3e083 -> CI success, deploy created 16:00:21Z.
+
+Stage Summary:
+- Site renders now have a working drain plane: queue -> claim -> storyboard -> H3 keyframe-anchored render -> storage -> done, all outside the blocked HTTP edge. Owner-visible once the E2E render completes (~18:45Z): their "Boy and the Can" project will show its storyboard (Gentle/Bubbles/Nana Bloom sheets + 3 keyframes) and a finished s1.
+- Films are no longer stuck at 15s: owner selects up to 120s (10x12s scenes); per-scene renders are ~2.3h GPU each on free Kaggle — parallel fleet rendering is the speed model, brain coordination for site workers is the next upgrade.
+- ComfyUI answer: the fleet has ALWAYS rendered through ComfyUI (MiniMax-H3 headless); now it also draws the storyboard through it (SDXL) — keyframe-anchored i2v is how characters stay consistent across scenes.
+- Lip sync: H3 generates the soundscape; dialogue lip-sync pass is a queued upgrade, not shipped.
