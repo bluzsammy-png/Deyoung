@@ -31,13 +31,19 @@ if [ -z "${DATABASE_URL:-}" ]; then
 else
   if [ -x ./node_modules/.bin/prisma ]; then
     echo "[deyoung] syncing database schema (prisma db push, scoped to the deyoung schema)…"
-    ./node_modules/.bin/prisma db push \
+    # FIX 2026-09-07: pass the URL via the DATABASE_URL env var, NOT --url.
+    # With prisma 6.19.2 the `--url "$DB_PUSH_URL"` form makes the CLI print
+    # its help page instead of pushing — and the `|| echo WARNING` swallow
+    # hid it, so every deploy boot silently skipped the schema sync (Asset /
+    # RateLimit / Premiere / StudioProject tables never got created in prod).
+    # The env-var form is verified working (push completed in ~18s against prod).
+    DATABASE_URL="$DB_PUSH_URL" ./node_modules/.bin/prisma db push \
       --schema prisma/schema.postgres.prisma \
-      --url "$DB_PUSH_URL" \
       --skip-generate --accept-data-loss \
       || echo "[deyoung] WARNING: db push failed (continuing — tables may already exist)"
     echo "[deyoung] seeding demo content if empty…"
-    node scripts/seed.ts || echo "[deyoung] WARNING: seed skipped (may already be seeded)"
+    DATABASE_URL="$DB_PUSH_URL" node scripts/seed.ts \
+      || echo "[deyoung] WARNING: seed skipped (may already be seeded)"
   else
     echo "[deyoung] NOTE: prisma CLI not present at runtime — assuming database is already provisioned."
   fi
