@@ -86,3 +86,10 @@ brain/*.tmp
 # W1 isolated postgres client for e2e testing (regenerable)
 /prisma/pg-client-tmp/
 /prisma/_pggen.prisma
+
+# python bytecode must never be tracked (W41: auto-snapshot committed .pyc binaries)
+__pycache__/
+*.pyc
+
+# brain runtime out files (loop/one-shot wrapper stdout)
+/brain/*.out

@@ -577,3 +577,24 @@ Stage Summary:
 - v2 relaunch chain is now FULLY autonomous and crash-tolerant; canary eta ~02:10Z, wave 2 fires automatically on verified canary output, outputs auto-harvest thereafter.
 - Railway cutover reduced to ONE owner action: provide RAILWAY_TOKEN, then `bash scripts/railway_cutover.sh`.
 - Lost-prompt regeneration (s04-s06, s09-s10, g01-g08) remains the known content gap for a follow-up wave.
+
+---
+Task ID: 40
+Agent: Super Z (main)
+Task: Owner provided Railway token -> execute env deployment + WORKER_TOKEN cutover
+
+Work Log:
+- Vaulted the token (workers/secrets/railway.json, 0600, gitignored) before use.
+- v4 Railway CLI rejected the project token ("Invalid RAILWAY_TOKEN") — diagnosed via raw GraphQL: token IS valid (me = resolver-level Not Authorized = project-token scoping; projects list returns 2). Found service Deeyoung 1a50a560… inside project "QuantEdge Terminal" 99f9348d, production env a3f81c18…; also a second "graceful-happiness" project holding another Deeyoung + Postgres (not the target; left alone).
+- Built scripts/railway_apply.py (GraphQL backboard, UA header required — Railway edge 403s python-urllib default): introspected VariableUpsertInput/deploymentRedeploy, upserts 8 vault vars with skipDeploys=true -> ONE deploymentRedeploy -> status watcher.
+- ATTEMPT 1 FAILED (DEPLOYING, 6.5min): ROOT CAUSE = I set DATABASE_URL to the :6543 tx pooler directly, but deploy/start.sh's contract is DATABASE_URL = SESSION :5432 (it db-pushes at :5432 and rewrites runtime to :6543 itself) -> DDL over pgbouncer tx mode hung (advisory locks) -> healthcheck fail. Railway kept the old release serving (no downtime).
+- FIX: vault railway_env corrected to :5432 contract (+ _meta.railway_boot_contract note recorded); railway_apply.py mapping fixed; upserted again.
+- ATTEMPT 2: DEPLOY GREEN in 80s (deployment dc6d060a). Boot logs verified: db push + seed at :5432 ("seed done", idempotent), runtime rewritten to :6543 (pgbouncer=true, connection_limit=5), Ready 40ms, health SELECT 1 OK.
+- Sandbox IP 429-throttled on all external probes (known artifact) — Railway's own healthcheck (deploy-success precondition) is the authoritative external verification per Task 27 precedent.
+- prisma:query lines in boot logs = seed runs pre-NODE_ENV + STALE BUILD: redeploy reuses the old image (code = pre-W0/W1, no rate-limit-v2/storage_v2/paymentKey fix). W0+W1 code ships when owner pushes GitHub (no origin remote; needs PAT).
+- Untouched pre-existing vars: AGENTMAIL_API_KEY, NEXT_PUBLIC_SITE_URL. Vault railway.json carries the full cutover record.
+
+Stage Summary:
+- CUTOVER COMPLETE: production now runs the full env set incl. WORKER_TOKEN = staged dyw_62bf… (old dyw_a71c… is now dead weight — optional owner check: old token should 401). Site green on Railway; custom domain deyoungltd.site attached to the green deployment.
+- Remaining owner actions: (1) PAT -> push purged history + current code to GitHub (ships W0/W1 to Railway), (2) revoke old AgentMail key, (3) admin password change on first login, (4) old Supabase eu-central-1 project disposition.
+- Render fleet: canary still running; gate armed in brain loop (Task 39).

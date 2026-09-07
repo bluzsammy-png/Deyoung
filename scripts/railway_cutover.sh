@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# DEPRECATED CLI PATH — the v4 Railway CLI rejects project tokens ("Invalid RAILWAY_TOKEN")
+# even though the token is valid. The working tool is scripts/railway_apply.py (GraphQL
+# backboard API). This file remains only for its --health-only probe mode.
+#
 # DeYoung Railway cutover — ONE-SHOT, run when the owner provides a RAILWAY_TOKEN.
 #
 # Does, in order (vault workers/secrets/supabase.json + kaggle_tokens.json are the
@@ -92,7 +96,12 @@ if [ "$HEALTH_ONLY" = "1" ]; then
   exit 0
 fi
 
-: "${RAILWAY_TOKEN:?export RAILWAY_TOKEN=<token from owner> before running}"
+: "${RAILWAY_TOKEN:=}"
+if [ -z "$RAILWAY_TOKEN" ] && [ -f "$ROOT/workers/secrets/railway.json" ]; then
+  RAILWAY_TOKEN="$(python3 -c "import json;print(json.load(open('$ROOT/workers/secrets/railway.json'))['project_token'])")"
+  log "RAILWAY_TOKEN sourced from vault (workers/secrets/railway.json)"
+fi
+: "${RAILWAY_TOKEN:?export RAILWAY_TOKEN=<token> or vault it at workers/secrets/railway.json}"
 export RAILWAY_TOKEN
 ensure_cli
 log "whoami: $("$RAIL" whoami 2>&1 | head -c 120)"
