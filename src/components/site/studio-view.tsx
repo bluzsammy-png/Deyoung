@@ -8,12 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/types";
 import { go } from "@/components/site/hash";
 import { useSessionBadge } from "@/components/site/use-session";
+import { AgentStream } from "@/components/site/agent-stream";
 import {
   ArrowRight,
   Check,
   Clapperboard,
   Film,
   Loader2,
+  Radio,
   Save,
   Sparkles,
   Wand2,
@@ -124,6 +126,7 @@ export function StudioView({ projectId }: { projectId?: string }) {
   const [savedId, setSavedId] = useState<string | undefined>(projectId);
   const [saving, setSaving] = useState(false);
   const [render, setRender] = useState<RenderState>({});
+  const [watch, setWatch] = useState<string | null>(null); // requestId of the live-run console
   const [err, setErr] = useState<string | null>(null);
   const restored = useRef(false);
 
@@ -255,9 +258,12 @@ export function StudioView({ projectId }: { projectId?: string }) {
     try {
       const d = await api<{ request: { id: string; status: string }; etaDays: number }>("/api/studio/render", {
         method: "POST",
-        body: JSON.stringify({ prompt, seconds: scene.seconds, resolution, withAudio, projectId: savedId, sceneId: scene.id }),
+        // clamp to the API floor (5s) — scripts written before the writer-side
+        // floor fix may contain shorter scenes
+        body: JSON.stringify({ prompt, seconds: Math.max(5, scene.seconds), resolution, withAudio, projectId: savedId, sceneId: scene.id }),
       });
       setRender((cur) => ({ ...cur, [`${scene.id}`]: { requestId: d.request.id, status: d.request.status, etaDays: d.etaDays } }));
+      setWatch(d.request.id); // open the live film-simulator console immediately
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Render submit failed");
     }
@@ -466,6 +472,16 @@ export function StudioView({ projectId }: { projectId?: string }) {
                             </Button>
                           </>
                         )}
+                        {r && ["queued", "rendering"].includes(r.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setWatch(r.requestId)}
+                            className="border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200"
+                          >
+                            <Radio className="h-3.5 w-3.5" aria-hidden /> Watch live
+                          </Button>
+                        )}
                         {r?.status === "done" && r.resultUrl && (
                           <a href={r.resultUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
                             Watch →
@@ -478,6 +494,16 @@ export function StudioView({ projectId }: { projectId?: string }) {
               </div>
             </NodeShell>
           </>
+        )}
+
+        {/* LIVE RUN — the film simulator console */}
+        {watch && (
+          <div className="mt-6">
+            <p className="mb-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-white/40">
+              <Radio className="h-3.5 w-3.5 text-primary" aria-hidden /> Live run — the agent at work
+            </p>
+            <AgentStream requestId={watch} onClose={() => setWatch(null)} />
+          </div>
         )}
 
         {/* STEP 4 — DELIVER */}

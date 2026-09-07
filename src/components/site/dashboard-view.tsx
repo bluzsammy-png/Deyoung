@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/types";
 import { go } from "@/components/site/hash";
 import { useSessionBadge } from "@/components/site/use-session";
+import { AgentStream } from "@/components/site/agent-stream";
 import {
   Activity,
   Clapperboard,
@@ -13,6 +14,7 @@ import {
   Infinity as InfinityIcon,
   Loader2,
   Plus,
+  Radio,
   Sparkles,
 } from "lucide-react";
 
@@ -123,6 +125,7 @@ function GpuRing({
 export function DashboardView() {
   const [me, setMe] = useState<Me | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [watchId, setWatchId] = useState<string | null>(null); // live-run console requestId
   const badge = useSessionBadge();
 
   const load = useCallback(() => {
@@ -296,6 +299,11 @@ export function DashboardView() {
                 <Plus className="h-4 w-4" aria-hidden /> New film
               </Button>
             </div>
+            {watchId && (
+              <div className="mt-4">
+                <AgentStream requestId={watchId} onClose={() => setWatchId(null)} />
+              </div>
+            )}
             <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
               {me.requests.length === 0 && <p className="text-sm text-white/40">No renders yet — your first film is one prompt away.</p>}
               {me.requests.map((r) => (
@@ -309,6 +317,16 @@ export function DashboardView() {
                   <p className="mt-2 text-xs text-white/40">
                     {r.seconds}s · {r.resolution} · {r.gpuMinutes} GPU min · {new Date(r.createdAt).toLocaleString()}
                   </p>
+                  {["queued", "rendering"].includes(r.status) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setWatchId(r.id)}
+                      className="mt-2 border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200"
+                    >
+                      <Radio className="h-3.5 w-3.5" aria-hidden /> Watch live
+                    </Button>
+                  )}
                   {r.status === "done" && r.resultUrl && (
                     <a href={r.resultUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-bold text-primary hover:underline">
                       Watch your film →

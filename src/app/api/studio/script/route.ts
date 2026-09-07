@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             `Niche: ${niche}. Respond with VALID JSON ONLY (no markdown fence, no commentary) matching exactly:\n` +
             '{"title":string,"logline":string,"characters":[{"name":string,"look":string,"voice":string}],' +
             '"scenes":[{"id":string,"title":string,"seconds":number,"line":string,"visual":string}]}\n' +
-            "Rules: 3-6 scenes whose seconds sum to <= the total; each scene.visual is one concrete shot description " +
+            "Rules: 3-6 scenes whose seconds sum to <= the total; every scene is at least 5 seconds; each scene.visual is one concrete shot description " +
             "(camera + action + setting); each scene.line is ONE spoken line of dialogue or VO (<= 12 words); " +
             "1-3 characters total; ids are s1, s2, ...",
         },
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     script.scenes = script.scenes.slice(0, 8).map((sc, i) => ({
       id: sc.id || `s${i + 1}`,
       title: String(sc.title ?? `Scene ${i + 1}`).slice(0, 80),
-      seconds: Math.min(20, Math.max(3, Number(sc.seconds) || Math.round(seconds / script.scenes.length))),
+      seconds: Math.min(20, Math.max(5, Number(sc.seconds) || Math.round(seconds / script.scenes.length))),
       line: String(sc.line ?? "").slice(0, 200),
       visual: String(sc.visual ?? "").slice(0, 400),
     }));

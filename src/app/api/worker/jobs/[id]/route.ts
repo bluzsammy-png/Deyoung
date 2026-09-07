@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { bad, num, ok, str } from "@/lib/api";
 import { guardWorker } from "@/lib/worker";
 import { buildKey, putObject, sha256, sniffMime } from "@/lib/storage";
+import { sendRenderDoneEmail, sendRenderFailedEmail } from "@/lib/render-mail";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         notes: `rendered by ${renderer} — delivered ${new Date().toISOString()}`,
       },
     });
+    // Fire-and-forget: the customer learns their film is ready the moment the
+    // GPU lands it. Never blocks or fails the delivery response.
+    void sendRenderDoneEmail(updated);
     return ok({
       request: { id: updated.id, status: updated.status, resultUrl: updated.resultUrl },
     });
@@ -116,6 +120,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         notes: str(body.notes, 500) || request.notes,
       },
     });
+    void sendRenderDoneEmail(updated);
     return ok({
       request: { id: updated.id, status: updated.status, resultUrl: updated.resultUrl },
     });
@@ -128,6 +133,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
       where: { id },
       data: { status: "failed", notes: `${reason} — reported by ${agent} at ${new Date().toISOString()}` },
     });
+    void sendRenderFailedEmail(updated, reason);
     return ok({ request: { id: updated.id, status: updated.status } });
   }
 
