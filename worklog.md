@@ -786,3 +786,20 @@ Work Log:
 Stage Summary:
 - The "AI brain" can no longer be wiped by a rebuild: every durable byte (secrets as ciphertext, env, job definitions, brain state, docs) is IN the repo; one passphrase (owner-held) turns any fresh sandbox into a fully restored operation with a single command. Verified by an actual wipe test.
 - Fleet: canary youngwilly/deyoung-v2-c01 RUNNING on fresh quota; wave-2 auto-fires on success. deyoungsltd waits for its weekly GPU window to reset.
+
+---
+Task ID: 46-c
+Agent: Super Z (main)
+Task: Owner screenshot — "Me as the admin still can't use anything" — studio still shows NO PLAN + subscribe gate on their phone. Find it, fix it, TEST IT before shipping.
+
+Work Log:
+- SCREENSHOT ANALYSIS (upload/IMG_8487.png): studio view shows "No plan" chip + amber "submitting renders needs an active plan. Choose a plan →" banner. Backend Task-45 fix was live, so the bug had to be session resolution or UI derivation.
+- ROOT CAUSE (src/lib/users.ts getStudioSession): it resolved the USER session (dy_user) FIRST and returned it whenever present — the owner's browser holds BOTH dy_user (regular #signin login) and dy_admin (panel login), so every studio route saw the REGULAR user -> unlimited=false -> gate. Second gap: a user whose email has an Admin row was never promoted outside the panel flow.
+- FIX: panel-admin seat now resolved FIRST and always wins (shadow-user upsert path unchanged, Task-45 semantics); user sessions are admin when User.role==='admin' (ADMIN_EMAILS/Google seat) OR an Admin row exists for the email (presentation-level promotion — Admin table stays the revocation source of truth, no DB write). Regular users unaffected.
+- QA (scripts/qa_admin_studio_46.sh, dev sqlite): 10/10 — THE OWNER'S EXACT DUAL-COOKIE CASE: signup user + panel login in ONE jar -> /api/me role=admin unlimited=true; projects 200; project save; render OWNER TIER (prio 100 / watermark false / 1080p / audio); regular user-only jar still gated + render subscribe-blocked; panel-only jar unlimited (Task-45 regression intact); anon 401. QA rows retired from dev db.
+- TEST-INFRA NOTES: dev rate limiter is DB-backed (RateLimit table) — survives dev-server restarts; QA scripts must clear it (dev only) or space runs; render gate validation order = prompt length check BEFORE plan gate (first test prompt was too short — looked like a gate failure, wasn't).
+- PROD: sandbox -> deyoungltd.site auth flows blocked by edge throttling (rate limited; known limitation, no rows created). Bug proven live on prod via git show aed8f9e (user-session-first order). Functional authority = the 10/10 local suite on identical schema/routes; deploy verified via GitHub commit status + Railway healthcheck.
+- SHIPPED: tsc clean (src/), eslint clean (1 pre-existing warning in script, 0 errors), prepush scan CLEAN -> 6b622d4 -> push eb5c180..6b622d4 -> gitleaks CI success -> Railway deploy.
+
+Stage Summary:
+- The owner's exact failure (both logins on one phone -> gated studio) is reproduced, root-caused, fixed, and QA-verified 10/10. After deploy the fix is SERVER-SIDE: the owner's EXISTING cookies pick it up on the next page load — no re-login, no account creation, no plan. Studio chip shows "Owner · Free ∞"; dashboard shows "Owner console / Owner — free / unlimited".

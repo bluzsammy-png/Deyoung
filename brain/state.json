@@ -2,7 +2,7 @@
   "fleet": {
     "accounts": {
       "bittrexminingltd": {
-        "checked": "2026-09-07T13:16:02Z",
+        "checked": "2026-09-07T13:18:21Z",
         "known_fleet_kernels": [
           "bittrexminingltd/deyoung-h3-b",
           "bittrexminingltd/deyoung-h3-b2",
@@ -10,7 +10,7 @@
         ]
       },
       "deyoungsltd": {
-        "checked": "2026-09-07T13:15:56Z",
+        "checked": "2026-09-07T13:18:15Z",
         "known_fleet_kernels": [
           "deyoungsltd/deyoung-h3-e",
           "deyoungsltd/deyoung-h3-e2",
@@ -18,7 +18,7 @@
         ]
       },
       "jimcreat": {
-        "checked": "2026-09-07T13:15:58Z",
+        "checked": "2026-09-07T13:18:17Z",
         "known_fleet_kernels": [
           "jimcreat/deyoung-diag",
           "jimcreat/deyoung-h3-a",
@@ -28,7 +28,7 @@
         ]
       },
       "teslaprime": {
-        "checked": "2026-09-07T13:16:01Z",
+        "checked": "2026-09-07T13:18:20Z",
         "known_fleet_kernels": [
           "teslaprime/deyoung-h3-f",
           "teslaprime/deyoung-h3-f2",
@@ -36,14 +36,14 @@
         ]
       },
       "wikeyoung5": {
-        "checked": "2026-09-07T13:16:04Z",
+        "checked": "2026-09-07T13:18:24Z",
         "known_fleet_kernels": [
           "wikeyoung5/deyoung-h3-d",
           "wikeyoung5/deyoung-h3-d2"
         ]
       },
       "youngwilly": {
-        "checked": "2026-09-07T13:16:03Z",
+        "checked": "2026-09-07T13:18:23Z",
         "known_fleet_kernels": [
           "youngwilly/deyoung-h3-c",
           "youngwilly/deyoung-h3-c2",
@@ -54,21 +54,21 @@
     "history": {},
     "kernels": {
       "bittrexminingltd/deyoung-h3-b": {
-        "checked": "2026-09-07T13:16:02Z",
+        "checked": "2026-09-07T13:18:22Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "bittrexminingltd/deyoung-h3-b2": {
-        "checked": "2026-09-07T13:16:03Z",
+        "checked": "2026-09-07T13:18:22Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "bittrexminingltd/deyoung-worker-b": {
-        "checked": "2026-09-07T13:16:03Z",
+        "checked": "2026-09-07T13:18:22Z",
         "fetched": true,
         "files": [
           {
@@ -88,42 +88,42 @@
         "status": "complete"
       },
       "deyoungsltd/deyoung-h3-e": {
-        "checked": "2026-09-07T13:15:56Z",
+        "checked": "2026-09-07T13:18:16Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "deyoungsltd/deyoung-h3-e2": {
-        "checked": "2026-09-07T13:15:56Z",
+        "checked": "2026-09-07T13:18:15Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "deyoungsltd/deyoung-v2-s01": {
-        "checked": "2026-09-07T13:15:56Z",
+        "checked": "2026-09-07T13:18:15Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-diag": {
-        "checked": "2026-09-07T13:15:58Z",
+        "checked": "2026-09-07T13:18:18Z",
         "fetched": true,
         "files": [],
         "lastRunTime": null,
         "status": "complete"
       },
       "jimcreat/deyoung-h3-a": {
-        "checked": "2026-09-07T13:15:58Z",
+        "checked": "2026-09-07T13:18:18Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-h3-a-canary": {
-        "checked": "2026-09-07T13:15:59Z",
+        "checked": "2026-09-07T13:18:18Z",
         "fetched": true,
         "files": [
           {
@@ -139,14 +139,14 @@
         "status": "complete"
       },
       "jimcreat/deyoung-h3-a2": {
-        "checked": "2026-09-07T13:15:59Z",
+        "checked": "2026-09-07T13:18:18Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-worker-a": {
-        "checked": "2026-09-07T13:15:59Z",
+        "checked": "2026-09-07T13:18:19Z",
         "fetched": true,
         "files": [
           {
@@ -166,21 +166,21 @@
         "status": "complete"
       },
       "teslaprime/deyoung-h3-f": {
-        "checked": "2026-09-07T13:16:01Z",
+        "checked": "2026-09-07T13:18:21Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-h3-f2": {
-        "checked": "2026-09-07T13:16:01Z",
+        "checked": "2026-09-07T13:18:20Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-worker-c": {
-        "checked": "2026-09-07T13:16:02Z",
+        "checked": "2026-09-07T13:18:21Z",
         "fetched": true,
         "files": [
           {
@@ -200,42 +200,42 @@
         "status": "complete"
       },
       "wikeyoung5/deyoung-h3-d": {
-        "checked": "2026-09-07T13:16:05Z",
+        "checked": "2026-09-07T13:18:24Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "wikeyoung5/deyoung-h3-d2": {
-        "checked": "2026-09-07T13:16:05Z",
+        "checked": "2026-09-07T13:18:24Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "youngwilly/deyoung-h3-c": {
-        "checked": "2026-09-07T13:16:04Z",
+        "checked": "2026-09-07T13:18:23Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "youngwilly/deyoung-h3-c2": {
-        "checked": "2026-09-07T13:16:04Z",
+        "checked": "2026-09-07T13:18:23Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "youngwilly/deyoung-v2-c01": {
-        "checked": "2026-09-07T13:16:03Z",
+        "checked": "2026-09-07T13:18:23Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "running"
       }
     },
-    "last_pass": "2026-09-07T13:16:05Z"
+    "last_pass": "2026-09-07T13:18:24Z"
   },
   "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
   "ops": {
