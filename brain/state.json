@@ -1,298 +1,298 @@
 {
- "fleet": {
-  "accounts": {
-   "bittrexminingltd": {
-    "checked": "2026-09-07T16:12:48Z",
-    "known_fleet_kernels": [
-     "bittrexminingltd/deyoung-h3-b",
-     "bittrexminingltd/deyoung-h3-b2",
-     "bittrexminingltd/deyoung-worker-b"
-    ]
-   },
-   "deyoungsltd": {
-    "checked": "2026-09-07T16:12:40Z",
-    "known_fleet_kernels": [
-     "deyoungsltd/deyoung-h3-e",
-     "deyoungsltd/deyoung-h3-e2",
-     "deyoungsltd/deyoung-prod-selftest",
-     "deyoungsltd/deyoung-v2-s01"
-    ]
-   },
-   "jimcreat": {
-    "checked": "2026-09-07T16:12:43Z",
-    "known_fleet_kernels": [
-     "jimcreat/deyoung-diag",
-     "jimcreat/deyoung-h3-a",
-     "jimcreat/deyoung-h3-a-canary",
-     "jimcreat/deyoung-h3-a2",
-     "jimcreat/deyoung-worker-a"
-    ]
-   },
-   "teslaprime": {
-    "checked": "2026-09-07T16:12:46Z",
-    "known_fleet_kernels": [
-     "teslaprime/deyoung-h3-f",
-     "teslaprime/deyoung-h3-f2",
-     "teslaprime/deyoung-site-w01",
-     "teslaprime/deyoung-worker-c"
-    ]
-   },
-   "wikeyoung5": {
-    "checked": "2026-09-07T16:12:50Z",
-    "known_fleet_kernels": [
-     "wikeyoung5/deyoung-h3-d",
-     "wikeyoung5/deyoung-h3-d2",
-     "wikeyoung5/deyoung-site-w01"
-    ]
-   },
-   "youngwilly": {
-    "checked": "2026-09-07T16:12:49Z",
-    "known_fleet_kernels": [
-     "youngwilly/deyoung-h3-c",
-     "youngwilly/deyoung-h3-c2",
-     "youngwilly/deyoung-v2-c01"
-    ]
-   }
+  "fleet": {
+    "accounts": {
+      "bittrexminingltd": {
+        "checked": "2026-09-07T16:13:59Z",
+        "known_fleet_kernels": [
+          "bittrexminingltd/deyoung-h3-b",
+          "bittrexminingltd/deyoung-h3-b2",
+          "bittrexminingltd/deyoung-worker-b"
+        ]
+      },
+      "deyoungsltd": {
+        "checked": "2026-09-07T16:13:51Z",
+        "known_fleet_kernels": [
+          "deyoungsltd/deyoung-h3-e",
+          "deyoungsltd/deyoung-h3-e2",
+          "deyoungsltd/deyoung-prod-selftest",
+          "deyoungsltd/deyoung-v2-s01"
+        ]
+      },
+      "jimcreat": {
+        "checked": "2026-09-07T16:13:54Z",
+        "known_fleet_kernels": [
+          "jimcreat/deyoung-diag",
+          "jimcreat/deyoung-h3-a",
+          "jimcreat/deyoung-h3-a-canary",
+          "jimcreat/deyoung-h3-a2",
+          "jimcreat/deyoung-worker-a"
+        ]
+      },
+      "teslaprime": {
+        "checked": "2026-09-07T16:13:57Z",
+        "known_fleet_kernels": [
+          "teslaprime/deyoung-h3-f",
+          "teslaprime/deyoung-h3-f2",
+          "teslaprime/deyoung-site-w01",
+          "teslaprime/deyoung-worker-c"
+        ]
+      },
+      "wikeyoung5": {
+        "checked": "2026-09-07T16:14:01Z",
+        "known_fleet_kernels": [
+          "wikeyoung5/deyoung-h3-d",
+          "wikeyoung5/deyoung-h3-d2",
+          "wikeyoung5/deyoung-site-w01"
+        ]
+      },
+      "youngwilly": {
+        "checked": "2026-09-07T16:14:00Z",
+        "known_fleet_kernels": [
+          "youngwilly/deyoung-h3-c",
+          "youngwilly/deyoung-h3-c2",
+          "youngwilly/deyoung-v2-c01"
+        ]
+      }
+    },
+    "history": {},
+    "kernels": {
+      "bittrexminingltd/deyoung-h3-b": {
+        "checked": "2026-09-07T16:13:59Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "bittrexminingltd/deyoung-h3-b2": {
+        "checked": "2026-09-07T16:13:59Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "bittrexminingltd/deyoung-worker-b": {
+        "checked": "2026-09-07T16:14:00Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "__pycache__/deyoung_worker.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_db_worker.py"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_worker.py"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "deyoungsltd/deyoung-h3-e": {
+        "checked": "2026-09-07T16:13:52Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "deyoungsltd/deyoung-h3-e2": {
+        "checked": "2026-09-07T16:13:52Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "deyoungsltd/deyoung-prod-selftest": {
+        "checked": "2026-09-07T16:13:52Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "error"
+      },
+      "deyoungsltd/deyoung-v2-s01": {
+        "checked": "2026-09-07T16:13:52Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "jimcreat/deyoung-diag": {
+        "checked": "2026-09-07T16:13:55Z",
+        "fetched": true,
+        "files": [],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "jimcreat/deyoung-h3-a": {
+        "checked": "2026-09-07T16:13:55Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "jimcreat/deyoung-h3-a-canary": {
+        "checked": "2026-09-07T16:13:55Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "comfy.log"
+          },
+          {
+            "bytes": null,
+            "name": "result.json"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "jimcreat/deyoung-h3-a2": {
+        "checked": "2026-09-07T16:13:55Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "jimcreat/deyoung-worker-a": {
+        "checked": "2026-09-07T16:13:56Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "__pycache__/deyoung_worker.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_db_worker.py"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_worker.py"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "teslaprime/deyoung-h3-f": {
+        "checked": "2026-09-07T16:13:58Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "teslaprime/deyoung-h3-f2": {
+        "checked": "2026-09-07T16:13:58Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "teslaprime/deyoung-site-w01": {
+        "checked": "2026-09-07T16:13:57Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "running"
+      },
+      "teslaprime/deyoung-worker-c": {
+        "checked": "2026-09-07T16:13:58Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "__pycache__/deyoung_worker.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_db_worker.py"
+          },
+          {
+            "bytes": null,
+            "name": "deyoung_worker.py"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
+      "wikeyoung5/deyoung-h3-d": {
+        "checked": "2026-09-07T16:14:02Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "wikeyoung5/deyoung-h3-d2": {
+        "checked": "2026-09-07T16:14:01Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "wikeyoung5/deyoung-site-w01": {
+        "checked": "2026-09-07T16:14:01Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "running"
+      },
+      "youngwilly/deyoung-h3-c": {
+        "checked": "2026-09-07T16:14:01Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "youngwilly/deyoung-h3-c2": {
+        "checked": "2026-09-07T16:14:00Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "cancelAcknowledged"
+      },
+      "youngwilly/deyoung-v2-c01": {
+        "checked": "2026-09-07T16:14:00Z",
+        "fetched": false,
+        "files": [],
+        "lastRunTime": null,
+        "status": "running"
+      }
+    },
+    "last_pass": "2026-09-07T16:14:02Z"
   },
-  "history": {},
-  "kernels": {
-   "bittrexminingltd/deyoung-h3-b": {
-    "checked": "2026-09-07T16:12:48Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "bittrexminingltd/deyoung-h3-b2": {
-    "checked": "2026-09-07T16:12:48Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "bittrexminingltd/deyoung-worker-b": {
-    "checked": "2026-09-07T16:12:49Z",
-    "fetched": true,
-    "files": [
-     {
-      "bytes": null,
-      "name": "__pycache__/deyoung_worker.cpython-312.pyc"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_db_worker.py"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_worker.py"
-     }
-    ],
-    "lastRunTime": null,
-    "status": "complete"
-   },
-   "deyoungsltd/deyoung-h3-e": {
-    "checked": "2026-09-07T16:12:41Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "deyoungsltd/deyoung-h3-e2": {
-    "checked": "2026-09-07T16:12:41Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "deyoungsltd/deyoung-prod-selftest": {
-    "checked": "2026-09-07T16:12:40Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "error"
-   },
-   "deyoungsltd/deyoung-v2-s01": {
-    "checked": "2026-09-07T16:12:40Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "jimcreat/deyoung-diag": {
-    "checked": "2026-09-07T16:12:44Z",
-    "fetched": true,
-    "files": [],
-    "lastRunTime": null,
-    "status": "complete"
-   },
-   "jimcreat/deyoung-h3-a": {
-    "checked": "2026-09-07T16:12:43Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "jimcreat/deyoung-h3-a-canary": {
-    "checked": "2026-09-07T16:12:44Z",
-    "fetched": true,
-    "files": [
-     {
-      "bytes": null,
-      "name": "comfy.log"
-     },
-     {
-      "bytes": null,
-      "name": "result.json"
-     }
-    ],
-    "lastRunTime": null,
-    "status": "complete"
-   },
-   "jimcreat/deyoung-h3-a2": {
-    "checked": "2026-09-07T16:12:44Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "jimcreat/deyoung-worker-a": {
-    "checked": "2026-09-07T16:12:45Z",
-    "fetched": true,
-    "files": [
-     {
-      "bytes": null,
-      "name": "__pycache__/deyoung_worker.cpython-312.pyc"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_db_worker.py"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_worker.py"
-     }
-    ],
-    "lastRunTime": null,
-    "status": "complete"
-   },
-   "teslaprime/deyoung-h3-f": {
-    "checked": "2026-09-07T16:12:47Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "teslaprime/deyoung-h3-f2": {
-    "checked": "2026-09-07T16:12:47Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "teslaprime/deyoung-site-w01": {
-    "checked": "2026-09-07T16:12:46Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "running"
-   },
-   "teslaprime/deyoung-worker-c": {
-    "checked": "2026-09-07T16:12:47Z",
-    "fetched": true,
-    "files": [
-     {
-      "bytes": null,
-      "name": "__pycache__/deyoung_worker.cpython-312.pyc"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_db_worker.py"
-     },
-     {
-      "bytes": null,
-      "name": "deyoung_worker.py"
-     }
-    ],
-    "lastRunTime": null,
-    "status": "complete"
-   },
-   "wikeyoung5/deyoung-h3-d": {
-    "checked": "2026-09-07T16:12:51Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "wikeyoung5/deyoung-h3-d2": {
-    "checked": "2026-09-07T16:12:51Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "wikeyoung5/deyoung-site-w01": {
-    "checked": "2026-09-07T16:12:50Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "running"
-   },
-   "youngwilly/deyoung-h3-c": {
-    "checked": "2026-09-07T16:12:50Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "youngwilly/deyoung-h3-c2": {
-    "checked": "2026-09-07T16:12:50Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "cancelAcknowledged"
-   },
-   "youngwilly/deyoung-v2-c01": {
-    "checked": "2026-09-07T16:12:49Z",
-    "fetched": false,
-    "files": [],
-    "lastRunTime": null,
-    "status": "running"
-   }
+  "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
+  "ops": {
+    "pending_review": [
+      "teslaprime/deyoung-site-w01=running",
+      "wikeyoung5/deyoung-site-w01=running"
+    ]
   },
-  "last_pass": "2026-09-07T16:12:51Z"
- },
- "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
- "ops": {
-  "pending_review": [
-   "teslaprime/deyoung-site-w01=running",
-   "wikeyoung5/deyoung-site-w01=running"
-  ]
- },
- "relaunch": {
-  "canary": {
-   "empty_polls": 0,
-   "verify_polls": 0
+  "relaunch": {
+    "canary": {
+      "empty_polls": 0,
+      "verify_polls": 0
+    },
+    "grounded": null,
+    "phase": "waiting",
+    "wave2": {
+      "abandoned": {},
+      "attempts": {},
+      "pushed": {}
+    }
   },
-  "grounded": null,
-  "phase": "waiting",
-  "wave2": {
-   "abandoned": {},
-   "attempts": {},
-   "pushed": {}
-  }
- },
- "site_drain": {
-  "checked": "2026-09-07T16:10:51Z",
-  "kernels": {
-   "teslaprime": "KernelWorkerStatus.RUNNING",
-   "wikeyoung5": "KernelWorkerStatus.RUNNING"
+  "site_drain": {
+    "checked": "2026-09-07T16:10:51Z",
+    "kernels": {
+      "teslaprime": "KernelWorkerStatus.RUNNING",
+      "wikeyoung5": "KernelWorkerStatus.RUNNING"
+    },
+    "render_id": "cmtr0b1c62c4191e45ff9c5b0819",
+    "resultUrl": null,
+    "status": "queued",
+    "storyboard": false
   },
-  "render_id": "cmtr0b1c62c4191e45ff9c5b0819",
-  "resultUrl": null,
-  "status": "queued",
-  "storyboard": false
- },
- "vault_note": "vault FULLY restored 2026-09-07T09:5xZ from offsite dataset (kaggle/supabase/railway/github); brain healthy; prod schema fixed via fcf3a0d; canary still RUNNING ~8h",
- "w2_3": "AI Studio free on admin login shipped (aed8f9e, deploy SUCCESS); getStudioSession shadow-user pattern; literal-in-tracked-file incident contained pre-push",
- "site_drain_note": "Task 48: site-worker kernels (teslaprime, wikeyoung5) drain prod render queue via scoped DB role; E2E render cmtr0b1c62c4191e45ff9c5b0819 (owner s1) tracked by scripts/site_drain_watch_48.py -> brain/site_drain.log"
+  "site_drain_note": "Task 48: site-worker kernels (teslaprime, wikeyoung5) drain prod render queue via scoped DB role; E2E render cmtr0b1c62c4191e45ff9c5b0819 (owner s1) tracked by scripts/site_drain_watch_48.py -> brain/site_drain.log",
+  "vault_note": "vault FULLY restored 2026-09-07T09:5xZ from offsite dataset (kaggle/supabase/railway/github); brain healthy; prod schema fixed via fcf3a0d; canary still RUNNING ~8h",
+  "w2_3": "AI Studio free on admin login shipped (aed8f9e, deploy SUCCESS); getStudioSession shadow-user pattern; literal-in-tracked-file incident contained pre-push"
 }
