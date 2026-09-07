@@ -204,3 +204,8 @@ repo:
 - Email: src/lib/render-mail.ts — done + failure mail to request.email via AgentMail (prod key live; dev no-op). Hooks in worker/jobs PATCH deliver(multipart+JSON)/fail. Failed renders do NOT consume quota — email copy matches periodUsage.
 - Bugfix: script-writer scene seconds floor 3->5 (render API rejects <5s): writer clamp + prompt rule + client clamp. Found via browser QA golden path.
 - Shipped: 1a9df05 -> CI success -> Railway SUCCESS 02:38Z. QA e2e suite: scripts/qa_stream_e2e.js (14/14). NOTE: dev DB == prod DB — QA scripts mutate ONLY by-id/QA-prefixed rows.
+
+## Task 49 — The Director's Brain + the two-schema trap
+- **Studio AI now thinks in film**: `src/lib/cinema.ts` (shot grammar, camera moves, lighting, composition, color scripting, the 12 animation principles, kid-lens rules, sound design, per-niche director voices). Every script gets ONE visual bible + per-scene direction (shot/move/light/emotion/principle + director's note) — shown in the studio storyboard. Cast comes FROM the brief ("robot & firefly" star as Robot & Firefly).
+- **THE TWO-SCHEMA TRAP (never again)**: prod boots `prisma db push --schema prisma/schema.postgres.prisma`; dev uses `prisma/schema.prisma`. A column added ONLY to the dev schema gets DROPPED by every prod boot (this killed `StudioProject.storyboardJson` twice). Rule: any schema change goes into BOTH files, or into `schema.postgres.prisma` at minimum.
+- Fleet plane: queue is clear of site renders (owner order — campaign video first); kernels write storyboards via `deyoung_fleet` scoped grants.
