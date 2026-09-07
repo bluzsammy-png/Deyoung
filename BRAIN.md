@@ -170,3 +170,10 @@ Deliverable location: `/home/z/my-project/download/markdown.md.txt` (+ repo-root
   (Atlas/Evolink keys valid but EMPTY until owner tops up).
 - Owner wants: permanent memory (this brain), fleet autonomy, upgrades driven by the master
   prompt, everything free-first.
+
+## W2.1 — Live film simulator + render notifications (Task 43, 2026-09-07)
+- SSE agent trace: GET /api/studio/stream?requestId= (session auth owner-or-admin; 2s ticks; end-event on done/failed/cancelled; 30-min cap). Engine: src/lib/agenttrace.ts (deterministic; REAL queue position + REAL claim time from worker notes; pacing simulated inside phases only — UI labels it).
+- UI: agent-stream.tsx connected timeline console; auto-opens on scene submit (StudioView), Watch live buttons (scene cards + dashboard rows).
+- Email: src/lib/render-mail.ts — done + failure mail to request.email via AgentMail (prod key live; dev no-op). Hooks in worker/jobs PATCH deliver(multipart+JSON)/fail. Failed renders do NOT consume quota — email copy matches periodUsage.
+- Bugfix: script-writer scene seconds floor 3->5 (render API rejects <5s): writer clamp + prompt rule + client clamp. Found via browser QA golden path.
+- Shipped: 1a9df05 -> CI success -> Railway SUCCESS 02:38Z. QA e2e suite: scripts/qa_stream_e2e.js (14/14). NOTE: dev DB == prod DB — QA scripts mutate ONLY by-id/QA-prefixed rows.

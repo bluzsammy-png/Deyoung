@@ -656,3 +656,24 @@ Work Log:
 Stage Summary:
 - PRODUCTION = full platform: user auth (+Google-ready), subscription-at-registration, dashboard w/ GPU life, AI Film Studio (enhancer/script-writer/storyboard -> real render queue via /api/worker/claim), admin panel w/ user control, owner seat deyoungsltd@gmail.com, 20-work gallery.
 - Only owner unlock left for Google sign-in: GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET on Railway, redirect URI https://deyoungltd.site/api/auth/google/callback, redeploy.
+
+---
+Task ID: 43
+Agent: Super Z (main)
+Task: "Begin last 1 — make no mistakes": live film simulator (SSE agent streaming) + render-done emails via AgentMail
+
+Work Log:
+- Traced the full render pipeline first (studio/render -> worker/claim -> worker/jobs PATCH deliver|fail|progress -> storage_v2 assets): zero schema changes needed for either feature.
+- Agent trace engine (src/lib/agenttrace.ts): pure deterministic timeline builder — brief->parse->cast->storyboard (fast clock from createdAt), GPU queue step with REAL position (queuePositionFor), per-scene + pass steps paced at 90s/step from the REAL claim time parsed out of worker notes, delivery steps driven strictly by real status. Honest by construction: nothing shows delivered before the worker delivers (§65).
+- SSE endpoint (src/app/api/studio/stream): session auth (owner-or-admin, 401/403 verified), 2s ticks, terminal end-event + close on done/failed/cancelled, 30-min lifetime cap, abort-signal cleanup, retry:10000, X-Accel-Buffering no. Linked StudioProject script feeds real scene titles/cast into the trace.
+- Live console UI (src/components/site/agent-stream.tsx): connected vertical timeline (done nodes fill, active pulses, failed red), time gutter, LIVE chip, resultUrl "Watch now" on delivery, honest caption "pacing simulated, status real". Auto-opens on scene submit in StudioView; "Watch live" buttons on active scene cards + dashboard render rows.
+- Render mail (src/lib/render-mail.ts + hooks in worker/jobs route): done + failure emails to request.email via existing AgentMail transport (prod has AGENTMAIL_API_KEY + NEXT_PUBLIC_SITE_URL; dev no-ops with log). Failure copy verified against periodUsage semantics (failed renders do NOT consume quota — email states exactly that).
+- QA: tsc 0, eslint clean, curl E2E 14/14 (minted-cookie auth, 401/403 guards, real submit->SSE agent phase->worker claim->SSE gpu phase->multipart delivery to REAL Supabase storage->done trace + end event->fail branch; [render-mail] hook logs verified both paths). Browser QA (agent-browser): QA user signup->dashboard->Watch live console renders; studio golden path re-verified.
+- BUG FOUND + FIXED during browser QA (pre-existing W2 bug): script writer clamped scene seconds to min 3 while render API floor is 5 -> unrenderable scenes ("Videos start at 5 seconds"). Fixed 3 layers: writer clamp 3->5, prompt rule "every scene at least 5 seconds", client submitScene clamp Math.max(5, seconds) (covers already-saved scripts).
+- Guardrail honored: dev DATABASE_URL = SAME Supabase DB as prod -> QA mutations limited to by-id/QA-prefixed rows; retired 4 stale W2 QA rows (3 queued artifacts + browser-QA render), all marked "retired by QA".
+- Shipped: prepush scan CLEAN -> commit 1a9df05 -> push -> gitleaks CI success -> Railway deploy 02:38:59Z SUCCESS (commit status back-write verified).
+
+Stage Summary:
+- PRODUCTION now streams the live film simulator: users watch the agent work the storyboard line-by-line, every line connected, from brief to delivery — in the studio (auto-open on submit) and on the dashboard (Watch live).
+- Render-done + failure emails live in production (AgentMail key already in prod env); dev verified hook wiring via logs.
+- Remaining owner unlocks unchanged: GOOGLE_CLIENT_ID/SECRET for Google sign-in; PAT rotation; old AgentMail key revoke; admin password change on first login.
