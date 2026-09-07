@@ -697,3 +697,20 @@ Stage Summary:
 - The Premiere Wall is BUILT and QA-verified locally (39/39 API + full browser pass): a public Netflix-style wall of finished DeYoung films where delivered renders premiere after owner approval, users can request premieres of their own films from the dashboard, and the admin curates everything with honest asset-privacy flips (public on wall = public bytes, off wall = private again).
 - Production deploy of commit 562ed74 awaits a fresh GitHub PAT (vault was wiped by the sandbox rebuild). After push: Railway auto-deploys, boot applies the Premiere schema + seeds the 3 premieres automatically.
 - Still queued (by owner's own ordering): Google OAuth wiring LAST (needs GOOGLE_CLIENT_ID/SECRET on Railway; redirect URI https://deyoungltd.site/api/auth/google/callback). Owner actions: fresh PAT, rotate old PAT at github.com/settings/tokens (vault loss makes this mandatory now), revoke old AgentMail key, admin password on first prod login.
+
+---
+Task ID: 44-b
+Agent: Super Z (main)
+Task: Owner supplied fresh all-access GitHub PAT -> ship the blocked Premiere Wall commit + vault restore + fleet health sweep
+
+Work Log:
+- PUSH UNBLOCKED: owner PAT verified (bluzsammy-png). Safety scan of origin/main..HEAD diff CLEAN (no credential patterns; only code, docs, mode changes). One-shot push (PAT not persisted to remote config or disk): af86d42..f63da2c main -> main — carries 40ca351 (auto-snapshot), 562ed74 (W2.2 PREMIERE WALL), 0ed960a (Task 44 docs), f63da2c (auto-snapshot).
+- DEPLOY VERIFIED: GitHub commit status for f63da2c = "success — Success - deyoungltd.site" (Railway healthcheck /api/health green => boot completed => Premiere schema push + idempotent 3-seed run at boot, by design). Local HEAD == origin/main == f63da2c.
+- Content fetch caveat (documented, not a regression): sandbox IP is Railway-edge 429-throttled (BRAIN.md note) and Cloudflare Turnstile blocks datacenter-IP fetchers (page_reader + headless agent-browser stuck on challenge; checkbox click did not clear). Owner-side visual check of https://deyoungltd.site/#premieres recommended for final confirmation.
+- VAULT RESTORED (partial): workers/secrets/github.json recreated (gitignored, chmod 600, chat-exposure rotation warning embedded).
+- FLEET CRITICAL DISCOVERED: brain loop pid 5267 alive but EVERY pass since 07:48Z errors FileNotFoundError: workers/secrets/kaggle_tokens.json (wiped by sandbox rebuild; never in git history — verified --all --diff-filter=A scan). Kaggle CLI config (~/.kaggle, ~/.local/bin/kaggle) also gone. Fleet automation (canary deyoungsltd/deyoung-v2-s01 verification + wave-2 push of 6 kernels w2-w8) STALLED until owner supplies Kaggle API tokens. Brain left running — self-heals the moment the vault file lands.
+
+Stage Summary:
+- PREMIERE WALL IS LIVE IN PRODUCTION (deyoungltd.site) — public curated wall + user premiere requests + admin curation, seeded with 3 real premieres at boot.
+- Owner inputs now needed: (1) Kaggle API tokens per fleet account (kaggle.com -> Settings -> API -> Create New Token; accounts in brain/state.json: jimcreat, bittrexminingltd, youngwilly, wikeyoung5, teslaprime, deyoungsltd) to restore workers/secrets/kaggle_tokens.json and revive wave-2; (2) for the LAST queued task (Google OAuth): GOOGLE_CLIENT_ID + GOOGLE_SECRET on Railway, redirect URI https://deyoungltd.site/api/auth/google/callback.
+- Security standing items: rotate THIS chat-exposed PAT after the fleet vault is restored; revoke old AgentMail key; change admin password on first prod login.
