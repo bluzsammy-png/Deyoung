@@ -354,8 +354,12 @@ function beatsFor(count: number): Beat[] {
     4: ["hook", "establish", "turn", "resolve"],
     5: ["hook", "establish", "turn", "climax", "resolve"],
     6: ["hook", "establish", "build", "turn", "climax", "resolve"],
+    7: ["hook", "establish", "build", "turn", "build", "climax", "resolve"],
+    8: ["hook", "establish", "build", "turn", "build", "climax", "resolve", "resolve"],
+    9: ["hook", "establish", "build", "turn", "build", "build", "climax", "resolve", "resolve"],
+    10: ["hook", "establish", "build", "build", "turn", "build", "build", "climax", "resolve", "resolve"],
   };
-  return arcs[Math.min(6, Math.max(3, count))];
+  return arcs[Math.min(10, Math.max(3, count))];
 }
 
 /** Night-coherent lighting — avoids "night + sunshine" contradictions (47 polish). */
@@ -508,7 +512,7 @@ export async function writeScript(briefText: string, niche: Niche, seconds: numb
     "You are DeYoung's AI screenwriter. Write a shot-by-shot script. Respond with VALID JSON ONLY matching: " +
       '{"title":string,"logline":string,"characters":[{"name":string,"look":string,"voice":string}],' +
       '"scenes":[{"id":string,"title":string,"seconds":number,"line":string,"visual":string}]}. ' +
-      "Rules: 3-6 scenes, seconds sum <= total, every scene >= 5s, scene.visual = one concrete shot (camera + action + setting), scene.line = ONE spoken line <= 12 words, 1-3 characters, ids s1, s2, ...",
+      "Rules: 2-10 scenes, seconds sum <= total, every scene 5-12s, scene.visual = one concrete shot (camera + action + setting), scene.line = ONE spoken line <= 12 words, 1-3 characters, ids s1, s2, ...",
     `Total seconds: ${seconds}. Niche: ${niche}. Brief: ${briefText}`,
     1200
   );
@@ -517,22 +521,34 @@ export async function writeScript(briefText: string, niche: Niche, seconds: numb
   const r = rng();
   const st = STYLES[niche];
   const brief = analyzeBrief(briefText);
-  const total = Math.min(60, Math.max(10, seconds));
-  const count = total <= 20 ? 3 : total <= 30 ? 4 : total <= 45 ? 5 : 6;
+  const total = Math.min(120, Math.max(15, seconds));
+  const count =
+    total <= 20 ? 3 : total <= 30 ? 4 : total <= 45 ? 5 : total <= 60 ? 6 :
+    total <= 75 ? 7 : total <= 90 ? 8 : total <= 105 ? 9 : 10;
   const beats = beatsFor(count);
 
-  /* seconds: base spread, clamp 5..20, sum === total */
+  /* seconds: base spread, clamp 5..12, sum === total */
   let remaining = total;
   const sceneSecs: number[] = [];
   for (let i = 0; i < count; i++) {
     const left = count - i;
     let v = Math.floor(remaining / left);
     if (i === count - 1) v = remaining;
-    v = Math.min(20, Math.max(5, v));
+    v = Math.min(12, Math.max(5, v));
     sceneSecs.push(v);
     remaining -= v;
   }
-  if (remaining > 0) sceneSecs[sceneSecs.length - 1] = Math.min(20, sceneSecs[sceneSecs.length - 1] + remaining);
+  /* spread leftover seconds round-robin without breaking the 12s cap */
+  let guard = 0;
+  while (remaining > 0 && guard++ < count * 12) {
+    for (let i = 0; i < count && remaining > 0; i++) {
+      if (sceneSecs[i] < 12) {
+        sceneSecs[i] += 1;
+        remaining -= 1;
+      }
+    }
+  }
+  if (remaining > 0) sceneSecs[sceneSecs.length - 1] += remaining; // never truncates the film
 
   /* cast */
   const characters: ScriptShape["characters"] = [];
@@ -605,10 +621,10 @@ function isShape(v: unknown): v is ScriptShape {
 
 /** Clamp an LLM-shaped script to the same guarantees as the local engine. */
 function sanitizeShape(s: ScriptShape, seconds: number): ScriptShape {
-  const scenes = s.scenes.slice(0, 8).map((sc, i) => ({
+  const scenes = s.scenes.slice(0, 10).map((sc, i) => ({
     id: sc.id || `s${i + 1}`,
     title: String(sc.title ?? `Scene ${i + 1}`).slice(0, 80),
-    seconds: Math.min(20, Math.max(5, Math.round(Number(sc.seconds) || 5))),
+    seconds: Math.min(12, Math.max(5, Math.round(Number(sc.seconds) || 5))),
     line: String(sc.line ?? "").slice(0, 200),
     visual: String(sc.visual ?? "").slice(0, 400),
   }));

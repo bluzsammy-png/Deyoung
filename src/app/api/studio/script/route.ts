@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const brief = str(body.brief, 4000);
   const niche = str(body.niche, 60).toLowerCase();
-  const seconds = Math.min(60, Math.max(10, Number(body.seconds) || 30));
+  const seconds = Math.min(120, Math.max(15, Number(body.seconds) || 30));
   if (brief.length < 10) return bad("Describe your idea in a sentence or two first");
   if (!NICHES.includes(niche as Niche)) return bad("Pick a niche for the writer");
 

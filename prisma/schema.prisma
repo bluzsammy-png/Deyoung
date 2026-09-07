@@ -263,16 +263,17 @@ model Premiere {
 // scenes) and render linkage. scriptJson shape: { title, logline, characters:
 // [{name, look, voice}], scenes: [{ id, title, seconds, line, visual }] }.
 model StudioProject {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  title      String
-  niche      String   @default("")
-  brief      String   @default("")
-  scriptJson String   @default("{}")
-  status     String   @default("draft") // draft | scripted | rendering | done
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  title          String
+  niche          String   @default("")
+  brief          String   @default("")
+  scriptJson     String   @default("{}")
+  storyboardJson String? // fleet-generated character sheets + scene keyframes (JSON)
+  status         String   @default("draft") // draft | scripted | rendering | done
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([userId])
 }

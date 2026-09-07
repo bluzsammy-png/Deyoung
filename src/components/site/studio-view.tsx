@@ -51,6 +51,13 @@ type Script = {
   scenes: { id: string; title: string; seconds: number; line: string; visual: string }[];
 };
 
+/** Character sheets + per-scene keyframes produced by the render fleet.
+ *  urls are /api/files/{assetId} links (storyboard stills are public assets). */
+type Storyboard = {
+  sheets: { name: string; url: string }[];
+  keyframes: { scene: string; url: string }[];
+};
+
 type Me = {
   blocked?: { status: string; reason: string };
   unlimited?: boolean;
@@ -128,11 +135,16 @@ export function StudioView({ projectId }: { projectId?: string }) {
   const [render, setRender] = useState<RenderState>({});
   const [watch, setWatch] = useState<string | null>(null); // requestId of the live-run console
   const [err, setErr] = useState<string | null>(null);
+  const [storyboard, setStoryboard] = useState<Storyboard | null>(null);
+  const [filmLength, setFilmLength] = useState<number>(15);
+  const [renderingAll, setRenderingAll] = useState(false);
   const restored = useRef(false);
 
   const unlimited = Boolean(me?.unlimited);
-  const maxSeconds = me?.plan?.maxSecondsVideo ?? 15;
-  const maxRes = me?.plan?.maxResolution ?? "720p";
+  // Owner tier: plan is synthetic (null) — give the studio a real 120s film
+  // budget instead of falling back to the 15s default that produced 3x5s films.
+  const maxSeconds = unlimited ? 120 : (me?.plan?.maxSecondsVideo ?? 15);
+  const maxRes = unlimited ? "1080p" : (me?.plan?.maxResolution ?? "720p");
 
   useEffect(() => {
     api<Me>("/api/me")
@@ -143,11 +155,11 @@ export function StudioView({ projectId }: { projectId?: string }) {
       .catch((e) => setAuthErr(e instanceof Error ? e.message : "Sign in to use the studio"));
   }, []);
 
-  // restore a saved project
+  // restore a saved project (+ its fleet-generated storyboard)
   useEffect(() => {
     if (!projectId || restored.current) return;
     restored.current = true;
-    api<{ projects: { id: string; title: string; niche: string; brief: string; scriptJson: string }[] }>(
+    api<{ projects: { id: string; title: string; niche: string; brief: string; scriptJson: string; storyboardJson: string | null }[] }>(
       "/api/studio/projects"
     )
       .then((d) => {
@@ -161,9 +173,28 @@ export function StudioView({ projectId }: { projectId?: string }) {
           const parsed = JSON.parse(p.scriptJson) as Script;
           if (parsed?.scenes?.length) setScript(parsed);
         } catch { /* draft without script */ }
+        try {
+          if (p.storyboardJson) setStoryboard(JSON.parse(p.storyboardJson) as Storyboard);
+        } catch { /* no storyboard yet */ }
       })
       .catch(() => undefined);
   }, [projectId]);
+
+  // pick up the storyboard once the fleet generates it (poll while rendering)
+  useEffect(() => {
+    if (!savedId || storyboard) return;
+    const t = setInterval(() => {
+      api<{ projects: { id: string; storyboardJson: string | null }[] }>("/api/studio/projects")
+        .then((d) => {
+          const p = d.projects.find((x) => x.id === savedId);
+          if (p?.storyboardJson) {
+            try { setStoryboard(JSON.parse(p.storyboardJson) as Storyboard); } catch { /* ignore */ }
+          }
+        })
+        .catch(() => undefined);
+    }, 20000);
+    return () => clearInterval(t);
+  }, [savedId, storyboard]);
 
   // live render status (film-simulator feel)
   const pollRenders = useCallback(() => {
@@ -213,15 +244,30 @@ export function StudioView({ projectId }: { projectId?: string }) {
     try {
       const d = await api<{ script: Script }>("/api/studio/script", {
         method: "POST",
-        body: JSON.stringify({ brief: enhanced || brief, niche, seconds: Math.min(60, maxSeconds) }),
+        body: JSON.stringify({ brief: enhanced || brief, niche, seconds: Math.min(maxSeconds, filmLength) }),
       });
       setScript(d.script);
       setTitle(d.script.title);
+      setStoryboard(null); // a new script invalidates the old storyboard
       setTimeout(() => saveProject(d.script), 50);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Script writer failed");
     } finally {
       setWriting(false);
+    }
+  }
+
+  async function renderAllScenes() {
+    if (!script) return;
+    setRenderingAll(true);
+    try {
+      for (const sc of script.scenes) {
+        const r = render[sc.id];
+        if (r && !["failed", "cancelled"].includes(r.status)) continue; // already queued/rendered
+        await submitScene(sc, unlimited ? "1080p" : maxRes, unlimited ? true : Boolean(me?.plan?.audio));
+      }
+    } finally {
+      setRenderingAll(false);
     }
   }
 
@@ -364,6 +410,22 @@ export function StudioView({ projectId }: { projectId?: string }) {
                 {enhancing ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Sparkles className="h-4 w-4" aria-hidden />}
                 Enhance with AI
               </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Label htmlFor="st-len" className="text-xs font-black uppercase tracking-widest text-white/40">
+                  Film length
+                </Label>
+                <select
+                  id="st-len"
+                  value={filmLength}
+                  onChange={(e) => setFilmLength(Number(e.target.value))}
+                  className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm font-bold text-white"
+                  aria-label="Film length"
+                >
+                  {[15, 30, 45, 60, 90, 120].filter((s) => s <= maxSeconds).map((s) => (
+                    <option key={s} value={s} className="bg-neutral-900">{s}s</option>
+                  ))}
+                </select>
+              </div>
               <Button
                 onClick={writeScript}
                 disabled={writing || (brief.trim().length < 10 && enhanced.trim().length < 10)}
@@ -428,6 +490,41 @@ export function StudioView({ projectId }: { projectId?: string }) {
                   </div>
                 </div>
               )}
+              {storyboard && (
+                <div className="rounded-xl border border-primary/30 bg-primary/[0.05] p-4">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-primary">
+                    Storyboard — drawn by the fleet
+                  </p>
+                  {storyboard.sheets?.length > 0 && (
+                    <>
+                      <p className="mt-2 text-xs text-white/50">Character sheets (the cast, created from scratch):</p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                        {storyboard.sheets.map((s) => (
+                          <figure key={s.url} className="overflow-hidden rounded-lg border border-white/10">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={s.url} alt={`Character sheet — ${s.name}`} className="aspect-square w-full object-cover" />
+                            <figcaption className="bg-white/5 px-2 py-1 text-xs font-bold">{s.name}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {storyboard.keyframes?.length > 0 && (
+                    <>
+                      <p className="mt-3 text-xs text-white/50">Scene keyframes (each scene starts from its keyframe — that's how characters stay consistent):</p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {storyboard.keyframes.map((k) => (
+                          <figure key={k.url} className="overflow-hidden rounded-lg border border-white/10">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={k.url} alt={`Keyframe — scene ${k.scene}`} className="aspect-video w-full object-cover" />
+                            <figcaption className="bg-white/5 px-2 py-1 text-xs font-bold">Scene {k.scene}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               <p className="text-xs text-white/40">
                 {script.scenes.length} scenes · {totalSceneSeconds}s total
               </p>
@@ -441,6 +538,24 @@ export function StudioView({ projectId }: { projectId?: string }) {
             <Connector active />
             <NodeShell step="3" title="Scenes → render queue" icon={<Clapperboard className="h-4 w-4" aria-hidden />} active>
               <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-white/40">
+                    {Object.values(render).some((r) => ["queued", "rendering"].includes(r.status))
+                      ? "The fleet renders scene by scene — watch any scene live."
+                      : "Every scene renders with its keyframe + cast for a consistent film."}
+                  </p>
+                  {script.scenes.length > 1 && (
+                    <Button
+                      size="sm"
+                      onClick={renderAllScenes}
+                      disabled={renderingAll || !unlimited && !me?.subscription}
+                      className="bg-primary font-bold text-white hover:bg-[#B91C1C]"
+                    >
+                      {renderingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Clapperboard className="h-3.5 w-3.5" aria-hidden />}
+                      Render all {script.scenes.length} scenes
+                    </Button>
+                  )}
+                </div>
                 {script.scenes.map((sc) => {
                   const r = render[sc.id];
                   return (
@@ -462,16 +577,24 @@ export function StudioView({ projectId }: { projectId?: string }) {
                       <p className="mt-2 text-sm text-white/70">{sc.visual}</p>
                       {sc.line && <p className="mt-1 text-sm italic text-primary/90">“{sc.line}”</p>}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <Button size="sm" onClick={() => submitScene(sc, maxRes, Boolean(me?.plan?.audio))} className="bg-primary font-bold text-white hover:bg-[#B91C1C]">
-                          <Clapperboard className="h-3.5 w-3.5" aria-hidden /> Render scene
+                    {storyboard?.keyframes?.find((k) => k.scene === sc.id) && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={storyboard.keyframes.find((k) => k.scene === sc.id)!.url}
+                        alt={`Keyframe for ${sc.id}`}
+                        className="h-14 w-24 rounded-md border border-white/10 object-cover"
+                      />
+                    )}
+                    <Button size="sm" onClick={() => submitScene(sc, unlimited ? "1080p" : maxRes, unlimited ? true : Boolean(me?.plan?.audio))} className="bg-primary font-bold text-white hover:bg-[#B91C1C]">
+                      <Clapperboard className="h-3.5 w-3.5" aria-hidden /> Render scene
+                    </Button>
+                    {unlimited && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => submitScene(sc, "1080p", true)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                          1080p + audio
                         </Button>
-                        {unlimited && (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => submitScene(sc, "1080p", true)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                              1080p + audio
-                            </Button>
-                          </>
-                        )}
+                      </>
+                    )}
                         {r && ["queued", "rendering"].includes(r.status) && (
                           <Button
                             size="sm"
