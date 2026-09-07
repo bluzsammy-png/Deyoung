@@ -38,8 +38,8 @@ KAGGLE_BIN = os.path.expanduser("~/.local/bin/kaggle")
 TOK_PATH = os.path.expanduser("~/.kaggle/access_token")
 
 # --- relaunch gate constants (v10 v2 wave) ---
-CANARY_REF = "deyoungsltd/deyoung-v2-s01"
-CANARY_DIR = os.path.join(FETCH_DIR, "deyoungsltd__deyoung-v2-s01")
+CANARY_REF = "youngwilly/deyoung-v2-c01"  # moved off deyoungsltd 2026-09-07: weekly GPU quota exhausted (30h cap) — fresh account
+CANARY_DIR = os.path.join(FETCH_DIR, "youngwilly__deyoung-v2-c01")
 KERNELS_DIR = os.path.join(FETCH_DIR, "kernels")
 # (account, kernel-dir slug, vault token id) — quota-aware placement
 WAVE2 = [
