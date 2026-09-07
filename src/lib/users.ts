@@ -118,22 +118,45 @@ export async function getUserSession(): Promise<UserSession> {
  * Revoked admins (Admin row deleted) lose studio access automatically.
  */
 export async function getStudioSession(): Promise<UserSession> {
-  const s = await getUserSession();
-  if (s.kind !== "anon") return s;
+  // Task 46 fix: the owner's browser typically holds BOTH cookies at once
+  // (dy_user from #signin + dy_admin from the panel). The panel session is
+  // resolved FIRST and a valid admin seat always wins over any user session —
+  // previously the user session was returned first, which left the owner
+  // gated as a regular user ("No plan" + subscribe banner in the studio).
+  // A user session whose email is an admin — User row role "admin"
+  // (ADMIN_EMAILS signup / Google auto-promote) or an Admin table row — is
+  // the same owner tier. Regular users are unaffected; revoked admins lose
+  // access (Admin row deleted and/or role demoted).
   const { getSession } = await import("@/lib/auth");
   const p = await getSession();
-  if (!p || p.role === "user") return { kind: "anon" };
-  // role "admin" tokens pass on the token claim; legacy role-less tokens must
-  // still map to a real Admin row (same rule as isAdmin()).
-  const admin = await db.admin.findFirst({
-    where:
-      p.role === "admin"
-        ? { id: p.sub }
-        : { OR: [{ id: p.sub }, { email: (p.email || "").toLowerCase() }] },
-    select: { id: true, email: true },
+  if (p && p.role !== "user") {
+    // role "admin" tokens pass on the token claim; legacy role-less tokens
+    // must still map to a real Admin row (same rule as isAdmin()).
+    const admin = await db.admin.findFirst({
+      where:
+        p.role === "admin"
+          ? { id: p.sub }
+          : { OR: [{ id: p.sub }, { email: (p.email || "").toLowerCase() }] },
+      select: { id: true, email: true },
+    });
+    if (admin) return adminStudioSession(admin.email);
+  }
+  const s = await getUserSession();
+  if (s.kind !== "ok") return s;
+  if (s.user.role === "admin") return s;
+  const adminRow = await db.admin.findFirst({
+    where: { email: s.user.email.toLowerCase() },
+    select: { id: true },
   });
-  if (!admin) return { kind: "anon" };
-  const email = admin.email.toLowerCase();
+  if (!adminRow) return s;
+  // presentation-level promotion: the Admin table is the source of truth, so
+  // deleting the row revokes studio access again — no DB write needed here.
+  return { kind: "ok", user: { ...s.user, role: "admin" } };
+}
+
+/** Panel-admin seat -> shadow User row (Task 45 semantics, unchanged). */
+async function adminStudioSession(adminEmail: string): Promise<UserSession> {
+  const email = adminEmail.toLowerCase();
   const shadow = await db.user.upsert({
     where: { email },
     update: { role: "admin", status: "active", banReason: "" },
