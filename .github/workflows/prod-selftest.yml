@@ -15,64 +15,17 @@ on:
         description: "Admin password (transient, masked)"
         required: true
 
-env:
-  BROWSER_H: >-
-    -A "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" -H "Accept-Language: en-US,en;q=0.9" -H "sec-fetch-site: same-origin" -H "sec-fetch-mode: cors" -H "sec-fetch-dest: empty"
 jobs:
   selftest:
     runs-on: ubuntu-latest
     steps:
-      - name: Mask secret
-        run: echo "::add-mask::${{ github.event.inputs.pass }}"
-      - name: Health
-        run: |
-          code=$(curl -s ${BROWSER_H} -o /tmp/h.json -w '%{http_code}' --max-time 20 "${{ github.event.inputs.base }}/api/health")
-          echo "health=$code"; cat /tmp/h.json; test "$code" = 200
-      - name: Admin login + session
-        run: |
-          code=$(curl -s ${BROWSER_H} -c /tmp/jar.txt -o /tmp/l.json -w '%{http_code}' --max-time 20 \
-            -X POST "${{ github.event.inputs.base }}/api/auth/login" \
-            -H 'Content-Type: application/json' \
-            -d "{\"email\":\"admin@deyoung.site\",\"password\":\"${{ github.event.inputs.pass }}\"}")
-          echo "login=$code"; test "$code" = 200
-          me=$(curl -s ${BROWSER_H} -b /tmp/jar.txt --max-time 20 "${{ github.event.inputs.base }}/api/me")
-          echo "$me" | head -c 300; echo
-          echo "$me" | grep -q '"role":"admin"' && echo "ME_ROLE=admin"
-          echo "$me" | grep -q '"unlimited":true' && echo "ME_UNLIMITED=true"
-      - name: Prompt enhancer (was broken in prod)
-        run: |
-          code=$(curl -s ${BROWSER_H} -b /tmp/jar.txt -o /tmp/en.json -w '%{http_code}' --max-time 30 \
-            -X POST "${{ github.event.inputs.base }}/api/studio/enhance" \
-            -H 'Content-Type: application/json' \
-            -d '{"prompt":"a boy discovers his drawing pen brings cartoons to life","niche":"kids cartoon"}')
-          echo "enhance=$code"; test "$code" = 200
-          words=$(python3 -c "import json;d=json.load(open('/tmp/en.json'));print(len(d['enhanced'].split()))")
-          echo "enhanced_words=$words"; test "$words" -ge 25
-          python3 -c "import json;print('ENHANCED:', json.load(open('/tmp/en.json'))['enhanced'][:220])"
-      - name: Script writer (was broken in prod)
-        run: |
-          code=$(curl -s ${BROWSER_H} -b /tmp/jar.txt -o /tmp/sc.json -w '%{http_code}' --max-time 30 \
-            -X POST "${{ github.event.inputs.base }}/api/studio/script" \
-            -H 'Content-Type: application/json' \
-            -d '{"brief":"a boy discovers his drawing pen brings cartoons to life and his doodles race across the page","niche":"kids cartoon","seconds":30}')
-          echo "script=$code"; test "$code" = 200
-          python3 - <<'EOF'
-          import json
-          s = json.load(open('/tmp/sc.json'))['script']
-          secs = sum(sc['seconds'] for sc in s['scenes'])
-          assert s['title'] and 3 <= len(s['scenes']) <= 6 and secs <= 40, s
-          assert 1 <= len(s['characters']) <= 3
-          print(f"SCRIPT OK: title={s['title']!r} scenes={len(s['scenes'])} total={secs}s cast={[c['name'] for c in s['characters']]}")
-          print("SCENE s1:", s['scenes'][0]['visual'][:200])
-          EOF
-      - name: Owner-tier render gate
-        run: |
-          code=$(curl -s ${BROWSER_H} -b /tmp/jar.txt -o /tmp/r.json -w '%{http_code}' --max-time 30 \
-            -X POST "${{ github.event.inputs.base }}/api/studio/render" \
-            -H 'Content-Type: application/json' \
-            -d '{"prompt":"prod selftest — boy discovers his drawing pen brings cartoons to life","seconds":5,"resolution":"1080p","withAudio":true}')
-          echo "render=$code"; test "$code" = 201
-          python3 -c "import json;r=json.load(open('/tmp/r.json'))['request'];print(f\"RENDER TIER: prio={r['queuePriority']} watermark={r['watermark']} res={r['resolution']} audio={r['withAudio']}\")"
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run production self-test
+        env:
+          ADMIN_PASS: ${{ github.event.inputs.pass }}
+          BASE: ${{ github.event.inputs.base }}
+        run: bash scripts/prod_selftest.sh
       - name: Summary
         if: always()
-        run: echo "PROD SELFTEST COMPLETE — see step results above"
+        run: echo "PROD SELFTEST COMPLETE — see step result above"
