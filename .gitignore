@@ -100,3 +100,8 @@ __pycache__/
 # CI log dumps (transient debug artifacts)
 /brain/ci_logs*
 campaign/v10/
+
+# Task 54 credential-probe evidence (contains echoed API key - NEVER commit)
+/brain/lightning54_*
+/brain/lt_*
+/brain/hf_verify_54_*
