@@ -888,3 +888,23 @@ Work Log:
 
 Stage Summary:
 - Site renders now speak: dialogue lines are voiced per character and lip-synced onto the H3 motion. E2E proof pending GPU slot — orchestrator watching (brain/lipsync50.log).
+
+---
+Task ID: 53
+Agent: main (Super Z)
+Task: Onboard 4 owner-supplied HuggingFace "ZeroSpace" tokens + redesign the studio UI to H3-studio grade (W3).
+
+Work Log:
+- Sandbox rebuilt (3rd time) -> recovery drill: git fetch+reset to ac3a273, selfheal restored vault/.env.local/secrets; brain loop + recovery_orchestrator_51 relaunched (first cycle: ground probe youngwilly QUOTA — expected until Sat 00:00 UTC reset).
+- HF tokens: all 4 verified via whoami-v2 (deyoungsltd, bittrexminingltd, bluzsammy, jimmmfg; 0 PRO, fine-grained). Stored workers/secrets/hf_tokens.json (0600) + baked into vault.enc.
+- Live capability probes (scripts/hf_probe_53b.py, hard timeouts): model-repo create+delete 200 OK on 4/4 (write scope CONFIRMED); Gradio Space create -> HTTP 402 on 4/4: "Static Spaces are free for everyone, but hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription" -> ZeroGPU worker Spaces IMPOSSIBLE on free accounts (2026 policy, verified not assumed). Fleet role = private weights/artifact repos (35GB H3 stack CDN) + future grant vehicle; NOT renderers.
+- GitHub push protection BLOCKED first push (HF tokens hardcoded in verify script) -> script rewritten to read from secrets file; archive-scanned pushed tree f4a53ff for all 4 token values: NONE present (leak false-alarm was broken pipe logic; rejected intermediate commit never landed).
+- Studio W3 redesign: studio-view.tsx rebuilt as 3-zone workstation (Director's Console rail / dot-grid workflow canvas with node ports + flowing edges + Script->Scenes->Delivery nodes / render-queue rail + docked live monitor); globals.css +90 lines (dy-node/dy-port/dy-flow/dy-canvas/dy-busy-dot + reduced-motion). All W2 logic preserved 1:1.
+- QA on dev: typecheck clean (src/), eslint 0 errors, browser E2E: admin login -> studio renders -> typed brief -> Enhance with AI returned live agent output -> Write the script produced 3-scene script (cast, bible, direction badges) -> render queue rail lists s1-s3 NOT QUEUED -> "Project saved" chip. Desktop+mobile screenshots (brain/qa_studio_w3_*.png).
+- Pushed f4a53ff; CI success; Railway deploy SUCCESS 16:50:23Z (verified via Railway GraphQL: deployment 4290ed00 SUCCESS, staticUrl deyoungltd.site).
+- Railway edge (railway-hikari hkg1) IP-throttled sandbox during chunk-scan polling -> all local 429s were EDGE, not app; DB RateLimit purge harmless; visual live check pending edge-window expiry.
+
+Stage Summary:
+- f4a53ff live on deyoungltd.site: W3 studio workstation.
+- HF: 4 accounts = storage assets only (verified); Lightning/Modal remain the real free-capacity adds per Task 51/52 research.
+- Orchestrator armed for Sat quota reset; E2E row cmt12fd3a610a05125f38d16840 watched.

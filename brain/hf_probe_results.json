@@ -1,0 +1,34 @@
+{
+  "write_probe": {},
+  "zerogpu_probe": {},
+  "space_probe_v2": {
+    "hf_zero_1:deyoungsltd": {
+      "model_create": "200 {\"url\":\"https://huggingface.co/deyoungsltd/deyoung-probe\",\"name\":\"deyoungsltd/de",
+      "model_cleanup": 400,
+      "model_write": true,
+      "space_create": "402 {\"error\":\"Static Spaces are free for everyone, but hosting Gradio and Docker Spa",
+      "space_write": false
+    },
+    "hf_zero_2:bittrexminingltd": {
+      "model_create": "200 {\"url\":\"https://huggingface.co/bittrexminingltd/deyoung-probe\",\"name\":\"bittrexmi",
+      "model_cleanup": 400,
+      "model_write": true,
+      "space_create": "402 {\"error\":\"Static Spaces are free for everyone, but hosting Gradio and Docker Spa",
+      "space_write": false
+    },
+    "hf_zero_3:bluzsammy": {
+      "model_create": "200 {\"url\":\"https://huggingface.co/bluzsammy/deyoung-probe\",\"name\":\"bluzsammy/deyoun",
+      "model_cleanup": 400,
+      "model_write": true,
+      "space_create": "402 {\"error\":\"Static Spaces are free for everyone, but hosting Gradio and Docker Spa",
+      "space_write": false
+    },
+    "hf_zero_4:jimmmfg": {
+      "model_create": "200 {\"url\":\"https://huggingface.co/jimmmfg/deyoung-probe\",\"name\":\"jimmmfg/deyoung-pr",
+      "model_cleanup": 400,
+      "model_write": true,
+      "space_create": "402 {\"error\":\"Static Spaces are free for everyone, but hosting Gradio and Docker Spa",
+      "space_write": false
+    }
+  }
+}
