@@ -102,12 +102,24 @@ def main():
                     st["restored"]["campaign"] = {"account": st["probe_account"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
                     save_state(st)
                     continue
-                if msg != "QUOTA":
-                    order = ["youngwilly", "teslaprime", "wikeyoung5", "jimcreat", "bittrexminingltd", "deyoungsltd"]
-                    i = (order.index(st["probe_account"]) + 1) % len(order)
-                    st["probe_account"] = order[i]
-                    save_state(st)
-                time.sleep(POLL_SEC)
+                # Task 54-c: rotate on QUOTA too - one drained account must not
+                # ground the whole loop while others may have fresh quota.
+                # Sleep 30 min only after a FULL round of all-6 QUOTA probes.
+                order = ["youngwilly", "teslaprime", "wikeyoung5", "jimcreat", "bittrexminingltd", "deyoungsltd"]
+                i = (order.index(st["probe_account"]) + 1) % len(order)
+                st["probe_account"] = order[i]
+                if msg == "QUOTA":
+                    st["quota_streak"] = st.get("quota_streak", 0) + 1
+                    if st["quota_streak"] >= len(order):
+                        st["quota_streak"] = 0
+                        log("all 6 accounts QUOTA - sleeping 30 min")
+                        save_state(st)
+                        time.sleep(POLL_SEC)
+                        continue
+                else:
+                    st["quota_streak"] = 0
+                save_state(st)
+                time.sleep(20)  # brief pause between fast quota-fail probes
                 continue
 
             if st["phase"] == "restore":
