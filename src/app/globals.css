@@ -407,4 +407,84 @@
   }
 }
 
+/* ---------------- studio workstation (W3) ---------------- */
+.dy-canvas {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.075) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+.dy-node {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1.1rem;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease;
+}
+.dy-node-active {
+  border-color: rgba(220, 38, 38, 0.55);
+  background: rgba(220, 38, 38, 0.045);
+  box-shadow: 0 0 50px -14px rgba(220, 38, 38, 0.55);
+}
+.dy-node-done {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.dy-port {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: #0a0a0a;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+.dy-port-on {
+  border-color: var(--brand-red);
+  background: var(--brand-red);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.9);
+  animation: dy-port-pulse 1.8s ease-in-out infinite;
+}
+@keyframes dy-port-pulse {
+  50% {
+    box-shadow: 0 0 20px rgba(220, 38, 38, 1);
+  }
+}
+.dy-flow {
+  animation: dy-flow 1.1s linear infinite;
+}
+@keyframes dy-flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+.dy-busy-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  display: inline-block;
+  animation: dy-busy 1.1s ease-in-out infinite;
+}
+@keyframes dy-busy {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dy-flow,
+  .dy-port-on,
+  .dy-busy-dot {
+    animation: none;
+  }
+  .dy-node,
+  .dy-port {
+    transition: none;
+  }
+}
+
 /* brand-rebuild */

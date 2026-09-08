@@ -2,7 +2,7 @@
   "fleet": {
     "accounts": {
       "bittrexminingltd": {
-        "checked": "2026-09-07T17:02:49Z",
+        "checked": "2026-09-08T16:48:38Z",
         "known_fleet_kernels": [
           "bittrexminingltd/deyoung-h3-b",
           "bittrexminingltd/deyoung-h3-b2",
@@ -10,7 +10,7 @@
         ]
       },
       "deyoungsltd": {
-        "checked": "2026-09-07T17:02:40Z",
+        "checked": "2026-09-08T16:48:30Z",
         "known_fleet_kernels": [
           "deyoungsltd/deyoung-h3-e",
           "deyoungsltd/deyoung-h3-e2",
@@ -19,7 +19,7 @@
         ]
       },
       "jimcreat": {
-        "checked": "2026-09-07T17:02:43Z",
+        "checked": "2026-09-08T16:48:34Z",
         "known_fleet_kernels": [
           "jimcreat/deyoung-diag",
           "jimcreat/deyoung-h3-a",
@@ -29,24 +29,25 @@
         ]
       },
       "teslaprime": {
-        "checked": "2026-09-07T17:02:47Z",
+        "checked": "2026-09-08T16:48:37Z",
         "known_fleet_kernels": [
           "teslaprime/deyoung-h3-f",
           "teslaprime/deyoung-h3-f2",
-          "teslaprime/deyoung-site-w01",
+          "teslaprime/deyoung-netdiag",
+          "teslaprime/deyoung-speedprobe",
           "teslaprime/deyoung-worker-c"
         ]
       },
       "wikeyoung5": {
-        "checked": "2026-09-07T17:02:51Z",
+        "checked": "2026-09-08T16:48:41Z",
         "known_fleet_kernels": [
           "wikeyoung5/deyoung-h3-d",
           "wikeyoung5/deyoung-h3-d2",
-          "wikeyoung5/deyoung-site-w01"
+          "wikeyoung5/deyoung-lipsync-cpu"
         ]
       },
       "youngwilly": {
-        "checked": "2026-09-07T17:02:50Z",
+        "checked": "2026-09-08T16:48:40Z",
         "known_fleet_kernels": [
           "youngwilly/deyoung-h3-c",
           "youngwilly/deyoung-h3-c2",
@@ -57,21 +58,21 @@
     "history": {},
     "kernels": {
       "bittrexminingltd/deyoung-h3-b": {
-        "checked": "2026-09-07T17:02:49Z",
+        "checked": "2026-09-08T16:48:39Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "bittrexminingltd/deyoung-h3-b2": {
-        "checked": "2026-09-07T17:02:49Z",
+        "checked": "2026-09-08T16:48:39Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "bittrexminingltd/deyoung-worker-b": {
-        "checked": "2026-09-07T17:02:49Z",
+        "checked": "2026-09-08T16:48:39Z",
         "fetched": true,
         "files": [
           {
@@ -91,49 +92,49 @@
         "status": "complete"
       },
       "deyoungsltd/deyoung-h3-e": {
-        "checked": "2026-09-07T17:02:42Z",
+        "checked": "2026-09-08T16:48:32Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "deyoungsltd/deyoung-h3-e2": {
-        "checked": "2026-09-07T17:02:41Z",
+        "checked": "2026-09-08T16:48:31Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "deyoungsltd/deyoung-prod-selftest": {
-        "checked": "2026-09-07T17:02:41Z",
+        "checked": "2026-09-08T16:48:31Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "error"
       },
       "deyoungsltd/deyoung-v2-s01": {
-        "checked": "2026-09-07T17:02:41Z",
+        "checked": "2026-09-08T16:48:31Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-diag": {
-        "checked": "2026-09-07T17:02:44Z",
+        "checked": "2026-09-08T16:48:34Z",
         "fetched": true,
         "files": [],
         "lastRunTime": null,
         "status": "complete"
       },
       "jimcreat/deyoung-h3-a": {
-        "checked": "2026-09-07T17:02:44Z",
+        "checked": "2026-09-08T16:48:34Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-h3-a-canary": {
-        "checked": "2026-09-07T17:02:45Z",
+        "checked": "2026-09-08T16:48:35Z",
         "fetched": true,
         "files": [
           {
@@ -149,14 +150,14 @@
         "status": "complete"
       },
       "jimcreat/deyoung-h3-a2": {
-        "checked": "2026-09-07T17:02:45Z",
+        "checked": "2026-09-08T16:48:35Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "jimcreat/deyoung-worker-a": {
-        "checked": "2026-09-07T17:02:45Z",
+        "checked": "2026-09-08T16:48:35Z",
         "fetched": true,
         "files": [
           {
@@ -176,18 +177,30 @@
         "status": "complete"
       },
       "teslaprime/deyoung-h3-f": {
-        "checked": "2026-09-07T17:02:48Z",
+        "checked": "2026-09-08T16:48:38Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "teslaprime/deyoung-h3-f2": {
-        "checked": "2026-09-07T17:02:47Z",
+        "checked": "2026-09-08T16:48:37Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
+      },
+      "teslaprime/deyoung-netdiag": {
+        "checked": "2026-09-08T16:48:37Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "netdiag.json"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
       },
       "teslaprime/deyoung-site-w01": {
         "checked": "2026-09-07T17:02:47Z",
@@ -196,8 +209,20 @@
         "lastRunTime": null,
         "status": "running"
       },
+      "teslaprime/deyoung-speedprobe": {
+        "checked": "2026-09-08T16:48:37Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "speed.json"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
+      },
       "teslaprime/deyoung-worker-c": {
-        "checked": "2026-09-07T17:02:48Z",
+        "checked": "2026-09-08T16:48:38Z",
         "fetched": true,
         "files": [
           {
@@ -217,18 +242,418 @@
         "status": "complete"
       },
       "wikeyoung5/deyoung-h3-d": {
-        "checked": "2026-09-07T17:02:52Z",
+        "checked": "2026-09-08T16:48:42Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "wikeyoung5/deyoung-h3-d2": {
-        "checked": "2026-09-07T17:02:51Z",
+        "checked": "2026-09-08T16:48:41Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
+      },
+      "wikeyoung5/deyoung-lipsync-cpu": {
+        "checked": "2026-09-08T16:48:41Z",
+        "fetched": true,
+        "files": [
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/HEAD"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/config"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/description"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/applypatch-msg.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/commit-msg.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/fsmonitor-watchman.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/post-update.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-applypatch.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-commit.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-merge-commit.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-push.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-rebase.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/pre-receive.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/prepare-commit-msg.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/push-to-checkout.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/hooks/update.sample"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/index"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/info/exclude"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/logs/HEAD"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/logs/refs/heads/master"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/logs/refs/remotes/origin/HEAD"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/objects/pack/pack-ce620483c01631886609403e35f01de92e3279d0.idx"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/objects/pack/pack-ce620483c01631886609403e35f01de92e3279d0.pack"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/packed-refs"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/refs/heads/master"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/refs/remotes/origin/HEAD"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.git/shallow"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/.gitignore"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/Dockerfile"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/Wav2Lip_simplified_V5(offline).ipynb"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/Wav2Lip_simplified_v4.ipynb"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/Wav2Lip_simplified_v5.ipynb"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/__pycache__/audio.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/__pycache__/hparams.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/audio.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/checkpoints/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/checkpoints/mobilenet.pth"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/checkpoints/wav2lip_gan.pth"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/cog.yaml"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/color_syncnet_train.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/gen_videos_from_filelist.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/real_videos_inference.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/scores_LSE/SyncNetInstance_calc_scores.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/scores_LSE/calculate_scores_LRS.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/scores_LSE/calculate_scores_real_videos.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/scores_LSE/calculate_scores_real_videos.sh"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/ReSyncED/random_pairs.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/ReSyncED/tts_pairs.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/lrs2.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/lrs3.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/evaluation/test_filelists/lrw.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detect.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/__init__.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/api.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/__init__.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/core.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/sfd/__init__.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/sfd/bbox.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/sfd/detect.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/sfd/net_s3fd.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/detection/sfd/sfd_detector.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/models.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/face_detection/utils.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/filelists/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/hparams.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/hq_wav2lip_train.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/inference.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/__init__.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/__pycache__/__init__.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/__pycache__/conv.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/__pycache__/syncnet.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/__pycache__/wav2lip.cpython-312.pyc"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/conv.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/syncnet.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/models/wav2lip.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/predict.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/preprocess.py"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/requirements.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/requirementsCPU.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/requirements_colab.txt"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/results/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/scripts/download_models.sh"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/scripts/run-dev.sh"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/scripts/run-prod.sh"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/temp/README.md"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/temp/result.avi"
+          },
+          {
+            "bytes": null,
+            "name": "Wav2Lip/wav2lip_train.py"
+          },
+          {
+            "bytes": null,
+            "name": "bed.mp4"
+          },
+          {
+            "bytes": null,
+            "name": "face.jpg"
+          },
+          {
+            "bytes": null,
+            "name": "line.mp3"
+          },
+          {
+            "bytes": null,
+            "name": "line.wav"
+          },
+          {
+            "bytes": null,
+            "name": "lip.mp4"
+          },
+          {
+            "bytes": null,
+            "name": "proof.json"
+          },
+          {
+            "bytes": null,
+            "name": "result.mp4"
+          }
+        ],
+        "lastRunTime": null,
+        "status": "complete"
       },
       "wikeyoung5/deyoung-site-w01": {
         "checked": "2026-09-07T17:02:51Z",
@@ -238,34 +663,39 @@
         "status": "running"
       },
       "youngwilly/deyoung-h3-c": {
-        "checked": "2026-09-07T17:02:51Z",
+        "checked": "2026-09-08T16:48:40Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "youngwilly/deyoung-h3-c2": {
-        "checked": "2026-09-07T17:02:50Z",
+        "checked": "2026-09-08T16:48:40Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
         "status": "cancelAcknowledged"
       },
       "youngwilly/deyoung-v2-c01": {
-        "checked": "2026-09-07T17:02:50Z",
+        "checked": "2026-09-08T16:48:40Z",
         "fetched": false,
         "files": [],
         "lastRunTime": null,
-        "status": "running"
+        "status": "cancelAcknowledged"
       }
     },
-    "last_pass": "2026-09-07T17:02:52Z"
+    "last_pass": "2026-09-08T16:48:42Z"
   },
   "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
   "ops": {
     "pending_review": [
-      "teslaprime/deyoung-site-w01=running",
-      "wikeyoung5/deyoung-site-w01=running"
+      "teslaprime/deyoung-netdiag:fetched",
+      "teslaprime/deyoung-netdiag=complete",
+      "teslaprime/deyoung-speedprobe:fetched",
+      "teslaprime/deyoung-speedprobe=complete",
+      "wikeyoung5/deyoung-lipsync-cpu:fetched",
+      "wikeyoung5/deyoung-lipsync-cpu=complete",
+      "youngwilly/deyoung-v2-c01=cancelAcknowledged"
     ]
   },
   "relaunch": {
@@ -273,7 +703,7 @@
       "empty_polls": 0,
       "verify_polls": 0
     },
-    "grounded": null,
+    "grounded": "canary ended without success: cancelAcknowledged",
     "phase": "waiting",
     "wave2": {
       "abandoned": {},

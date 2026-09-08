@@ -99,3 +99,4 @@ __pycache__/
 
 # CI log dumps (transient debug artifacts)
 /brain/ci_logs*
+campaign/v10/
