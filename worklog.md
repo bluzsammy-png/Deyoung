@@ -928,3 +928,22 @@ Stage Summary:
 - Lightning AI = verified, wired, vault-committed fallback plane: identity+teamspace+25.91 credits proven live, owner's own deyoung-h3 Studio (108G H3 stack, T4-class) discovered and headless-controlled (start/run/stop proven); GPU-toolkit check inside the studio is the one remaining unknown.
 - HF 4 accounts re-verified + re-wired durably (vault now committed so rebuilds cannot lose it again).
 - campaign/v10 kernel sources restored + immune to the gitignore trap; orchestrator quota-rotation + survival supervision shipped; fleet state = all-6 QUOTA until Sat, auto-restores at the window.
+
+---
+Task ID: 55
+Agent: main (Super Z)
+Task: Owner ordered Lightning GPU ACTIVE while Kaggle is grounded, campaign cut to 20-40s UGC launch film, workers that stop when idle (credit burn guard), admin password handover, UI check.
+
+Work Log:
+- LIGHTNING RENDER PLANE PROVEN: deep-probed deyoung-h3 studio - full 54G MiniMax-H3 ComfyUI stack pre-installed (all 6 weights + render.sh from owner's earlier attempt). Found the earlier failure's root cause: torchaudio ABI mismatch (undefined symbol torch_library_impl) crashed ComfyUI boot; c20 worker repairs it live (pip --no-deps --force-reinstall torchaudio==2.8.0 -> attempt0 OK).
+- GPU TRUTH: studio resumed with NO GPU (machine=None/CPU, torch_cuda False). T4 does NOT persist across stop/start ("sameComputeOnResume": false) - switch_machine(Machine.T4) required EVERY session, and ONLY works while Running. Foreground SDK ops survive; ALL background nohup processes using lightning_sdk die silently (~2-5 min, no traceback, 3x reproduced) -> architecture rule: SDK only foreground, REST-only in background.
+- CREDIT MATH measured: T4 burn ~1.2 credits/h (25.91 -> 24.96 during session); 25.9 balance ~= 21h T4. Triple credit guard: (1) worker SELF-STOPS studio at end - PROVEN live (inner SDK stop -> Stopped; outer session error "no running instances" = success signature), (2) platform auto-sleep backstop, (3) brain REST watcher with 20h ALERT.
+- C20 UGC CAMPAIGN LIVE: 4x5s scenes (u1 hook 8-step dialogue, u2 site-UI-over-shoulder 4-step, u3 render-montage 4-step, u4 CTA 8-step dialogue), 960x544x121, deployed via base64 push (upload_file lands nowhere findable - b64+sha256 verified instead), worker self-contained: torchaudio fix -> ComfyUI boot (39s vs 20-25min Kaggle setup) -> render -> upload storage campaign/v20/<id>.mp4 -> self-stop. u1 rendering (VRAM 5.4GB). ETA ~13-14h.
+- ORCHESTRATOR RECONCILED: Kaggle restore now site-worker ONLY (all 6 accounts, ground probe = site-worker push); v2-c01 campaign kernel push REMOVED (obsolete 60s plan - no double-render). Brain: REST-only lightning_watch added (cloudspaces state + machine + balance + running-hours alert), wired both loop+single-pass; brain relaunched setsid (5348), orchestrator auto-resurrected (5361).
+- LIVE SITE TRUTH: 429s to bare curl = Cloudflare managed challenge in front of deyoungltd.site (browser-UA fetch = HTTP 200 railway-hikari jfk1; headless Chromium = Turnstile checkbox). Real users pass; flag to owner for launch friction. App-level W3 studio = deployed (f4a53ff CI success).
+- Pushed 0f7d704, CI success.
+
+Stage Summary:
+- Lightning T4 = ACTIVE render plane; c20 20s UGC launch film rendering with self-stop credit guard; Kaggle auto-joins as 6x site-worker queue capacity at quota reset; brain+orchestrator+watcher all live.
+- Admin password handed to owner: admin@deyoung.site / XM0Gfxp0fHX0zFszrqUP!c0e1 (chat-exposed -> rotate after owner's first login).
+- Owed next: Lightning queue-worker port (v4 claim path on the T4 node for user renders), campaign scene concat+voiceover assembly after u1-u4 land, Cloudflare challenge tuning decision, HF ZeroGPU = storage-only (honest verdict stands).
