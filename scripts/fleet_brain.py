@@ -357,6 +357,69 @@ def ensure_orchestrator():
         log(f"orch ensure error: {type(e).__name__}: {e}")
 
 
+def lightning_watch():
+    """Task 55: REST-only Lightning deyoung-h3 watcher (NO lightning_sdk in
+    background - SDK/gRPC background processes get reaped silently; plain
+    requests to Lightning REST are proven safe). Logs state + balance to
+    brain/lightning_watch.json every pass. The c20 worker self-stops the
+    studio when finished/fatal (proven); this watcher is the evidence trail
+    + hard-cap alarm, NOT the primary credit guard."""
+    import json as _json
+    try:
+        import requests
+        lf = pathlib.Path("/home/z/my-project/workers/secrets/lightning_tokens.json")
+        key = _json.loads(lf.read_text())["keys"][0]
+        hdr = {"Authorization": f"Bearer {key['key']}"}
+        base = key.get("cloud_url", "https://lightning.ai")
+        out = {"checked": now()}
+        r = requests.get(f"{base}/v1/projects/{key['teamspace_id']}/cloudspaces", headers=hdr, timeout=25)
+        if r.status_code == 200:
+            for cs in r.json().get("cloudspaces", []):
+                if cs.get("name") == "deyoung-h3":
+                    out["state"] = cs.get("state")
+                    out["id"] = cs.get("id")
+                    inu = (cs.get("codeStatus") or {}).get("inUse") or {}
+                    out["instance_phase"] = inu.get("phase")
+                    out["machine"] = ((inu.get("computeConfig") or {}).get("name"))
+                    out["running_since"] = inu.get("startTimestamp")
+        rm = requests.get(f"{base}/v1/memberships", headers=hdr, timeout=25)
+        if rm.status_code == 200:
+            for m in rm.json().get("memberships", []):
+                if m.get("projectId") == key["teamspace_id"]:
+                    out["balance"] = m.get("balance")
+        stf = pathlib.Path("/home/z/my-project/brain/lightning_c20_evidence.json")
+        if stf.exists():
+            try:
+                ev = _json.loads(stf.read_text())
+                out["c20_phase"] = (ev.get("summary") or {}).get("phase") or ev.get("c20_phase")
+            except Exception:
+                pass
+        wf = pathlib.Path("/home/z/my-project/brain/lightning_watch.json")
+        prev = {}
+        if wf.exists():
+            try:
+                prev = _json.loads(wf.read_text())
+            except Exception:
+                pass
+        # hard-cap alarm: >20h continuous Running without self-stop = alert loudly
+        if str(out.get("instance_phase", "")).upper().endswith("RUNNING"):
+            t0 = out.get("running_since")
+            if t0:
+                try:
+                    import datetime
+                    t = datetime.datetime.fromisoformat(t0.replace("Z", "+00:00"))
+                    hrs = (datetime.datetime.now(datetime.timezone.utc) - t).total_seconds() / 3600
+                    out["running_hours"] = round(hrs, 1)
+                    if hrs > 20:
+                        out["ALERT"] = "studio running >20h - worker self-stop failed; manual stop needed"
+                        log("LIGHTNING ALERT: " + out["ALERT"])
+                except Exception:
+                    pass
+        wf.write_text(_json.dumps(out, indent=1))
+    except Exception as e:
+        log(f"lightning_watch error: {type(e).__name__}: {str(e)[:140]}")
+
+
 def main():
     no_fetch = "--no-fetch" in sys.argv
     if "--loop" in sys.argv:
@@ -372,6 +435,7 @@ def main():
                 st = load_state()
                 relaunch_step(st)
                 ensure_orchestrator()
+                lightning_watch()
                 save_state(st)
             except KeyboardInterrupt:
                 break
@@ -383,6 +447,7 @@ def main():
         print(f"pass done; changes: {ch if ch else 'none'}")
         st = load_state()
         relaunch_step(st)
+        lightning_watch()
         save_state(st)
 
 

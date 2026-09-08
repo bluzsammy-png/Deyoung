@@ -1,0 +1,11 @@
+{
+ "checked": "2026-09-08T22:09:28Z",
+ "state": "CLOUD_SPACE_STATE_READY",
+ "id": "01m1tbnqb27z1fxg028awwttk2",
+ "instance_phase": "CLOUD_SPACE_INSTANCE_STATE_RUNNING",
+ "machine": "g4dn.2xlarge",
+ "running_since": "2026-09-08T22:01:15Z",
+ "balance": 24.960592709171824,
+ "c20_phase": null,
+ "running_hours": 0.1
+}

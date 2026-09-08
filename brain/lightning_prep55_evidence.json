@@ -1,0 +1,9 @@
+{
+ "status": "Stopping",
+ "updated_at": "2026-09-08T22:06:36Z",
+ "switch": "T4 requested",
+ "at": "2026-09-08T22:06:30Z",
+ "machine": "T4",
+ "gpu": "Tesla T4, 15360 MiB",
+ "start_seconds": 68.4
+}

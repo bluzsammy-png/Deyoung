@@ -1,0 +1,12 @@
+{
+ "started_at": "2026-09-08T21:47:04Z",
+ "balance_before": 25.33,
+ "updated_at": "2026-09-08T21:47:42Z",
+ "machine": "T4",
+ "gpu": "Tesla T4, 15360 MiB",
+ "fatal": "no GPU visible inside studio",
+ "gpu_raw": "zsh: command not found: nvidia-smi",
+ "worker_uploaded": true,
+ "launched": "LAUNCHED_PID=5236",
+ "launched_at": "2026-09-08T21:47:42Z"
+}

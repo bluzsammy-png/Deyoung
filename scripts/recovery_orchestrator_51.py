@@ -95,11 +95,15 @@ def main():
     while True:
         try:
             if st["phase"] == "ground":
-                ok, msg = push_kernel(CAMP, st["probe_account"], "deyoung-v2-c01")
-                log(f"ground probe {st['probe_account']}: {'QUOTA-BACK' if ok else msg}")
+                # Task 55: probe with a SITE WORKER push (v4) instead of the old
+                # campaign kernel - the 20s UGC launch cut now renders on the
+                # Lightning T4 node, and Kaggle must join ONLY the user queue.
+                acct = st["probe_account"]
+                ok, msg = push_site_worker(acct)
+                log(f"ground probe {acct}: {'QUOTA-BACK' if ok else msg}")
                 if ok:
                     st["phase"] = "restore"
-                    st["restored"]["campaign"] = {"account": st["probe_account"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
+                    st.setdefault("restored", {}).setdefault("site_workers", {})[acct] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
                     save_state(st)
                     continue
                 # Task 54-c: rotate on QUOTA too - one drained account must not
@@ -123,19 +127,10 @@ def main():
                 continue
 
             if st["phase"] == "restore":
-                if "campaign" not in st["restored"]:
-                    for acct in ["youngwilly", "teslaprime", "wikeyoung5", "jimcreat", "bittrexminingltd", "deyoungsltd"]:
-                        ok, msg = push_kernel(CAMP, acct, "deyoung-v2-c01")
-                        log(f"campaign push {acct}: {'OK' if ok else msg}")
-                        if ok:
-                            st["restored"]["campaign"] = {"account": acct, "at": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
-                            break
-                        if msg == "QUOTA":
-                            continue
-                    if "campaign" not in st["restored"]:
-                        st["phase"] = "ground"
-                        save_state(st); time.sleep(POLL_SEC); continue
-                for acct in ["teslaprime", "wikeyoung5"]:
+                # Task 55: NO campaign-kernel push anymore (v2-c01 = obsolete 60s
+                # plan; the UGC cut renders on Lightning). Kaggle restores as
+                # site-worker capacity on ALL 6 accounts.
+                for acct in ["youngwilly", "teslaprime", "wikeyoung5", "jimcreat", "bittrexminingltd", "deyoungsltd"]:
                     if acct in st["restored"].get("site_workers", {}):
                         continue
                     ok, msg = push_site_worker(acct)
