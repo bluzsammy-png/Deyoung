@@ -20,6 +20,7 @@ Usage:
 """
 import json
 import os
+import pathlib
 import subprocess
 import sys
 import time
@@ -339,6 +340,23 @@ def relaunch_step(st):
             relaunch_log(f"WAVE2 DONE: pushed {len(rl['wave2']['pushed'])}/6 -> {list(rl['wave2']['pushed'].values())}")
 
 
+def ensure_orchestrator():
+    """Task 54-c: keep the recovery orchestrator alive — instances kept dying
+    to sandbox process reaping. Idempotent, boot-script style (the plain
+    nohup-from-exiting-parent pattern proven to survive)."""
+    import subprocess
+    pidf = pathlib.Path("/home/z/my-project/brain/recovery51.pid")
+    try:
+        if pidf.exists():
+            p = pidf.read_text().strip()
+            if p and subprocess.run(["kill", "-0", p], capture_output=True).returncode == 0:
+                return
+        subprocess.run(["bash", "/home/z/my-project/scripts/orch_boot.sh", "start"],
+                       capture_output=True, timeout=30)
+    except Exception as e:
+        log(f"orch ensure error: {type(e).__name__}: {e}")
+
+
 def main():
     no_fetch = "--no-fetch" in sys.argv
     if "--loop" in sys.argv:
@@ -353,6 +371,7 @@ def main():
                     print(f"[{now()}] no changes")
                 st = load_state()
                 relaunch_step(st)
+                ensure_orchestrator()
                 save_state(st)
             except KeyboardInterrupt:
                 break
