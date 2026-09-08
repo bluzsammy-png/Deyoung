@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  @page { size: 794px 1123px; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #f2f2f0; }
+  .poster {
+    position: relative;
+    width: 794px; height: 1123px;
+    background: #f2f2f0;
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    color: #1a1917;
+    border: none; outline: none; box-shadow: none;
+  }
+  /* ---- Layer 1: background grid (clipped) ---- */
+  .layer1 {
+    position: absolute; inset: 0; overflow: hidden; z-index: 1;
+    background-image:
+      linear-gradient(rgba(97, 87, 60, 0.05) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, rgba(97, 87, 60, 0.05) 0.5px, transparent 0.5px);
+    background-size: 50px 50px;
+  }
+  /* ---- Layer 2: structure ---- */
+  .layer2 { position: absolute; inset: 0; z-index: 2; }
+  .anchor-line {
+    position: absolute;
+    left: 95px; top: 112px;
+    width: 8px; height: 899px;
+    background: #61573c;
+  }
+  /* ---- Layer 3: content ---- */
+  .layer3 { position: absolute; inset: 0; z-index: 3; }
+  .kicker {
+    position: absolute; left: 162px; top: 168px;
+    font-size: 16pt; font-weight: 400;
+    letter-spacing: 3pt; text-transform: uppercase;
+    color: rgba(26, 25, 23, 0.6);
+    max-width: 560px;
+  }
+  .hero1 {
+    position: absolute; left: 162px; top: 300px;
+    font-size: 76pt; font-weight: 900;
+    line-height: 1.15; letter-spacing: 1px;
+    color: #1a1917;
+    max-width: 600px;
+  }
+  .hero2 {
+    position: absolute; left: 162px; top: 434px;
+    font-size: 76pt; font-weight: 300;
+    line-height: 1.15; letter-spacing: 1px;
+    color: #61573c;
+    max-width: 600px;
+  }
+  .summary {
+    position: absolute; left: 162px; top: 578px;
+    font-size: 17pt; font-weight: 400;
+    line-height: 1.6; color: rgba(26, 25, 23, 0.85);
+    max-width: 476px;
+  }
+  .meta1 {
+    position: absolute; left: 162px; top: 852px;
+    font-size: 18pt; font-weight: 500;
+    line-height: 1.5; color: #1a1917;
+  }
+  .meta2 {
+    position: absolute; left: 162px; top: 900px;
+    font-size: 16pt; font-weight: 300;
+    line-height: 1.5; color: rgba(26, 25, 23, 0.65);
+  }
+  .footer {
+    position: absolute; left: 162px; top: 1030px;
+    font-size: 16pt; font-weight: 400;
+    letter-spacing: 3pt; text-transform: uppercase;
+    color: rgba(26, 25, 23, 0.6);
+  }
+  @media screen {
+    html { background: #f2f2f0; }
+    body { display: flex; justify-content: center; }
+    .poster { transform-origin: top center; transform: scale(0.8); }
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="layer1"></div>
+  <div class="layer2">
+    <div class="anchor-line"></div>
+  </div>
+  <div class="layer3">
+    <div class="kicker">Infrastructure Research &middot; Fleet Expansion 2026</div>
+    <div class="hero1">DEYOUNG</div>
+    <div class="hero2">GPU FLEET</div>
+    <div class="summary">A verified map of every free and low-cost cloud GPU that can join the render fleet &mdash; what each offers with no credit card, how each one is automated, and the exact capacity math for turning the first paying users into render speed.</div>
+    <div class="meta1">DeYoung Ltd &mdash; Operations AI</div>
+    <div class="meta2">Fleet Engineering &middot; deyoungltd.site &middot; September 2026</div>
+    <div class="footer">Verified Sources &middot; No Mock Data</div>
+  </div>
+</div>
+</body>
+</html>
