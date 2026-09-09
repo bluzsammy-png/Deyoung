@@ -1037,3 +1037,24 @@ Work Log:
 Stage Summary:
 - 6-poster cinematic social kit delivered: brand poster, pricing flyer, story promo, X/LinkedIn banner, launch-film promo (real film frame), trust card — all in the site's black/red design language, all copy real, all visually verified by me before delivery.
 - Pipeline persisted (HTML/CSS -> Playwright) so new sizes/variants are one-file edits; backgrounds reusable for future site art.
+
+---
+Task ID: 60
+Agent: main (Super Z)
+Task: Owner asked to put all the social flyers in a separate section on the admin panel for easy access.
+
+Work Log:
+- ASSETS SHIPPED INTO THE SITE: Task 59's 6 flyer PNGs + captions file + the all-in-one ZIP copied to public/flyers/ (now git-tracked; download/social/ stays ignored as the local drop). Dev-server asset proof: all 4 spot-checks HTTP 200 with byte-identical sizes (poster 1,138,840B; story 1,778,465B; trust 651,846B; ZIP 6,234,868B application/zip).
+- NEW TAB "Social Flyers" (Megaphone icon, placed after Premieres) in admin-app.tsx; component in NEW file src/components/site/admin/admin-flyers.tsx. No DB needed — fixed campaign manifest.
+- SECTION FEATURES (built for posting speed): intro explainer; responsive grid of 6 cards — real preview thumbnails, title, platform chip (IG/FB feed, square, Stories/Reels/TikTok/WhatsApp, X/LinkedIn/YouTube), exact dims chip (4:5 / 1:1 / 9:16 / 16:9), one-line blurb; per-card "PNG" download (download attribute) + "Caption" button that copies the ready-to-post caption WITH hashtags to clipboard (green check + toast feedback); header "Download all (ZIP)"; click-to-preview lightbox (full-size image on dark, title + dims + platform, Download PNG + Copy caption inside).
+- CAPTIONS: mirrored verbatim from download/social/README-captions.txt (all real site copy; Trust card caption written from the site's own promise lines). Nothing invented.
+- QA LOOP: tsc --noEmit clean (0 src errors); browser E2E on dev — real form login -> Social Flyers tab -> grid renders all 6 -> lightbox opens -> Copy caption shows green "Copied" state (clipboard write verified in-session; headless blocks clipboard READ so state badge is the proof). No console errors from the component (only pre-existing dev Turnstile warning).
+- DEPLOY + PROD EVIDENCE: commit 726818f pushed 11:40Z -> CI gitleaks SUCCESS; Railway deployment b2681dd1 BUILDING->DEPLOYING->SUCCESS (polled via GraphQL; note: Railway schema changed — DeploymentMeta is now scalar, meta{...} subfield selections 400; fixed in new scripts/railway_watch_60.py).
+- PROD BROWSER E2E (agent-browser, real browser): https://deyoungltd.site/#admin login OK -> Social Flyers tab present -> ALL 6 preview buttons found -> cards render with images -> Story Promo lightbox opens full-size. Prod asset fetch from sandbox edge: /flyers/deyoung-poster-4x5.png HTTP 200 byte-identical + /flyers/deyoung-social-flyers.zip HTTP 200 (static assets pass the edge; only HTML pages get the sandbox-IP challenge).
+- Screenshots: brain/qa_admin_flyers_60.png (dev grid), qa_admin_flyers_lightbox_60.png (dev lightbox), qa_admin_flyers_copied2_60.png (copied state), qa_prod_flyers_60.png (PROD section top), qa_prod_flyers_grid_60.png (PROD all-6 grid), qa_prod_flyers_lightbox_60.png (PROD lightbox). All committed.
+- Observed (cosmetic, no action): after admin sign-in the header shows the owner seat email deyoungsltd@gmail.com — /api/auth/me resolves the admin session to the Google-promote seat display; sign-in itself was admin@deyoung.site and works everywhere.
+
+Stage Summary:
+- Social Flyers is a permanent admin section: owner can now grab any poster + its caption in ~3 seconds and post. Prod-proven end to end with screenshots.
+- The 12.4MB asset drop rides in the repo, so future rebuilds/selfheals keep the section intact.
+- Owed unchanged: Lightning render-queue port (12.75 credits), free-cloud-GPU ranked research, credential rotation after owner's first self-set password.
