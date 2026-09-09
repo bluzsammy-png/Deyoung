@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3, CalendarCheck, Camera, Chrome, Clapperboard, Film, Image as ImageIcon, LayoutDashboard, Lock, LogOut,
-  Mail, MessageSquareQuote, Popcorn, Settings as SettingsIcon, ShieldAlert, Sparkles, UserCog, Users, Wand2, Wallet,
+  Mail, Megaphone, MessageSquareQuote, Popcorn, Settings as SettingsIcon, ShieldAlert, Sparkles, UserCog, Users, Wand2, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,14 @@ import {
 import { AdminPlans, AdminRequests, AdminSubscribers } from "./admin-subs";
 import { AdminUsers } from "./admin-users";
 import { AdminPremieres } from "./admin-premieres";
+import { AdminFlyers } from "./admin-flyers";
 import { StudioView } from "../studio-view";
 
 type Me = { authenticated: boolean; email?: string; usingDefaultPassword?: boolean };
 
 type TabKey =
   | "overview" | "plans" | "subscribers" | "users" | "requests" | "bookings" | "messages" | "photos" | "services"
-  | "premieres" | "studio" | "content" | "payments" | "settings" | "security";
+  | "premieres" | "flyers" | "studio" | "content" | "payments" | "settings" | "security";
 
 const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "messages", label: "Messages", icon: Mail },
   { key: "photos", label: "Photos", icon: ImageIcon },
   { key: "premieres", label: "Premieres", icon: Popcorn },
+  { key: "flyers", label: "Social Flyers", icon: Megaphone },
   { key: "services", label: "Services", icon: Camera },
   { key: "content", label: "Reviews & FAQ", icon: MessageSquareQuote },
   { key: "payments", label: "Payments", icon: Wallet },
@@ -150,6 +152,7 @@ export function AdminApp() {
           {tab === "messages" && <AdminMessages />}
           {tab === "photos" && <AdminPhotos />}
           {tab === "premieres" && <AdminPremieres />}
+          {tab === "flyers" && <AdminFlyers />}
           {tab === "services" && <AdminServices />}
           {tab === "content" && <AdminContentTab />}
           {tab === "payments" && <AdminPayments />}
