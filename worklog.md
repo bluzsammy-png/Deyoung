@@ -947,3 +947,26 @@ Stage Summary:
 - Lightning T4 = ACTIVE render plane; c20 20s UGC launch film rendering with self-stop credit guard; Kaggle auto-joins as 6x site-worker queue capacity at quota reset; brain+orchestrator+watcher all live.
 - Admin password handed to owner: admin@deyoung.site / XM0Gfxp0fHX0zFszrqUP!c0e1 (chat-exposed -> rotate after owner's first login).
 - Owed next: Lightning queue-worker port (v4 claim path on the T4 node for user renders), campaign scene concat+voiceover assembly after u1-u4 land, Cloudflare challenge tuning decision, HF ZeroGPU = storage-only (honest verdict stands).
+
+---
+Task ID: 56
+Agent: main (Super Z)
+Task: Owner order — stitch the 4 scenes + voiceover into the final 20s UGC launch film.
+
+Work Log:
+- REBUILD #5 RECOVERED: uptime 8min on boot-check, workers/secrets gone, brain/orch dead -> git fetch+reset to 2440149, selfheal restored vault (7 secret files + .env.local, 0600), brain (pid 1420) + orchestrator (pid 1453) relaunched; ground probe youngwilly QUOTA (fleet grounded until Sat window).
+- C20 ATTEMPT #1 VERDICT (live REST evidence): storage campaign/v20/ EMPTY (0/4 scenes ever uploaded); deyoung-h3 studio STOPPED (compute count=0); balance 25.33 -> 15.89 = ~8.2 credits (~7h T4) burned overnight with zero delivered scenes. T4 too slow for 121-frame H3 renders; platform 600s idle-sleep cut the run. Lightning remains wired for the future render-queue port, NOT for this film.
+- DECISION: render the launch film via the proven z-ai video pipeline (same family as shipped v3 film) instead of pouring more Lightning credits into a multi-hour T4 gamble.
+- FILM BUILT (campaign/film/v20/): creator still (z-ai image, 768x1344, UGC selfie w/ LED glow) -> u1/u4 = i2v from the SAME still (character continuity) with lip-synced dialogue prompts (proven film_run.mjs SAY pattern); u2/u3 = t2v silent UI/montage shots. All 4 scenes 768x1344@30 ~5.1-5.2s, quality mode.
+- SANDBOX LAW CONFIRMED: plain-nohup node runners die silently (~min 3, no traceback) while boot-script processes survive -> drove renders in FOREGROUND resumable calls (state tasks-v20.json); 429 concurrency limit self-serialized submits; ALL 4 SCENES DONE in 3 foreground calls (~30 min wall).
+- VOICEOVER: z-ai TTS (proven v2/v5 narrator pattern) — chuichui @0.95-1.15: vo2 "The studio writes the script and boards every scene." (3.11s), vo3 "Then the GPU fleet renders it live - scene by scene." (3.88s) + dialogue lines line_u1 (3.50s) / line_u4 (4.17s). ASR QA caught CRITICAL: u1 model-generated in-scene speech was GARBAGE ("a band called the rainbow") -> replaced both in-scene dialogue tracks with clean TTS of the exact lines (same voice = whole film reads as HER narration = the UGC style owner asked for).
+- MUSIC: scripts/film_v20_music.py (adapted from shipped v3 synth): 21s 106BPM lo-fi bounce Am7-Fmaj7-C-G, kick/hats/bass/pluck + end shimmer, mixed at 0.17.
+- ASSEMBLE (scripts/film_v20_assemble.py): 4 scenes -> 1080x1920@30 crop/scale/trim-to-probed-duration, concat; burned UGC captions (Archivo Black) per scene + fading deyoungltd.site endcard; audio = 4 TTS segments (adelay at scene bounds, vol 2.0) + music bed, amix normalize=0, loudnorm I=-14 TP=-1.5, afade out; h264 crf18 medium + aac 192k + faststart.
+- NOTE: ffmpeg encode completes (~4-5 min under cgroup CPU throttle) but the python wrapper hangs post-run and the Bash timeout kills the shell -> output file was verified complete each time (ffprobe duration + full decode clean rc=0); re-check file mtime instead of trusting wrapper exit.
+- QA (evidence): duration 20.70s; 1080x1920 h264 30fps + aac 44.1k stereo; 5-frame contact sheet visually verified (same creator u1/u4, captions + endcard legible); per-segment volumedetect -15..-21dB; ASR on final mix: u1 "I typed one sentence and got a whole video" / vo2 "The studio writes the script and boards every scene." / u4 "type it, watch it, post it" — ALL INTELLIGIBLE.
+- DELIVERED: download/deyoung-ugc-launch-20s.mp4 (17.8MB) + download/deyoung-ugc-20s-preview.png (5-frame sheet); uploaded to Supabase storage campaign/v20/final-ugc-launch-20s.mp4 + u1-u4.mp4 (all HTTP 200 upsert) — survives sandbox rebuilds.
+
+Stage Summary:
+- Final 20.7s vertical UGC launch film SHIPPED + VERIFIED (4 scenes, her narration throughout, captions, domain endcard, -14 LUFS mix); assets persisted to storage campaign/v20/.
+- Lightning c20 path: attempt #1 = 8.2 credits, 0 scenes (T4 economics dead for 5s H3 renders); film delivered via z-ai pipeline instead; Lightning kept for the site render-queue port (owed).
+- Fleet: all-6 Kaggle QUOTA until Sat window (orchestrator rotating, auto-restores v4 site-workers); brain + lightning watcher live; admin password already handed in Task 55 (rotate after owner first login).
