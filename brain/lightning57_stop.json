@@ -1,0 +1,27 @@
+{
+ "ts": "2026-09-09T09:29:08Z",
+ "balance_before": 12.77,
+ "before": {
+  "id": "01m1tbnqb27z1fxg028awwttk2",
+  "state": "CLOUD_SPACE_STATE_READY",
+  "instance_phase": null,
+  "machine": null,
+  "running_since": null
+ },
+ "stop_http": 200,
+ "after": {
+  "id": "01m1tbnqb27z1fxg028awwttk2",
+  "state": "CLOUD_SPACE_STATE_READY",
+  "instance_phase": null,
+  "machine": null,
+  "running_since": null
+ },
+ "balance_after": 12.774880420824152,
+ "ts_done": "2026-09-09T09:29:32Z",
+ "verify_read": {
+  "state": "CLOUD_SPACE_STATE_READY",
+  "instance_phase": null,
+  "balance": 12.75,
+  "ts": "2026-09-09T09:30:32Z"
+ }
+}

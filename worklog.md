@@ -970,3 +970,20 @@ Stage Summary:
 - Final 20.7s vertical UGC launch film SHIPPED + VERIFIED (4 scenes, her narration throughout, captions, domain endcard, -14 LUFS mix); assets persisted to storage campaign/v20/.
 - Lightning c20 path: attempt #1 = 8.2 credits, 0 scenes (T4 economics dead for 5s H3 renders); film delivered via z-ai pipeline instead; Lightning kept for the site render-queue port (owed).
 - Fleet: all-6 Kaggle QUOTA until Sat window (orchestrator rotating, auto-restores v4 site-workers); brain + lightning watcher live; admin password already handed in Task 55 (rotate after owner first login).
+
+---
+Task ID: 57
+Agent: main (Super Z)
+Task: Owner asked "All done?" — verify all deliverables live post-rebuild, restore the session, and enforce the credit guard.
+
+Work Log:
+- REBUILD #6 confirmed (uptime 4 min): workers/secrets/, .env.local, download/ all gone; brain/orch dead. Recovery drill: Task 56 checkpoint 10cd3a6 was UNPUSHED (remote was 2440149) -> pushed FIRST (2440149..10cd3a6, film scripts + state now survive rebuilds), then selfheal restored 7 secret files + .env.local (0600), brain (pid 1381) + orchestrator (pid 1403) relaunched; ground probe youngwilly QUOTA (fleet grounded until ~Sat 00:00 UTC, auto-restores).
+- FILM RE-VERIFIED post-rebuild: re-downloaded campaign/v20/final-ugc-launch-20s.mp4 from Supabase storage (HTTP 200, 17,774,784 bytes) -> ffprobe: 1080x1920 h264 30fps + AAC, duration EXACTLY 20.700s; regenerated 5-frame contact sheet and visually confirmed (same creator u1/u4, captions legible, deyoungltd.site endcard). download/deyoung-ugc-launch-20s.mp4 + deyoung-ugc-20s-preview.png restored locally.
+- CREDIT GUARD ENFORCED (owner's own rule): brain lightning_watch showed deyoung-h3 studio with a T4 attached since Sep 8 22:01Z (~11.4h) with NO work (c20 abandoned after Task 56 verdict) — idle-burning at ~1.5 credits/h. New lightning_sdk install resolved org differently (404 Organization) -> switched to PURE REST per installed openapi: POST /v1/projects/{pid}/cloudspaces/{id}/stop -> HTTP 200. Verified stopped: instance_phase=None, machine=None, compute count=0. Balance evidence: 12.83 -> 12.75 (was burning during stop call; now flat). 12.75 credits (~10.6h T4) preserved for the owed render-queue port. Evidence brain/lightning57_stop.json.
+- lightning_sdk reinstalled into /home/z/.venv (rebuild wiped it); scripts/lightning_idle_stop_57.py persisted (REST-only, no SDK dependency, secrets env-passed).
+- Live site: bare fetch from sandbox = edge 429 (known Cloudflare challenge on this IP; real users pass per Task 55 evidence).
+
+Stage Summary:
+- Every Task 53-56 deliverable re-verified live after rebuild #6; nothing lost (Task 56 commit now pushed).
+- Idle Lightning T4 stopped — 12.75 credits preserved; guard scripts persisted for the render-queue port.
+- Still owed: Lightning queue-worker port (v4 claim path), free-cloud-GPU ranked research, credential rotation (admin pw + Lightning key chat-exposed).
