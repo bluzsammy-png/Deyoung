@@ -945,7 +945,7 @@ Work Log:
 
 Stage Summary:
 - Lightning T4 = ACTIVE render plane; c20 20s UGC launch film rendering with self-stop credit guard; Kaggle auto-joins as 6x site-worker queue capacity at quota reset; brain+orchestrator+watcher all live.
-- Admin password handed to owner: admin@deyoung.site / XM0Gfxp0fHX0zFszrqUP!c0e1 (chat-exposed -> rotate after owner's first login).
+- Admin password handed to owner: admin@deyoung.site / <redacted — rotated 2026-09-09, see Task 58> (chat-exposed -> rotate after owner's first login).
 - Owed next: Lightning queue-worker port (v4 claim path on the T4 node for user renders), campaign scene concat+voiceover assembly after u1-u4 land, Cloudflare challenge tuning decision, HF ZeroGPU = storage-only (honest verdict stands).
 
 ---
