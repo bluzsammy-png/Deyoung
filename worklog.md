@@ -1017,3 +1017,5 @@ Work Log:
 
 Stage Summary:
 - The 20s UGC launch film is now the FIRST thing on the public film wall and the hero film band on the landing page. Deploy pending -> verify on prod.
+
+- DEPLOY EVIDENCE (58-b follow-up): CI success for 7ce5bae; Railway deployment 3718aeea status=SUCCESS at 2026-09-09T10:35:33Z (staticUrl deyoungltd.site) via GraphQL. Sandbox edge 429 on prod fetch (known Cloudflare IP challenge; agent-browser Turnstile re-confirmed blocked for headless) — prod page paint must be owner-verified in a real browser; DB + deploy + CI evidence all green.
