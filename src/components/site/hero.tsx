@@ -186,26 +186,44 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
       <div className="relative mx-auto max-w-6xl px-4 pb-16" data-depth="6">
         <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-white/70">
           <span className="h-2 w-2 bg-primary inline-block" aria-hidden />
-          Watch the 60-second film — Amara &amp; Kojo
+          The 20-second launch film — one sentence in, a real film out
         </p>
         <TiltCard max={4} lift={8} className="group relative">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#DC2626] via-[#7F1D1D] to-[#DC2626] opacity-60 blur-[6px] rounded-sm" aria-hidden />
-          <div className="relative border border-white/15 bg-black">
-            <video
-              src="/video/deyoung-film-web.mp4?v=5"
-              poster="/img/film-poster.jpg"
-              controls
-              loop
-              playsInline
-              preload="metadata"
-              className="w-full aspect-video"
-              aria-label="DeYoung 60-second AI film trailer"
-            />
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="dy-glass rounded-full h-16 w-16 flex items-center justify-center">
-                <Play className="h-6 w-6 text-white fill-white" aria-hidden />
+          <div className="relative flex flex-col items-center gap-4 border border-white/15 bg-black p-4 sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
+            <div className="relative w-full max-w-[300px] shrink-0">
+              <video
+                src="/video/deyoung-launch-20s.mp4?v=1"
+                poster="/img/launch-film-poster.jpg"
+                controls
+                loop
+                playsInline
+                preload="metadata"
+                className="w-full aspect-[9/16] object-cover"
+                aria-label="DeYoung 20-second UGC launch film"
+              />
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="dy-glass rounded-full h-16 w-16 flex items-center justify-center">
+                  <Play className="h-6 w-6 text-white fill-white" aria-hidden />
+                </span>
               </span>
-            </span>
+            </div>
+            <div className="flex flex-col justify-center gap-3 text-left">
+              <p className="text-lg font-black uppercase tracking-tight text-white sm:text-2xl">
+                &ldquo;I typed ONE sentence&hellip;&rdquo;
+              </p>
+              <p className="max-w-sm text-sm text-white/70">
+                The real launch film: script, cast, storyboard, GPU render —
+                captioned UGC style, straight out of the studio on this site.
+                Sound on.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/50">
+                <span className="bg-white/10 px-2 py-1">4 scenes</span>
+                <span className="bg-white/10 px-2 py-1">Voiceover</span>
+                <span className="bg-white/10 px-2 py-1">1080×1920</span>
+                <span className="bg-white/10 px-2 py-1">Made in DeYoung</span>
+              </div>
+            </div>
           </div>
         </TiltCard>
       </div>

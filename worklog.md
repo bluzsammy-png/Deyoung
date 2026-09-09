@@ -1003,3 +1003,17 @@ Work Log:
 Stage Summary:
 - Owner sign-in is FIXED and PROVEN at three levels (direct scrypt vs DB, app route vs prod DB, real browser form -> console -> W3 studio screenshot). New credential handed in chat (chat-exposed -> rotate after owner's first login; warning badge in console is expected until they set their own).
 - Owed unchanged: Lightning render-queue port, free-GPU research, Railway ADMIN_BOOTSTRAP_PASSWORD env alignment on next deploy window (bootstrap skips existing rows so no urgency).
+
+---
+Task ID: 58-b
+Agent: main (Super Z)
+Task: Owner asked "Where's the new campaign video? I can only see old things" — wire the 20s launch film INTO the site.
+
+Work Log:
+- GAP TRUTH: the Task-56 film lived only in storage + local download/ — it was NEVER wired into any page, so the site showed only the old 60s film (hero band) + old premieres. Owner complaint valid.
+- WIRED IN (following the site's own conventions): (1) public/video/deyoung-launch-20s.mp4 (17.8MB, same pattern as the 15.5MB deyoung-film-web.mp4) + extracted poster public/img/launch-film-poster.jpg (66KB); (2) hero.tsx film band rebuilt — old 60s "Amara & Kojo" band replaced by the 20s UGC film in a vertical 9:16 player (poster + controls + hover play chip) with launch copy ("I typed ONE sentence…", 4 scenes / voiceover / 1080×1920 / Made in DeYoung chips); (3) prod Premiere row prm-launch-ugc-20s INSERTED (featured=true pins FIRST on the public Premieres/Work wall) and the old "The DeYoung Film" un-featured (still published).
+- QA: src tsc clean (0 errors; scripts/skills warnings pre-existing); dev landing shows the new <video> element with poster + label (browser-eval verified); screenshot brain/qa_hero_launch_film_58.png; range-request on /video/deyoung-launch-20s.mp4 = 206.
+- Premiere wall feed order verified in DB: featured launch film first, old items after.
+
+Stage Summary:
+- The 20s UGC launch film is now the FIRST thing on the public film wall and the hero film band on the landing page. Deploy pending -> verify on prod.
