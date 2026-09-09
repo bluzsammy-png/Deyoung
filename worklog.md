@@ -987,3 +987,19 @@ Stage Summary:
 - Every Task 53-56 deliverable re-verified live after rebuild #6; nothing lost (Task 56 commit now pushed).
 - Idle Lightning T4 stopped — 12.75 credits preserved; guard scripts persisted for the render-queue port.
 - Still owed: Lightning queue-worker port (v4 claim path), free-cloud-GPU ranked research, credential rotation (admin pw + Lightning key chat-exposed).
+
+---
+Task ID: 58
+Agent: main (Super Z)
+Task: Owner reported "can't sign in to the admin panel, no change made" — root-cause, fix, E2E-verify.
+
+Work Log:
+- ROOT CAUSE (verified, not guessed): the password handed over in Task 55 (from vault .env.local ADMIN_BOOTSTRAP_PASSWORD) does NOT match either prod hash. scrypt-verify against Supabase: Admin row match=false AND User row match=false. The Admin row was seeded 2026-09-06 with an older bootstrap value and ensureOwnerAdmins() skips existing rows — the env value was never the live credential. Task 55's handover was an UNVERIFIED claim — process failure, now fixed with verified handover only.
+- FIX (both sign-in paths): reset Admin.passwordHash AND User.passwordHash for admin@deyoung.site to a NEW generated password using the repo's exact scheme (scrypt$salt$hash, scryptSync 64). Post-reset verify via direct scrypt compare: match=true on both rows. deyoungsltd@gmail.com (Google-promote row) untouched.
+- APP-LEVEL E2E vs PROD DB: ran the app locally with the generated postgres Prisma client + .env.local DATABASE_URL (Supabase). POST /api/auth/user-login (the site sign-in form route) -> 200 {"user":{...,"role":"admin","name":"Kennedy Wike-young"}}; POST /api/auth/login (admin route) -> 200 {"authenticated":true}. Session endpoint confirms admin role. Browser E2E: real form login -> OWNER CONSOLE renders (recent renders + studio projects) -> Open AI Film Studio -> W3 workstation screenshot brain/qa_admin_login_studio_58.png (Brief Console / Workflow Canvas / Render Queue / Owner rig all present). The "no change made" impression = the owner could not sign in; the workstation UI only appears after login. Production deployment has carried the W3 UI since f4a53ff (Task 53 GraphQL-verified SUCCESS); no UI-affecting commits since.
+- DEBUGGING ARTIFACTS EXPOSED + HANDLED: (1) the sandbox dev server booted BEFORE selfheal with global DATABASE_URL=file:db/custom.db (shell env beats .env.local; Next dev also caches env in .next/dev) — it served SQLITE, where Admin existed (created at first login by ensureAdmin with env bootstrap pw) and User was EMPTY — every dev-side user-login 401 was a red herring; wiped .next/dev, forced the postgres URL, proved prod-DB logins, then regenerated the sqlite client and restored the sandbox dev state. (2) Turbopack "Invalid datasource URL" on restart — caused by the same global env var; documented.
+- HYGIENE: prod RateLimit login/ai buckets purged (owner's failed attempts cleared); hardcoded passwords scrubbed from scripts/admin_check_58.py, admin_reset_58.py, admin_user_reset_58.py (env-passed now); vault.enc REPACKED with the new .env.local (decrypt roundtrip grep-verified new value inside); dev server restored to stock sqlite boot state.
+
+Stage Summary:
+- Owner sign-in is FIXED and PROVEN at three levels (direct scrypt vs DB, app route vs prod DB, real browser form -> console -> W3 studio screenshot). New credential handed in chat (chat-exposed -> rotate after owner's first login; warning badge in console is expected until they set their own).
+- Owed unchanged: Lightning render-queue port, free-GPU research, Railway ADMIN_BOOTSTRAP_PASSWORD env alignment on next deploy window (bootstrap skips existing rows so no urgency).
