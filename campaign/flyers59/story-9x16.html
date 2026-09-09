@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="flyers.css">
+<style>
+  body{width:1080px;height:1920px;}
+  .scrim{background:linear-gradient(180deg,
+    rgba(10,10,11,.82) 0%, rgba(10,10,11,.28) 14%, rgba(10,10,11,.05) 34%,
+    rgba(10,10,11,.12) 52%, rgba(10,10,11,.78) 72%, #0A0A0B 96%);}
+  .head{position:absolute;top:74px;left:70px;right:70px;z-index:46;
+    display:flex;align-items:center;justify-content:space-between;}
+  .brand{font-size:40px;}
+  .pill{border:1px solid var(--line);background:rgba(10,10,11,.6);
+    padding:14px 24px;font-size:19px;font-weight:700;letter-spacing:.12em;}
+  .main{position:absolute;left:70px;right:70px;bottom:280px;z-index:46;}
+  .kick{font-size:21px;margin-bottom:26px;}
+  h1{font-size:92px;}
+  .sub{margin-top:28px;font-size:25px;line-height:1.5;color:var(--w60);max-width:900px;font-weight:500;}
+  .sub b{color:#fff;font-weight:800;}
+  .chips{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;}
+  .chips .chip{font-size:14.5px;padding:13px 20px;}
+  .cta{position:absolute;left:70px;right:70px;bottom:88px;z-index:46;
+    background:var(--red);display:flex;align-items:center;justify-content:space-between;
+    padding:34px 40px;box-shadow:0 24px 70px rgba(220,38,38,.35);}
+  .cta .t{font-weight:900;font-size:30px;letter-spacing:.16em;text-transform:uppercase;}
+  .cta .u{font-size:24px;font-weight:700;}
+</style></head>
+<body>
+<div class="stage">
+  <img class="bg" src="bg/bg-ribbon.png" style="object-position:50% 68%;">
+  <div class="scrim"></div>
+  <div class="topbar"></div>
+
+  <div class="head">
+    <div class="wordmark brand">DEY<span class="g">OUNG</span></div>
+    <div class="mono pill">deyoungltd.site</div>
+  </div>
+
+  <div class="main">
+    <div class="kicker red kick">★ The launch film — made in DeYoung</div>
+    <h1 class="display">&ldquo;I TYPED <span class="grad-red">ONE</span> SENTENCE&hellip;&rdquo;</h1>
+    <p class="sub">&hellip;and got a whole video. The real launch film: <b>script, cast, storyboard,
+      GPU render</b> — captioned UGC style, straight out of the studio on this site. Sound on.</p>
+    <div class="chips">
+      <div class="chip"><span class="sq"></span>4 scenes</div>
+      <div class="chip"><span class="sq"></span>Voiceover</div>
+      <div class="chip"><span class="sq"></span>1080×1920</div>
+      <div class="chip"><span class="sq"></span>Made in DeYoung</div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div class="t">▶ Watch the film</div>
+    <div class="mono u">deyoungltd.site</div>
+  </div>
+  <div class="grain"></div>
+</div>
+</body></html>

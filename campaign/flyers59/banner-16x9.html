@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="flyers.css">
+<style>
+  body{width:1600px;height:900px;}
+  .bg{object-position:72% 50%;}
+  .scrim{background:linear-gradient(90deg,
+    #0A0A0B 0%, rgba(10,10,11,.97) 34%, rgba(10,10,11,.72) 52%,
+    rgba(10,10,11,.18) 74%, rgba(10,10,11,.35) 100%);}
+  .wrap{position:absolute;left:84px;top:150px;bottom:158px;width:760px;z-index:46;
+    display:flex;flex-direction:column;justify-content:center;}
+  .headrow{position:absolute;top:52px;left:84px;right:84px;z-index:46;
+    display:flex;align-items:center;justify-content:space-between;}
+  .brand{font-size:38px;}
+  .chip{font-size:15px;padding:12px 22px;}
+  .rule{width:96px;height:6px;background:var(--red);margin-bottom:30px;}
+  .kick{font-size:19px;margin-bottom:22px;}
+  h1{font-size:56px;}
+  h1 .l2{display:block;}
+  .sub{margin-top:24px;font-size:23px;line-height:1.5;color:var(--w60);max-width:660px;font-weight:500;}
+  .sub b{color:#fff;font-weight:800;}
+  .row{display:flex;align-items:center;gap:28px;margin-top:36px;}
+  .cta{background:var(--red);font-weight:900;font-size:21px;letter-spacing:.16em;
+    padding:22px 32px;text-transform:uppercase;white-space:nowrap;}
+  .url{font-size:28px;font-weight:700;}
+  .trust{margin-top:30px;font-size:17px;color:var(--w40);font-weight:600;letter-spacing:.04em;}
+  .trust span{color:var(--red-hot);font-weight:900;}
+  .footer-band{height:142px;display:flex;align-items:center;padding:0 84px;gap:40px;}
+  .fb-k{font-size:17px;flex:1;}
+</style></head>
+<body>
+<div class="stage">
+  <img class="bg" src="bg/bg-control.png">
+  <div class="scrim"></div>
+  <div class="vignette"></div>
+  <div class="topbar"></div>
+
+  <div class="headrow">
+    <div class="wordmark brand">DEY<span class="g">OUNG</span></div>
+    <div class="chip"><span class="sq"></span>DeYoung Original</div>
+  </div>
+
+  <div class="wrap">
+    <div class="rule"></div>
+    <div class="kicker kick">The AI film studio on the web</div>
+    <h1 class="display">60-SECOND AI VIDEO.<span class="l2 grad-red">One pass. Real film.</span></h1>
+    <p class="sub">Where other models stop at 15 seconds, DeYoung renders up to <b>60 seconds in one
+      pass</b> — script, cast, storyboard, GPU render, straight from the studio.</p>
+    <div class="row">
+      <div class="cta">See the plans</div>
+      <div class="mono url">deyoungltd.site</div>
+    </div>
+    <div class="trust"><span>★</span> Founding prices live&nbsp;&nbsp;·&nbsp;&nbsp;<span>★</span> Pay local or international&nbsp;&nbsp;·&nbsp;&nbsp;<span>★</span> Replies within 24h</div>
+  </div>
+
+  <div class="footer-band">
+    <div class="kicker fb-k">Bold work. Real results.</div>
+    <div class="mono url">deyoungltd.site</div>
+  </div>
+  <div class="grain"></div>
+</div>
+</body></html>

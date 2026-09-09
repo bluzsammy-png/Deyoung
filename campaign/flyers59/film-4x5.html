@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="flyers.css">
+<style>
+  body{width:1080px;height:1350px;}
+  .orb1{position:absolute;top:-120px;left:-120px;width:420px;height:420px;border-radius:50%;
+    background:rgba(220,38,38,.22);filter:blur(70px);z-index:5;}
+  .orb2{position:absolute;bottom:-140px;right:-100px;width:480px;height:480px;border-radius:50%;
+    background:rgba(153,27,27,.3);filter:blur(80px);z-index:5;}
+  .head{position:absolute;top:52px;left:64px;right:64px;z-index:46;
+    display:flex;align-items:center;justify-content:space-between;}
+  .brand{font-size:32px;}
+  .chip{font-size:14px;padding:11px 18px;}
+  .left{position:absolute;left:64px;top:170px;width:352px;z-index:46;}
+  .rule{width:80px;height:6px;background:var(--red);margin-bottom:28px;}
+  .kick{font-size:16px;margin-bottom:20px;}
+  h1{font-size:54px;letter-spacing:-.01em;}
+  .sub{margin-top:22px;font-size:19px;line-height:1.5;color:var(--w60);font-weight:500;}
+  .meta{margin-top:30px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+  .meta .chip{font-size:12.5px;padding:10px 16px;}
+  .lefturl{position:absolute;left:64px;bottom:56px;z-index:46;display:flex;flex-direction:column;gap:10px;}
+  .lu1{font-size:24px;font-weight:700;}
+  .lu2{font-size:14px;}
+  .shot{position:absolute;left:440px;top:150px;width:590px;height:1049px;z-index:46;}
+  .shot .ph{object-position:50% 20%;}
+  .play{position:absolute;z-index:47;left:440px;top:150px;width:590px;height:1049px;
+    display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none;
+    padding:0 30px 30px 0;}
+  .play .c{width:88px;height:88px;border-radius:50%;background:rgba(10,10,11,.72);
+    border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;}
+  .play .tri{width:0;height:0;border-left:26px solid #fff;border-top:17px solid transparent;
+    border-bottom:17px solid transparent;margin-left:7px;}
+</style></head>
+<body>
+<div class="stage" style="background:#0A0A0B;">
+  <div class="orb1"></div><div class="orb2"></div>
+  <div class="topbar"></div>
+
+  <div class="head">
+    <div class="wordmark brand">DEY<span class="g">OUNG</span></div>
+    <div class="chip"><span class="sq"></span>DeYoung Original</div>
+  </div>
+
+  <div class="left">
+    <div class="rule"></div>
+    <div class="kicker red kick">★ The launch film</div>
+    <h1 class="display">20<br>SECONDS,<br><span class="grad-red">ONE FILM.</span></h1>
+    <p class="sub">One sentence in, a real film out — captioned UGC style,
+      rendered live by the studio on this site.</p>
+    <div class="meta">
+      <div class="chip"><span class="sq"></span>4 scenes</div>
+      <div class="chip"><span class="sq"></span>Voiceover + music</div>
+      <div class="chip"><span class="sq"></span>1080×1920 vertical</div>
+      <div class="chip"><span class="sq"></span>Made in DeYoung</div>
+    </div>
+  </div>
+
+  <div class="lefturl">
+    <div class="mono lu1">deyoungltd.site</div>
+    <div class="kicker lu2">Watch it on the film wall</div>
+  </div>
+
+  <div class="frame-offset shot"><img class="ph" src="film_frame_2.5.png"></div>
+  <div class="play"><div class="c"><div class="tri"></div></div></div>
+
+  <div class="vignette"></div>
+  <div class="grain"></div>
+</div>
+</body></html>

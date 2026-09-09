@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="flyers.css">
+<style>
+  body{width:1080px;height:1350px;}
+  .scrim{background:linear-gradient(180deg,
+    rgba(10,10,11,.78) 0%, rgba(10,10,11,.4) 26%, rgba(10,10,11,.16) 48%,
+    rgba(10,10,11,.6) 68%, rgba(10,10,11,.94) 85%, #0A0A0B 100%);}
+  .bg{object-position:50% 40%;}
+  .head{position:absolute;top:52px;left:64px;right:64px;z-index:46;
+    display:flex;align-items:center;justify-content:space-between;}
+  .brandline{display:flex;align-items:center;gap:16px;}
+  .brand{font-size:34px;}
+  .chip{font-size:15px;padding:12px 20px;}
+  .main{position:absolute;left:64px;right:64px;bottom:196px;z-index:46;}
+  .rule{width:96px;height:6px;background:var(--red);margin-bottom:34px;}
+  .kick{font-size:21px;margin-bottom:26px;color:rgba(255,255,255,.8);text-shadow:0 2px 16px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.6);}
+  h1{font-size:112px;}
+  h1 .l2{display:block;}
+  .sub{margin-top:30px;font-size:27px;line-height:1.45;color:rgba(255,255,255,.78);max-width:820px;font-weight:500;text-shadow:0 1px 12px rgba(0,0,0,.7);}
+  .sub b{color:#fff;font-weight:800;}
+  .starline{margin-top:30px;font-size:26px;letter-spacing:.3em;font-weight:900;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.7);}
+  .starline span{color:var(--red-hot);}
+  .footer-band{height:128px;display:flex;align-items:center;padding:0 64px;gap:36px;}
+  .fb-url{font-size:31px;font-weight:700;}
+  .fb-mid{flex:1;font-size:17px;}
+  .fb-cta{background:var(--red);font-weight:900;font-size:22px;letter-spacing:.18em;
+    padding:22px 34px;text-transform:uppercase;white-space:nowrap;}
+</style></head>
+<body>
+<div class="stage">
+  <img class="bg" src="bg/bg-director.png">
+  <div class="scrim"></div>
+  <div class="vignette"></div>
+  <div class="topbar"></div>
+
+  <div class="head">
+    <div class="brandline">
+      <div class="wordmark brand">DEY<span class="g">OUNG</span></div>
+      <span class="dy-sq"></span>
+    </div>
+    <div class="chip"><span class="sq"></span>DeYoung Original</div>
+  </div>
+
+  <div class="main">
+    <div class="rule"></div>
+    <div class="kicker kick">The AI film studio on the web</div>
+    <h1 class="display">BOLD WORK.<span class="l2 grad-red">REAL RESULTS.</span></h1>
+    <p class="sub">AI video up to <b>60 seconds in one pass</b> — where other models stop at 15.
+      Subscribe or book online, paid your way: local or international.</p>
+    <div class="starline"><span>★</span> 60S&nbsp;&nbsp;<span>★</span> 5 STYLES&nbsp;&nbsp;<span>★</span> 4K</div>
+  </div>
+
+  <div class="footer-band">
+    <div class="mono fb-url">deyoungltd.site</div>
+    <div class="kicker fb-mid">Founding prices live now — they go up soon</div>
+    <div class="fb-cta">See Plans</div>
+  </div>
+  <div class="grain"></div>
+</div>
+</body></html>

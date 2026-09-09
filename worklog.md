@@ -1019,3 +1019,21 @@ Stage Summary:
 - The 20s UGC launch film is now the FIRST thing on the public film wall and the hero film band on the landing page. Deploy pending -> verify on prod.
 
 - DEPLOY EVIDENCE (58-b follow-up): CI success for 7ce5bae; Railway deployment 3718aeea status=SUCCESS at 2026-09-09T10:35:33Z (staticUrl deyoungltd.site) via GraphQL. Sandbox edge 429 on prod fetch (known Cloudflare IP challenge; agent-browser Turnstile re-confirmed blocked for headless) — prod page paint must be owner-verified in a real browser; DB + deploy + CI evidence all green.
+
+---
+Task ID: 59
+Agent: main (Super Z)
+Task: Owner asked for "stunning cinematic photos for social media — like a flyer with everything about the site on it, solid and sophisticated, not basic/mock/sloppy".
+
+Work Log:
+- COPY DISCIPLINE: every line on every flyer is real site copy pulled from the repo (hero.tsx: "Bold work. Real results.", "AI video up to 60 seconds in one pass — where other models stop at 15.", ★ 60S ★ 5 STYLES ★ 4K, founding-prices hook, trust bullets, "I typed ONE sentence…" film band) + real plan matrix ($9/$29/$79, Task 18 seed). Nothing invented.
+- ART: 6 cinematic AI backgrounds generated to the site's exact charcoal/#DC2626 grade (film set camera, ring-light creator, projector beam, render-farm control wall, crimson light ribbon figure, red silk). All visually QA'd; creator shot's top band artifact rejected, bg-ribbon/control/silk/director/projector approved. No text baked into AI images (typography is real HTML/CSS — crisp, never AI-sloppy).
+- FILM TIE-IN: film flyer uses a REAL frame extracted from the shipped 20s launch film (ffmpeg seek, burned UGC caption "I typed ONE sentence..." visible) in the site's offset red-keyline frame with a corner play chip.
+- PIPELINE (survives rebuilds): campaign/flyers59/{flyers.css,6x HTML} -> scripts/flyers59_render.py (Playwright, exact platform viewports, broken-image assert, document.fonts.ready). Fonts = the site/film's own Archivo Black + Archivo variable + JetBrains Mono (scripts/*.ttf). Brand tokens replicated (red top bar, keyline offset frames, ticket chips, stars, stripes).
+- QA LOOP (3 render rounds, every PNG visually inspected): fixed banner header/kicker collision; plans dead space + headline wrap; poster kicker contrast over camera (text-shadow + deeper mid scrim); film headline hyphen-break -> deliberate "20 / SECONDS, / ONE FILM." stack + play chip moved off the face to bottom-right; trust "IN." orphan -> 54px single-line headline.
+- EVIDENCE: download/social/ = 6 PNGs at exact platform sizes (1080x1350 4:5, 1080x1080 x2, 1080x1920 9:16, 1600x900 16:9) + README-captions.txt (per-flyer captions + hashtags); download/deyoung-social-flyers.zip (6.2MB). PIL dimension check printed for all 6.
+- Sources committed incl. backgrounds + the real film frame (gitignore un-ignore for /campaign/flyers59).
+
+Stage Summary:
+- 6-poster cinematic social kit delivered: brand poster, pricing flyer, story promo, X/LinkedIn banner, launch-film promo (real film frame), trust card — all in the site's black/red design language, all copy real, all visually verified by me before delivery.
+- Pipeline persisted (HTML/CSS -> Playwright) so new sizes/variants are one-file edits; backgrounds reusable for future site art.

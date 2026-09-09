@@ -57,6 +57,7 @@ server.log
 # they are the reproducible work product; big media stays ignored)
 /campaign/*
 !/campaign/v10
+!/campaign/flyers59
 !/campaign/site-worker
 /download/
 /upload/
