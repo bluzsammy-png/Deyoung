@@ -22,7 +22,10 @@ export async function POST(req: Request) {
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const next = await db.videoRequest.findFirst({
-      where: { status: "queued" },
+      // rows whose notes contain "reserved:" are held back from automated
+      // claimers — they exist to test a specific pipeline (e.g. the
+      // Wav2Lip lip-sync E2E) and must not be drained by a plain renderer
+      where: { status: "queued", notes: { not: { contains: "reserved:" } } },
       orderBy: [{ queuePriority: "desc" }, { createdAt: "asc" }, { id: "asc" }],
     });
     if (!next) {
