@@ -1,0 +1,47 @@
+name: vault-rescue
+# Task 63 — one-time (and emergency-only) passphrase custody WITHOUT chat:
+# decrypts vault/vault.enc (in this repo) using the VAULT_PASSPHRASE repo
+# secret and pushes the plaintext secrets to the PRIVATE mirror repo using
+# MIRROR_PAT. After this runs once, selfheal.sh restores from the mirror with
+# NO passphrase and NO owner action on every future sandbox rebuild.
+#
+# Setup (once): repo Secrets -> VAULT_PASSPHRASE, MIRROR_PAT (repo scope).
+# Run: Actions -> vault-rescue -> Run workflow. Values are never printed.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decrypt vault into private mirror
+        env:
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+          MIRROR_PAT: ${{ secrets.MIRROR_PAT }}
+        run: |
+          set -eu
+          if [ -z "$VAULT_PASSPHRASE" ] || [ -z "$MIRROR_PAT" ]; then
+            echo "NOTICE: set repo secrets VAULT_PASSPHRASE + MIRROR_PAT first — nothing to do"
+            exit 0
+          fi
+          PRIV=$(curl -s -H "Authorization: token $MIRROR_PAT" https://api.github.com/repos/bluzsammy-png/deyoung-vault-mirror | python3 -c "import json,sys;print(json.load(sys.stdin).get('private'))")
+          [ "$PRIV" = "True" ] || { echo "FATAL: mirror is not private — aborting"; exit 2; }
+          TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in vault/vault.enc -pass env:VAULT_PASSPHRASE | tar xzf - -C "$TMP" || { echo "FATAL: decrypt failed (wrong passphrase?)"; exit 3; }
+          [ -d "$TMP/workers/secrets" ] || { echo "FATAL: decrypted payload missing workers/secrets"; exit 4; }
+          git clone -q "https://x-access-token:$MIRROR_PAT@github.com/bluzsammy-png/deyoung-vault-mirror.git" "$TMP/m"
+          mkdir -p "$TMP/m/workers"
+          cp -r "$TMP/workers/secrets" "$TMP/m/workers/"
+          [ -f "$TMP/.env.local" ] && cp "$TMP/.env.local" "$TMP/m/.env.local"
+          cd "$TMP/m"
+          git config user.email "agent@deyoungltd.site"; git config user.name "deyoung-agent"
+          git add -A
+          git diff --cached --quiet && { echo "mirror already up to date"; exit 0; }
+          git commit -qm "vault rescue sync $(date -u +%FT%TZ)"
+          git push -q origin main 2>/dev/null || git push -q origin HEAD:main
+          echo "RESCUE COMPLETE: private mirror seeded — future rebuilds self-restore passphrase-free"

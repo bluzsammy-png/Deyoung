@@ -24,9 +24,18 @@ if [ ! -f "$ROOT/workers/secrets/kaggle_tokens.json" ]; then
     exit 1
   fi
   if [ -z "$PASS" ]; then
-    echo "VAULT MISSING -> passphrase required:"
-    echo "  bash scripts/selfheal.sh '<vault passphrase>'   (owner has it; also in agent chat history)"
-    exit 1
+    # Task 63: try the PRIVATE vault mirror before demanding the passphrase
+    # (post-bootstrap this makes rebuilds fully owner-independent).
+    if bash "$ROOT/scripts/vault_mirror_pull_63.sh" 2>>"$ROOT/brain/selfheal_mirror.log"; then
+      echo "[selfheal] VAULT RESTORED from private mirror (no passphrase needed)"
+      bash "$ROOT/scripts/brain_boot.sh" start
+      bash "$ROOT/scripts/brain_boot.sh" status
+      exit 0
+    else
+      echo "VAULT MISSING -> passphrase required:"
+      echo "  bash scripts/selfheal.sh '<vault passphrase>'   (owner has it; also in agent chat history)"
+      exit 1
+    fi
   fi
   TMP=$(mktemp -d)
   if openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$BLOB" -pass pass:"$PASS" \

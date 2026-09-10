@@ -9,9 +9,13 @@ import os
 import pathlib
 import time
 
-ROOT = pathlib.Path("/home/z/my-project")
+ROOT = pathlib.Path(__file__).resolve().parent.parent  # repo root (sandbox + Actions portable)
 OUT = ROOT / "brain/lightning61_start.json"
-KEY = json.loads((ROOT / "workers/secrets/lightning_tokens.json").read_text())["keys"][0]["key"]
+import os as _os
+_vk = ROOT / "workers/secrets/lightning_tokens.json"
+KEY = _os.environ.get("LIGHTNING_API_KEY") or (json.loads(_vk.read_text())["keys"][0]["key"] if _vk.exists() else "")
+if not KEY:
+    raise SystemExit("start61: no LIGHTNING_API_KEY (env or vault)")
 os.environ["LIGHTNING_API_KEY"] = KEY
 
 from lightning_sdk import Studio, Machine  # noqa: E402

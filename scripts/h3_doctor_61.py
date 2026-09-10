@@ -45,7 +45,7 @@ import subprocess
 import sys
 import time
 
-ROOT = pathlib.Path("/home/z/my-project")
+ROOT = pathlib.Path(__file__).resolve().parent.parent  # repo root (sandbox + Actions portable)
 VAULT = ROOT / "workers/secrets/lightning_tokens.json"
 STATE_F = ROOT / "brain/h3worker_state.json"
 LOG_F = ROOT / "brain/h3doctor.log"

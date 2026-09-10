@@ -1,0 +1,39 @@
+name: fleet-doctor
+# Task 63 — sandbox-immune render-fleet control plane (runs the repo's own
+# doctor scripts; public repo = free Actions minutes).
+#
+# ARMING (once, owner/agent): set repo secrets LIGHTNING_API_KEY + WORKER_TOKEN,
+# then either run it manually (Actions -> fleet-doctor -> Run) or uncomment the
+# schedule below for automatic every-5-min supervision.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "ensure | status | stop"
+        default: "ensure"
+  # schedule:
+  #   - cron: "*/5 * * * *"   # uncomment after secrets are set (auto-pilot)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-doctor
+  cancel-in-progress: false
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIGHTNING_API_KEY: ${{ secrets.LIGHTNING_API_KEY }}
+      WORKER_TOKEN: ${{ secrets.WORKER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install fleet deps
+        run: pip install requests lightning-sdk
+      - name: Run fleet doctor
+        run: python scripts/fleet_doctor_actions.py "${{ github.event.inputs.mode || 'ensure' }}"
