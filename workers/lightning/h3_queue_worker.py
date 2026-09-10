@@ -297,7 +297,10 @@ def render_h3(job):
     secs = int(job.get("seconds") or 5)
     # H3 band: 8n+1 frames, clamp to [121, 289] exactly like the v4 fleet worker
     length = max(BAND_MIN_F, min(BAND_MAX_F, 8 * max(1, (secs * 24) // 8) + 1))
-    steps = 8 if length <= 121 else 4  # quality on shorts, speed on longs
+    # Task 64: steps=4 for ALL lengths — the v10-proven config (fl2v_turbo_4step).
+    # steps=8 on shorts watchdog-failed twice on the T4 (35-min ceiling, est~136min);
+    # no Lightning-T4 render has ever completed at 8 steps.
+    steps = 4
     seed = int(hashlib.sha256(job["id"].encode()).hexdigest()[:8], 16)
 
     if not comfy_up() and not boot_comfy():
