@@ -39,3 +39,19 @@ regexes = [
   # documentation truncations of the agentmail key prefix (prefix is not secret)
   '''am_us_…''',
 ]
+
+# W3.0 (Task 62-d): cookie jars are live session material — never commit them.
+# The S-1 incident (brain/admin_cookie_58.txt, purged in 62-c) was exactly this
+# shape: a libcurl jar with a session token landed in the public repo and lived
+# there for days. These rules catch the jar header and any #HttpOnly_ entry.
+[[rules]]
+id = "netscape-cookie-jar"
+description = "Netscape HTTP Cookie File (live session jar) committed to the repo"
+regex = '''# Netscape HTTP Cookie File'''
+keywords = ["netscape http cookie file"]
+
+[[rules]]
+id = "curl-httponly-jar-entry"
+description = "curl cookie jar #HttpOnly_ entry committed to the repo"
+regex = '''#HttpOnly_[^\t\r\n]+\t'''
+keywords = ["#httponly_"]

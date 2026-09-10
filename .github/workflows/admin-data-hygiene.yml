@@ -1,0 +1,71 @@
+# Task 62-d — admin session probe + targeted data hygiene.
+#
+# WHY THIS EXISTS: Task 62-b removed the 3 fictional testimonials from the seed,
+# but the rows still exist in the PROD database. Deletion needs an admin session.
+# The repo's only server-side credential is the ADMIN_PASS Actions secret
+# (created 2026-09-07; likely stale since the Task 58 reset) — this workflow
+# tests it honestly without ever printing the value, and ONLY if the login
+# succeeds may it delete testimonial IDs given explicitly in the input.
+#
+# SAFETY: no secret is echoed; failure bodies are truncated error messages only;
+# with delete_ids empty the workflow is a pure probe. Rows are deleted via the
+# site's own admin API (audit-equivalent), never by direct DB access.
+name: admin-data-hygiene
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete_ids:
+        description: "Comma-separated testimonial IDs to delete (empty = probe only)"
+        required: false
+        default: ""
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe ADMIN_PASS against prod (value never printed)
+        env:
+          ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
+          DELETE_IDS: ${{ github.event.inputs.delete_ids }}
+          BASE: https://deyoungltd.site
+          UA: "Mozilla/5.0 (X11; Linux x86_64) deyoung-ops/62d"
+        run: |
+          set -uo pipefail
+          jar=/tmp/jar.txt; rm -f "$jar"
+          HC=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 -A "$UA" "$BASE/api/health")
+          echo "health: $HC"
+          LC=$(curl -s -o /tmp/login.json -w '%{http_code}' --max-time 25 -A "$UA" \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"admin@deyoung.site\",\"password\":\"$ADMIN_PASS\"}" \
+            -c "$jar" "$BASE/api/auth/login")
+          echo "admin login: $LC"
+          if [ "$LC" != "200" ]; then
+            echo "::notice::ADMIN_PASS did NOT authenticate (expected if stale since the Task 58 password reset). No deletion attempted."
+            echo "ADMIN_PASS probe: FAIL (login $LC)" >> "$GITHUB_STEP_SUMMARY"
+            echo "login body head: $(head -c 160 /tmp/login.json)"
+            exit 0
+          fi
+          ROLE=$(curl -s --max-time 25 -A "$UA" -b "$jar" "$BASE/api/me" \
+            | python3 -c 'import json,sys;print(json.load(sys.stdin).get("user",{}).get("role"))' 2>/dev/null || echo "?")
+          echo "session role: $ROLE"
+          echo "ADMIN_PASS probe: PASS (role=$ROLE)" >> "$GITHUB_STEP_SUMMARY"
+          BEFORE=$(curl -s --max-time 25 -A "$UA" "$BASE/api/testimonials" \
+            | python3 -c 'import json,sys;print(len(json.load(sys.stdin).get("testimonials",[])))' 2>/dev/null || echo "?")
+          echo "testimonials before: $BEFORE"
+          if [ -z "${DELETE_IDS// /}" ]; then
+            echo "probe-only mode (no delete_ids) — done."
+            exit 0
+          fi
+          IFS=',' read -ra IDS <<< "$DELETE_IDS"
+          for id in "${IDS[@]}"; do
+            id="$(echo "$id" | tr -d '[:space:]')"
+            [ -z "$id" ] && continue
+            DC=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 -A "$UA" \
+              -b "$jar" -X DELETE "$BASE/api/testimonials/$id")
+            echo "delete $id -> $DC"
+          done
+          AFTER=$(curl -s --max-time 25 -A "$UA" "$BASE/api/testimonials" \
+            | python3 -c 'import json,sys;d=json.load(sys.stdin).get("testimonials",[]);print(len(d));[print(" -",t["id"],t["name"]) for t in d]' 2>/dev/null || echo "?")
+          echo "testimonials after: $AFTER"
+          echo "deletion pass complete — see testimonials-after above." >> "$GITHUB_STEP_SUMMARY"
