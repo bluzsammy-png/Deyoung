@@ -1,0 +1,11 @@
+{
+ "t0": "2026-09-10T07:39:53Z",
+ "steps": [
+  "status before: Running | machine: T4",
+  "gpu probe: Tesla T4, 15360 MiB",
+  "balance: 12.04820198212928",
+  "balance: 12.04820198212928"
+ ],
+ "balance_after_start": 12.04820198212928,
+ "t1": "2026-09-10T07:40:03Z"
+}

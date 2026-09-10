@@ -1,0 +1,66 @@
+{
+ "incidents": 0,
+ "consecutive_restarts": 0,
+ "last_restart_epoch": 0,
+ "cooldown_until": 0,
+ "last_state": "BUSY",
+ "last_state_epoch": 1789027590.2929516,
+ "idle_since": null,
+ "history": [
+  {
+   "t": "2026-09-10T07:13:21Z",
+   "state": "OFFLINE",
+   "detail": "studio machine not running"
+  },
+  {
+   "t": "2026-09-10T07:39:23Z",
+   "state": "OFFLINE",
+   "detail": "studio machine not running"
+  },
+  {
+   "t": "2026-09-10T07:40:21Z",
+   "state": "OFFLINE",
+   "detail": "studio machine not running"
+  },
+  {
+   "t": "2026-09-10T07:41:11Z",
+   "state": "OFFLINE",
+   "detail": "studio machine not running"
+  },
+  {
+   "t": "2026-09-10T07:42:45Z",
+   "state": "UNHEALTHY",
+   "detail": "heartbeat stale 199s (limit 180s) \u2014 process hung or machine frozen"
+  },
+  {
+   "t": "2026-09-10T07:53:49Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  },
+  {
+   "t": "2026-09-10T07:56:34Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  },
+  {
+   "t": "2026-09-10T07:59:02Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  },
+  {
+   "t": "2026-09-10T08:01:31Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  },
+  {
+   "t": "2026-09-10T08:04:01Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  },
+  {
+   "t": "2026-09-10T08:06:30Z",
+   "state": "BUSY",
+   "detail": "rendering job cmt61qa77e76d6251834532b9"
+  }
+ ]
+}
