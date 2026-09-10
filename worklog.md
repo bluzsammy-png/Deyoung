@@ -1058,3 +1058,38 @@ Stage Summary:
 - Social Flyers is a permanent admin section: owner can now grab any poster + its caption in ~3 seconds and post. Prod-proven end to end with screenshots.
 - The 12.4MB asset drop rides in the repo, so future rebuilds/selfheals keep the section intact.
 - Owed unchanged: Lightning render-queue port (12.75 credits), free-cloud-GPU ranked research, credential rotation after owner's first self-set password.
+
+---
+Task ID: 61 (reconstructed post-hoc 2026-09-10 — session ended before logging)
+Agent: main (Super Z)
+Task: TMUX GPU worker integration — persistent Lightning H3 queue worker + orchestrator doctor (owner's audit→plan→implement→test loop).
+
+Work Log:
+- H3 QUEUE WORKER (workers/lightning/h3_queue_worker.py, 554 lines): API-plane claim loop against /api/worker/claim (WORKER_TOKEN from h3q.env, never argv), ComfyUI H3 render at the 960x544 T4-safe band (frames 8n+1 clamp [121,289]; steps 8 if <=121 frames else 4; deterministic seed = sha256(job id)), audio kept when withAudio, ffmpeg normalize + watermark + tpad last-frame hold, multipart deliver with gpuMinutes/renderer, atomic local heartbeat ~/h3work/status_h3q.json (phase/job/comfy/gpu/h3_ready/errors), 540-min self-exit budget, /free unload_models after every job. DESIGN CONTRACT: tmux is ONLY the session layer — the worker file knows nothing about tmux; health truth = heartbeat file.
+- TMUX STARTER (workers/lightning/ensure_h3_tmux.sh, 134 lines): session h3-queue, windows worker+diag; forced TERM=xterm before any tmux call (Jupyter exec ships empty TERM which kills the tmux server — proven live 2026-09-10); secrets sourced INSIDE the pane from h3q.env (0600); idempotent (alive session + alive heartbeat pid = no-op; stale session killed+replaced); nohup fallback; verification layer waits <=90s for heartbeat+pid, exit codes 10-14 for distinct failure classes.
+- DOCTOR (scripts/h3_doctor_61.py, 469 lines): health ladder REST cloudspace -> SDK Studio.status (L0 truth; REST instance record unreliable post machine-switch) -> tmux session -> worker pid -> heartbeat age (stale >180s = UNHEALTHY) -> ComfyUI /queue -> H3 object_info -> nvidia-smi. State machine OFFLINE/STARTING/IDLE/BUSY/UNHEALTHY/ERROR; tmux-alive alone NEVER means healthy. Bounded recovery: max 3 consecutive restarts -> 60-min cooldown, >=120s apart; incidents+history to brain/h3worker_state.json. Credit guard: doctor never STARTS the machine; --stop-studio / opt-in --auto-stop-idle MIN.
+- STARTER (scripts/lightning_start_61.py): starts studio, verifies/switches to T4 (Machine.T4, fallback g4dn.xlarge), balance evidence to brain/lightning61_start.json.
+- SITE PLANE: /api/worker/claim gained the reserved-row guard (rows with notes containing "reserved:" are skipped by automated claimers — protects pipeline E2E rows) and the 45-MIN ORPHAN REAPER (any rendering row with updatedAt older than 45 min is failed honestly at claim time — commit 8e818d1; action=progress beats keep rows alive).
+- Commits: b50c491 (worker+starter+doctor+reserved guard, +1231 lines), 8e818d1 (reaper), 3490fd4 (brain state). Pushed and CI-clean during that session.
+
+Stage Summary:
+- Lightning T4 now runs a persistent, self-healing H3 queue worker: SSH/Jupyter disconnects no longer kill renders (tmux session layer), crashes are detected via layered health (never via tmux alone), restarts are bounded (no infinite loop), and credit safety is opt-in explicit (doctor never starts machines).
+- KNOWN GAPS left for W3.1 (documented in DEYOUNGLTD_DEYO_MASTER_ARCHITECTURE.md): DB-plane CLAIM_SQL lacks the reserved: guard (mismatch); H3 worker beats a local file but not the site row (customer notes go stale mid-render); single shared WORKER_TOKEN.
+
+---
+Task ID: 62
+Agent: main (Super Z)
+Task: MASTER UPGRADE INSTRUCTION phase 1 — full repository/application audit + DEYOUNGLTD_DEYO_MASTER_ARCHITECTURE.md + smallest safe first implementation task. NO rewrite (per instruction).
+
+Work Log:
+- AUDIT (three parallel deep audits, all file:line-evidenced): (1) backend — 53 API routes, 16 lib modules, 16 Prisma models, schema drift between sqlite/postgres = NONE, session-plane separation verified sound, render-queue state machine + 45-min reaper + dedup mapped; (2) worker fabric — universal Kaggle worker, DB-plane site-workers (SKIP LOCKED), Lightning tmux H3 queue worker, fleet_brain/recovery_orchestrator/h3_doctor supervisors, H3 stack facts (fp8 DiT + Qwen3-VL-32B nvfp4 AWQ encoder, audio VAE = real audio support, turbo LoRA 4/8-step, 960x544x121-289 T4 band, ~13-31 min/job); (3) frontend — hash-routed SPA, 16 admin tabs, SSE trace (status real / pacing simulated + labeled), a11y/mobile gaps, legal gaps.
+- CRITICAL FINDING S-1: brain/admin_cookie_58.txt (LIVE production admin session cookie, 7-day TTL from Task 58) is git-tracked in the PUBLIC repo. Rotation (AUTH_SECRET on Railway) + history purge prepared but BLOCKED — sandbox rebuild #7 (2026-09-10 ~11:08) sealed the vault (workers/secrets + .env.local gone; passphrase not in this session's context) => NO push/PAT/Railway/fleet control until owner repeats the passphrase. Escalated as owner action #1.
+- DELIVERABLE: DEYOUNGLTD_DEYO_MASTER_ARCHITECTURE.md (826 lines, repo root, 21 sections covering every §36 requirement: existing architecture/tech/H3/workers/deployment, security/a11y/legal findings (S-1..S-12, A-1..A-8, L-1..L-8), DB/state, API, proposed architecture (additive Production/ProductionTask/ProductionEvent/Worker/ModelRegistry tables + Director lib), worker fabric + Termux design (outbound-only /api/infra/*, safe-shutdown state machine), Deyo model family as HONEST production layer (no trained-model claims), event architecture (SSE + ProductionEvent), 6-wave incremental migration plan (W3.0-W3.6), testing plan, risks, unresolved questions, §-by-§ implementation status).
+- SMALLEST SAFE FIRST TASK identified + implemented (see Task 62-b): honesty fix pack — 4K claims removed (code caps 1080p), fictional "Real clients" testimonials removed, flyer prices aligned to real plans ($12/$39/$99), invalid robots Noindex directive fixed.
+- HONESTY GATES baked into the doc: H3 commercial license NOT VERIFIED (territory exclusion + outputs-training clause) = gate before W3.4 scale-up; no mechanism makes free GPUs permanent (red line preserved); dev-fleet churn designed-for, not denied.
+- Commit: doc + worklog + BRAIN tracker update + Task 61 mode-bits (chmod +x on committed worker scripts). PUSH BLOCKED (vault sealed) — committed locally, push + CI verify queued behind the passphrase.
+
+Stage Summary:
+- Audit-first mandate satisfied: the repo, live app, worker fabric, H3 integration, security, legal and a11y are mapped with evidence; the architecture doc is the new synchronization point for every future change (per §36).
+- Owner escalations: (1) vault passphrase to unseal push/rotation/fleet control, (2) AUTH_SECRET rotation + cookie purge for S-1, (3) H3 license-text fetch, (4) legal page wording sign-off.
+- Next in sequence: W3.1 worker-plane truth fixes (reserved-guard alignment, H3 progress beats), W3.2 legal pages, then W3.3 Production state + events.

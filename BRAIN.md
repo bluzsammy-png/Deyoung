@@ -6,7 +6,7 @@
 > Any AI or human taking over: follow the Session Protocol at the bottom, then continue the
 > highest-priority open item in the tracker. Update this file before ending a session.
 
-Last updated: 2026-09-07 (W2 PLATFORM SHIPPED: user auth + Google OAuth (deyoungsltd@gmail.com = owner seat), subscription-with-registration, dashboard w/ GPU life, AI Film Studio (storyboard + prompt enhancer + script writer → real render queue), admin user control (ban/activate/deactivate), 20-work gallery; gitleaks CI green; canary wave-2 gate armed; owner actions: GOOGLE_CLIENT_ID/SECRET, rotate PAT, revoke old AgentMail key, admin password on first login)
+Last updated: 2026-09-10 (Task 62 MASTER UPGRADE AUDIT: full repo/app/worker-fabric audit done → **DEYOUNGLTD_DEYO_MASTER_ARCHITECTURE.md** (repo root) is now the synchronized architecture record + 6-wave migration plan (W3.0 honesty/security hygiene → W3.6 Termux). CRITICAL S-1: live admin session cookie committed in `brain/admin_cookie_58.txt` (public repo) — AUTH_SECRET rotation + history purge BLOCKED on vault passphrase (rebuild #7 sealed vault; no PAT = no push until owner repeats it). W3.0 honesty fix pack implemented locally (4K claims removed, fake testimonials removed, flyer prices aligned $12/$39/$99, robots Noindex fix). H3 commercial license NOT VERIFIED = gate before scale-up)
 
 ---
 
@@ -113,7 +113,7 @@ deliverable it demands is `markdown.md.txt` — a 56-section master upgrade spec
 | 2 | Existing-code audit (stack, routes, auth, payments, worker plane, content/claims, trackers, a11y, tests) | **DONE** (5 CRITICAL + 10 HIGH + 12 MEDIUM findings, incl. leaked AgentMail key + WORKER_TOKEN in git-tracked files — see spec §A.2) |
 | 3 | Write `markdown.md.txt` (56 sections incl. research tables, NOT VERIFIED / LEGAL REVIEW REQUIRED discipline) | **DONE** — deliverable at `download/markdown.md.txt` + repo-root copy; 720 lines, all 56 items mapped in §I.6 |
 | 4 | Validate spec against codebase (prompt §75 checklist) | **DONE** (§I.1 self-audit) |
-| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | **W0 EXECUTED 2026-09-07** (see below) — **W1 storage_v2 + RateLimit EXECUTED 2026-09-07** (see below) |
+| 5 | Implementation waves (control plane, manifests, worker registry, credit ledger, legal pages, a11y, tests/CI) | **W0 EXECUTED 2026-09-07** (see below) — **W1 storage_v2 + RateLimit EXECUTED 2026-09-07** (see below) — **2026-09-10 SUPERSEDED by the Master Upgrade Instruction (Task 62)**: canonical plan = `DEYOUNGLTD_DEYO_MASTER_ARCHITECTURE.md` §16 (waves W3.0→W3.6 + W4); that doc also supersedes this tracker for status (§20 §-by-§ table) |
 
 **W1 state (2026-09-07, Task 35):**
 - ✅ Supabase credentials vaulted (`workers/secrets/supabase.json`, 0600) + offline backup VERDICT PASS; vault_backup.py now backs up the WHOLE vault dir (fixed latent PATH bug).
