@@ -42,7 +42,8 @@ git clone -q "https://x-access-token:$PAT@github.com/$MIRROR_REPO.git" "$TMP/m" 
 mkdir -p "$TMP/m/workers"
 cp -r "$ROOT/workers/secrets" "$TMP/m/workers/"
 [ -f "$ROOT/.env.local" ] && cp "$ROOT/.env.local" "$TMP/m/.env.local"
-chmod -R 600 "$TMP/m/workers/secrets" 2>/dev/null || true
+find "$TMP/m/workers/secrets" -type f -exec chmod 600 {} \; 2>/dev/null
+chmod 700 "$TMP/m/workers/secrets" 2>/dev/null || true
 cd "$TMP/m"
 git config user.email "agent@deyoungltd.site"; git config user.name "deyoung-agent"
 git add -A >/dev/null

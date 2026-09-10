@@ -53,7 +53,7 @@ BASE = f"http://127.0.0.1:{PORT}"
 # 121 frames minimum (~5s), 289 maximum (~12s), always 8n+1, T4-safe 960x544.
 BAND_MIN_F, BAND_MAX_F = 121, 289
 RENDER_W, RENDER_H = 960, 544
-JOB_WATCHDOG_MIN = 35          # hard ceiling for one graph render
+JOB_WATCHDOG_MIN = 110         # Task 64: measured T4 economics (fp8 DiT dynamic-VRAM streams on 15GB): 121f/4steps = ~45min real (load 6 + 4x399s sampling + VAE ~8); 289f needs ~85min. 35min killed a delivery-ready render at 20:49:04 (VAE phase). Beats keep the row reaper-safe during long renders.
 COMFY_BOOT_TIMEOUT_S = 420     # model-heavy stack; give it 7 minutes
 COMFY_RESTART_WINDOW_S = 600   # crash-rate window
 COMFY_RESTART_MAX = 3          # in-window crash limit -> give up honestly
@@ -315,7 +315,8 @@ def render_h3(job):
                                  json.dumps(api_graph(info, job, length, steps, seed)).encode(),
                                  {"Content-Type": "application/json"})
     pid = json.loads(urllib.request.urlopen(req, timeout=120).read())["prompt_id"]
-    est = length * RENDER_W * RENDER_H * 0.000129 / 60
+    # Task 64: calibrated on the measured T4 run (see JOB_WATCHDOG_MIN): load + per-frame sampling + decode/deliver
+    est = 6 + (length / 121.0) * (steps / 4.0) * 26.6 + 10
     log(f"[{job['id']}] queued {pid} len={length}f steps={steps} est~{est:.0f}min")
     beat(phase="BUSY", job={**job, "render": {"frames": length, "steps": steps,
                                               "prompt_id": pid, "est_min": round(est)}})
