@@ -11,8 +11,8 @@ on:
       mode:
         description: "ensure | status | stop"
         default: "ensure"
-  # schedule:
-  #   - cron: "*/5 * * * *"   # uncomment after secrets are set (auto-pilot)
+  schedule:
+    - cron: "*/5 * * * *"   # ARMED (Task 64): secrets set; ensure-mode starts studio only when queue has work
 
 permissions:
   contents: read
