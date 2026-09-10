@@ -144,5 +144,29 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return ok({ request: { id } });
   }
 
-  return bad("Unknown action — use deliver, fail or progress");
+  // Task 64 — fleet self-repair: the 45-min orphan reaper honestly fails rows
+  // whose worker died mid-render (sandbox rebuilds, studio freezes). Those rows
+  // are SAFE to re-render (nothing was wrong with the request itself). A fleet
+  // operator (WORKER_TOKEN) may requeue exactly that class of row — never
+  // genuine render failures and never rows in any other state. The resulting
+  // notes must not contain "reserved:" (which would hide it from claimers).
+  if (action === "requeue") {
+    if (request.status !== "failed") {
+      return bad(`requeue only applies to failed rows — this one is ${request.status}`, 409);
+    }
+    if (!request.notes.includes("orphaned:")) {
+      return bad("requeue is only for reaper-orphaned rows (notes must contain 'orphaned:') — genuine failures stay failed", 409);
+    }
+    const agent = str(body.agent, 60) || "worker";
+    const updated = await db.videoRequest.update({
+      where: { id },
+      data: {
+        status: "queued",
+        notes: `requeued by ${agent} after orphan reap — ${new Date().toISOString()}`,
+      },
+    });
+    return ok({ request: { id: updated.id, status: updated.status } });
+  }
+
+  return bad("Unknown action — use deliver, fail, progress or requeue");
 }
