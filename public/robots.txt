@@ -1,6 +1,3 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-
-# Owner-only area is not for search engines
-Noindex: /#admin

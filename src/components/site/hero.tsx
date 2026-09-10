@@ -67,7 +67,7 @@ export function Hero({ settings }: { settings: PublicSettings | null }) {
                 {s?.tagline || "Bold work. Real results."}
               </p>
               <span className="dy-ticket-stars hidden lg:inline whitespace-nowrap" aria-hidden>
-                ★ 60S ★ 5 STYLES ★ 4K
+                ★ 60S ★ 5 STYLES ★ 1080P
               </span>
             </div>
           </div>

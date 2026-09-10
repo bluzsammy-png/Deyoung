@@ -43,9 +43,9 @@ const FLYERS: Flyer[] = [
     dims: "1080 × 1080 (1:1)",
     w: 1080,
     h: 1080,
-    blurb: "Beginner $9 / Pro $29 / Elite $79 with the founding-prices hook.",
+    blurb: "Beginner $12 / Pro $39 / Elite $99 with the founding-prices hook.",
     caption:
-      "Founding prices are LIVE: Beginner $9/mo - Pro $29/mo - Elite $79/mo. Up to 60 seconds in one pass. They go up soon — lock yours in.\ndeyoungltd.site\n#DeYoung #AIVideo #FounderDeal #AIStudio #VideoContent",
+      "Founding prices are LIVE: Beginner $12/mo - Pro $39/mo - Elite $99/mo. Up to 60 seconds in one pass. They go up soon — lock yours in.\ndeyoungltd.site\n#DeYoung #AIVideo #FounderDeal #AIStudio #VideoContent",
   },
   {
     file: "deyoung-story-9x16.png",

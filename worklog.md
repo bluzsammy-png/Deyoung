@@ -1093,3 +1093,20 @@ Stage Summary:
 - Audit-first mandate satisfied: the repo, live app, worker fabric, H3 integration, security, legal and a11y are mapped with evidence; the architecture doc is the new synchronization point for every future change (per §36).
 - Owner escalations: (1) vault passphrase to unseal push/rotation/fleet control, (2) AUTH_SECRET rotation + cookie purge for S-1, (3) H3 license-text fetch, (4) legal page wording sign-off.
 - Next in sequence: W3.1 worker-plane truth fixes (reserved-guard alignment, H3 progress beats), W3.2 legal pages, then W3.3 Production state + events.
+
+---
+Task ID: 62-b
+Agent: main (Super Z)
+Task: Smallest safe first implementation task (Master Upgrade workflow step: implement after audit) — the W3.0 honesty fix pack.
+
+Work Log:
+- 4K CLAIMS REMOVED (code caps resolution at 1080p — RESOLUTION_RANK + plan seeds + request form all say 1080p): hero ticket "★ 60S ★ 5 STYLES ★ 4K" → "★ 1080P" (hero.tsx:70); "choose 720p or crisp 4K" → "crisp 1080p" (sections.tsx HowItWorks step 01); marquee "UP TO 4K CINEMATIC" → "UP TO 1080P CINEMATIC" (sections.tsx STRIP_ITEMS). The remaining "4K" in request-view.tsx:154 is a PROMPT placeholder (style keyword the user types to the generator), not a product claim — intentionally kept.
+- FAKE REVIEWS REMOVED (Instruction §28): Testimonials kicker "Real clients" → "Client reviews" (sections.tsx:231); the 3 fictional seed testimonials (Amara O./Kwame B./Tessa M.) DELETED from scripts/seed.ts and replaced with an explicit honesty comment + "skipped by design" log line — fresh deploys seed ZERO reviews; section returns null when empty; real reviews enter via Admin → Reviews & FAQ only.
+- FLYER PRICES ALIGNED to real plans: admin-flyers.tsx $9/$29/$79 → $12/$39/$99 (verified against seed.ts priceMonthly 12/39/99) in both blurb and copy-to-clipboard caption.
+- ROBOTS.TXT FIXED: removed invalid "Noindex: /#admin" directive (removed from robots spec 2019; admin gate is server-side anyway).
+- QA EVIDENCE: tsc --noEmit src = 0 errors; dev server SSR grep = 0×"4K", 1×"1080P" (hero) + 2×"UP TO 1080P" + 1×"crisp 1080p"; /api/home testimonials = 0 rows → section renders nothing (honest end state proven live in dev); "Real clients" string = 0 hits in src/.
+- PENDING DATA ACTION (needs vault/passphrase): the 3 fake testimonial ROWS still exist in the PROD Postgres (original seed) — delete via Admin → Reviews & FAQ (owner, 30 seconds) or SQL during the next unsealed session. Until then prod still shows them under the corrected "Client reviews" kicker.
+- Commit: local (push blocked with Task 62 on the sealed vault).
+
+Stage Summary:
+- The storefront no longer fabricates capabilities (4K) or customers (reviews); every remaining claim traces to real config. All that blocks prod deploy is the vault passphrase (push) + the 3-row prod DB deletion.

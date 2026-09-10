@@ -271,37 +271,11 @@ async function main() {
   }
 
   // ---- testimonials ----
-  if ((await prisma.testimonial.count()) === 0) {
-    await prisma.testimonial.createMany({
-      data: [
-        {
-          name: "Amara O.",
-          role: "Boutique owner",
-          quote:
-            "Booked a content day, had 35 photos and 5 videos back before the weekend. My Instagram has never looked this good.",
-          rating: 5,
-          sortOrder: 1,
-        },
-        {
-          name: "Kwame B.",
-          role: "Music artist",
-          quote:
-            "The brand pack changed everything — people take my pages seriously now. Fast, clean, no stories.",
-          rating: 5,
-          sortOrder: 2,
-        },
-        {
-          name: "Tessa M.",
-          role: "Event planner",
-          quote:
-            "Covered a wedding for 200 guests and still delivered the highlight reel in two days. Book with confidence.",
-          rating: 5,
-          sortOrder: 3,
-        },
-      ],
-    });
-    console.log("seed: 3 testimonials");
-  }
+  // HONESTY RULE (Master Upgrade Instruction §28, Task 62): the site ships with ZERO
+  // fabricated reviews. Real testimonials are entered by the owner in Admin →
+  // Reviews & FAQ only, after real client work. The testimonials section renders
+  // nothing while the list is empty (Testimonials returns null).
+  console.log("seed: testimonials skipped by design (no fabricated reviews)");
 
   // ---- FAQ ----
   if ((await prisma.faq.count()) === 0) {

@@ -228,7 +228,7 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
   return (
     <section className="py-16 md:py-24 bg-[#F7F7F7] border-y-4 border-primary">
       <div className="mx-auto max-w-6xl px-4">
-        <SectionHead kicker="Real clients" title="Word on the Street" dark={false} />
+        <SectionHead kicker="Client reviews" title="Word on the Street" dark={false} />
         <div className="mt-10 grid md:grid-cols-3 gap-4 dy-scene">
           {testimonials.map((t, i) => (
             <Reveal key={t.id} delay={i * 90}>
@@ -442,7 +442,7 @@ const STEPS = [
     n: "01",
     icon: PenLine,
     title: "Describe your story",
-    body: "Type your idea, pick a length up to 60 seconds and choose 720p or crisp 4K. One prompt is all it takes to start rolling.",
+    body: "Type your idea, pick a length up to 60 seconds and choose 720p or crisp 1080p. One prompt is all it takes to start rolling.",
   },
   {
     n: "02",
@@ -506,7 +506,7 @@ export function HowItWorks() {
 const STRIP_ITEMS = [
   "FOUNDING PRICES — LOCK IN NOW",
   "60 SECONDS — ONE PASS",
-  "UP TO 4K CINEMATIC",
+  "UP TO 1080P CINEMATIC",
   "LIVE QUEUE + HONEST ETA",
   "INSTANT CACHE DELIVERY",
   "MOBILE + WEB STUDIO",
