@@ -121,6 +121,33 @@ def http_json(url, payload=None, token="", method=None, timeout=120):
         return json.loads(resp.read().decode())
 
 
+# --- F-10 (W3.1): customer-visible progress beats to the site ----------
+# The local heartbeat (beat()) keeps the doctor honest; site_beat() keeps the
+# CUSTOMER row honest: PATCH action=progress refreshes the row's notes and
+# updatedAt so the 45-min orphan reaper never eats a long-but-alive H3 render,
+# and the admin queue note shows real facts (frames/steps/elapsed) — never
+# invented percentages (architecture §event rules).
+SITE_BEAT_MIN_INTERVAL = 60.0
+SITE_BEAT_CTX = {"site": "", "token": ""}
+_site_beat_state = {"t": 0.0}
+
+
+def site_beat(job_id, note, force=False):
+    """Throttled, fail-silent progress beat to the site row (F-10)."""
+    if not job_id or not SITE_BEAT_CTX["site"]:
+        return
+    now = time.time()
+    if not force and (now - _site_beat_state["t"]) < SITE_BEAT_MIN_INTERVAL:
+        return
+    try:
+        http_json(f"{SITE_BEAT_CTX['site']}/api/worker/jobs/{job_id}",
+                  payload={"action": "progress", "notes": str(note)[:500]},
+                  token=SITE_BEAT_CTX["token"], method="PATCH")
+        _site_beat_state["t"] = now
+    except Exception as exc:
+        log(f"site_beat({job_id}) failed (render continues): {exc!r}")
+
+
 def http_multipart(url, fields, filename, file_bytes, token, timeout=900):
     boundary = "----deyoung" + uuid.uuid4().hex
     buf = io.BytesIO()
@@ -289,14 +316,22 @@ def render_h3(job):
     log(f"[{job['id']}] queued {pid} len={length}f steps={steps} est~{est:.0f}min")
     beat(phase="BUSY", job={**job, "render": {"frames": length, "steps": steps,
                                               "prompt_id": pid, "est_min": round(est)}})
+    # F-10: the customer row learns the real render shape immediately
+    site_beat(job["id"], f"H3 sampling queued — {length} frames @ {RENDER_W}x{RENDER_H}, "
+                         f"steps={steps}, est ~{est:.0f} min", force=True)
     t0 = time.time()
     while True:
         time.sleep(30)
         # progress beats: a long render must NEVER look like a hung worker
         # (the doctor flags heartbeat age > HEARTBEAT_STALE_S as UNHEALTHY)
+        elapsed_min = round((time.time() - t0) / 60, 1)
         beat(phase="BUSY", job={**job, "render": {
             "frames": length, "steps": steps, "prompt_id": pid,
-            "elapsed_min": round((time.time() - t0) / 60, 1)}})
+            "elapsed_min": elapsed_min}})
+        # F-10: same truth for the customer row (throttled to ~1/min by site_beat)
+        site_beat(job["id"], f"H3 sampling running — {length} frames @ "
+                             f"{RENDER_W}x{RENDER_H}, steps={steps}, "
+                             f"{elapsed_min} min elapsed")
         if (time.time() - t0) / 60 > JOB_WATCHDOG_MIN:
             try:
                 urllib.request.urlopen(urllib.request.Request(
@@ -430,6 +465,8 @@ def main():
     STATE["agent"] = agent
     STATE["budget_min"] = args.max_minutes
     site = args.site.rstrip("/")
+    SITE_BEAT_CTX["site"] = site
+    SITE_BEAT_CTX["token"] = args.token
 
     signal.signal(signal.SIGTERM, on_signal)
     signal.signal(signal.SIGINT, on_signal)
@@ -510,10 +547,12 @@ def main():
         ok = False
         try:
             raw, steps, frames = render_h3(job)
+            site_beat(jid, f"sampling done ({frames} frames) — encoding + watermark", force=True)
             final = os.path.join(workdir, "final.mp4")
             encode_final(raw, final, int(job["seconds"]), job["resolution"],
                          bool(job.get("watermark")), jid, bool(job.get("withAudio")))
             size_mb = os.path.getsize(final) / 1e6
+            site_beat(jid, f"uploading {size_mb:.1f} MB to site", force=True)
             job_min = max(0.1, round((time.time() - JOB_T0["t"]) / 60, 1))
             with open(final, "rb") as fh:
                 result = http_multipart(

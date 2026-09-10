@@ -24,7 +24,11 @@ export function guardWorker(req: Request): NextResponse | null {
   }
   const header = req.headers.get("authorization") || "";
   const bearer = header.startsWith("Bearer ") ? header.slice(7) : header;
-  const provided = bearer.trim() || new URL(req.url).searchParams.get("token") || "";
+  // S-7 (W3.1): the ?token= query-param fallback is REMOVED — tokens embedded in
+  // URLs leak into edge/access logs and Referer headers. Every fleet worker
+  // (Kaggle universal, DB-plane site worker, Lightning H3) already authenticates
+  // with the Authorization header, so nothing deployed depends on the fallback.
+  const provided = bearer.trim();
   if (
     provided.length !== expected.length ||
     !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))

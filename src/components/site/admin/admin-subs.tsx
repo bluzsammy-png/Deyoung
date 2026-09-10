@@ -382,6 +382,11 @@ export function AdminRequests() {
                 </>
               ) : null}
             </p>
+            {r.notes ? (
+              <p className="mt-1 text-xs font-mono text-muted-foreground break-words" title="Worker-plane status note (claim + live progress beats)">
+                {r.notes.length > 180 ? `${r.notes.slice(0, 180)}…` : r.notes}
+              </p>
+            ) : null}
             {["queued", "rendering"].includes(r.status) && (
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 {r.status === "queued" && (

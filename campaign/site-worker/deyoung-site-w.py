@@ -170,7 +170,12 @@ import psycopg2, psycopg2.extras
 CLAIM_SQL = '''
 UPDATE deyoung."VideoRequest" SET status='rendering', notes=%(claim)s, "updatedAt"=now()
 WHERE id = (
-  SELECT id FROM deyoung."VideoRequest" WHERE status='queued'
+  SELECT id FROM deyoung."VideoRequest"
+  WHERE status='queued'
+    -- F-9 (W3.1): reserved rows are held back from automated claimers, exactly
+    -- like the API plane (/api/worker/claim) — parity between the two claim
+    -- surfaces. notes is NOT NULL DEFAULT '', so NOT LIKE is NULL-safe.
+    AND notes NOT LIKE '%%reserved:%%'
   ORDER BY "queuePriority" DESC, "createdAt" ASC, id ASC LIMIT 1 FOR UPDATE SKIP LOCKED
 ) RETURNING id, prompt, seconds, resolution, "withAudio", watermark, notes
 '''
