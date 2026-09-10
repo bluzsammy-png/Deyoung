@@ -20,6 +20,20 @@ export async function POST(req: Request) {
   const agent =
     (typeof body?.agent === "string" ? body.agent.trim().slice(0, 60) : "") || "unnamed-worker";
 
+  // Reaper: a worker that dies mid-render leaves its row stuck in
+  // "rendering" forever and the queue silently clogs. No heartbeat system
+  // exists yet, so use the one hard signal we have: a legitimate render
+  // never exceeds the worker-side hard cap (~35 min watchdog + upload
+  // headroom). Past that, orphan the row honestly so the customer's queue
+  // position math stays truthful.
+  await db.videoRequest.updateMany({
+    where: { status: "rendering", updatedAt: { lt: new Date(Date.now() - 45 * 60 * 1000) } },
+    data: {
+      status: "failed",
+      notes: "orphaned: no worker reported back for 45+ minutes (worker died mid-render) — safe to re-submit",
+    },
+  });
+
   for (let attempt = 0; attempt < 5; attempt++) {
     const next = await db.videoRequest.findFirst({
       // rows whose notes contain "reserved:" are held back from automated
