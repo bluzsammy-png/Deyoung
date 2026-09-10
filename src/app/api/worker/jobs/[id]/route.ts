@@ -145,27 +145,32 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   // Task 64 — fleet self-repair: the 45-min orphan reaper honestly fails rows
-  // whose worker died mid-render (sandbox rebuilds, studio freezes). Those rows
-  // are SAFE to re-render (nothing was wrong with the request itself). A fleet
-  // operator (WORKER_TOKEN) may requeue exactly that class of row — never
-  // genuine render failures and never rows in any other state. The resulting
-  // notes must not contain "reserved:" (which would hide it from claimers).
+  // whose worker died mid-render (sandbox rebuilds, studio freezes) and the
+  // render watchdog honestly fails rows that exceed the GPU ceiling. Both are
+  // INFRASTRUCTURE failures — the request itself was fine — so a fleet
+  // operator (WORKER_TOKEN) may requeue exactly those two classes. Genuine
+  // render failures and any other state stay failed. The resulting notes must
+  // not contain "reserved:" (which would hide it from claimers).
   if (action === "requeue") {
     if (request.status !== "failed") {
       return bad(`requeue only applies to failed rows — this one is ${request.status}`, 409);
     }
-    if (!request.notes.includes("orphaned:")) {
-      return bad("requeue is only for reaper-orphaned rows (notes must contain 'orphaned:') — genuine failures stay failed", 409);
+    const infra =
+      request.notes.includes("orphaned:") || request.notes.includes("watchdog");
+    if (!infra) {
+      return bad("requeue is only for infrastructure failures (orphaned:/watchdog notes) — genuine failures stay failed", 409);
     }
+    const prior = /attempt=(\d+)/.exec(request.notes)?.[1];
+    const attempt = prior ? parseInt(prior, 10) : 0;
     const agent = str(body.agent, 60) || "worker";
     const updated = await db.videoRequest.update({
       where: { id },
       data: {
         status: "queued",
-        notes: `requeued by ${agent} after orphan reap — ${new Date().toISOString()}`,
+        notes: `requeued by ${agent} attempt=${attempt + 1} after infra-failure — ${new Date().toISOString()}`,
       },
     });
-    return ok({ request: { id: updated.id, status: updated.status } });
+    return ok({ request: { id: updated.id, status: updated.status, attempt: attempt + 1 } });
   }
 
   return bad("Unknown action — use deliver, fail, progress or requeue");

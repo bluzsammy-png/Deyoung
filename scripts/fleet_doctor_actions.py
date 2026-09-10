@@ -52,6 +52,52 @@ def queue_counts():
     return int(q.get("queued", 0)), int(q.get("rendering", 0))
 
 
+def worker_req(path, data=None, method="GET"):
+    tok = (os.environ.get("WORKER_TOKEN") or "").strip()
+    req = urllib.request.Request(
+        f"{SITE}{path}",
+        data=json.dumps(data).encode() if data else None,
+        headers={"Authorization": f"Bearer {tok}", "Content-Type": "application/json"},
+        method=method,
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read().decode())
+
+
+def reaper_poke():
+    """Task 64 — the 45-min orphan reaper lives inside POST /api/worker/claim;
+    with no live worker nobody triggers it. One claim poke per tick runs the
+    reaper (empty queue -> 'Queue is empty', side effect: stuck rows reaped)."""
+    try:
+        worker_req("/api/worker/claim", {"agent": "fleet-doctor-poke"}, "POST")
+    except Exception as e:  # noqa: BLE001
+        print(f"[fleet-doctor] reaper poke: {type(e).__name__}: {str(e)[:90]}")
+
+
+def requeue_orphaned():
+    """Task 64 — auto-requeue reaper-orphaned rows (worker died mid-render:
+    sandbox rebuilds, freezes, credit exhaustion). Orphans are infrastructure
+    deaths, not prompt problems; each retry costs real credits so the loop is
+    self-limiting. Watchdog-class rows stay operator-manual (possible poison
+    prompts must not auto-loop)."""
+    try:
+        body = worker_req("/api/worker/jobs?status=failed")
+    except Exception as e:  # noqa: BLE001
+        print(f"[fleet-doctor] failed-row list unavailable: {type(e).__name__}: {str(e)[:100]}")
+        return 0
+    n = 0
+    for j in body.get("jobs", []):
+        if "orphaned:" not in (j.get("notes") or ""):
+            continue
+        try:
+            worker_req(f"/api/worker/jobs/{j['id']}", {"action": "requeue", "agent": "fleet-doctor"}, "PATCH")
+            n += 1
+            print(f"[fleet-doctor] requeued orphaned row {j['id']}")
+        except Exception as e:  # noqa: BLE001
+            print(f"[fleet-doctor] requeue {j['id']} failed: {type(e).__name__}: {str(e)[:90]}")
+    return n
+
+
 def lightning_rest():
     key = (os.environ.get("LIGHTNING_API_KEY") or "").strip()
     if not key:
@@ -113,8 +159,15 @@ def main():
         sys.exit(0 if rc == 0 else 5)
 
     # mode == ensure
-    print(f"[fleet-doctor] queue: queued={q} rendering={rend} | studio: {state} | balance: {bal}")
+    reaper_poke()
+    requeued = requeue_orphaned() if mode == "ensure" else 0
+    q, rend = queue_counts()
+    print(f"[fleet-doctor] requeued {requeued} orphaned row(s) | queue: queued={q} rendering={rend} | studio: {state} | balance: {bal}")
     if (q or 0) + (rend or 0) == 0:
+        if state and "Running" in str(state):
+            print("[fleet-doctor] queue empty + studio running -> stopping machine (credit guard)")
+            rc = run("scripts/h3_doctor_61.py", "--stop-studio")
+            sys.exit(0 if rc == 0 else 5)
         print("[fleet-doctor] queue empty — nothing to do (studio not started; credits safe)")
         return
     if state == "NOT_FOUND":

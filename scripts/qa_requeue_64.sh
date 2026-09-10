@@ -28,6 +28,10 @@ const p = new PrismaClient({ datasources: { db: { url: "file:/home/z/my-project/
     { subscriptionId: "qa64-sub", email: "qa64@test.local", prompt: "QA64: genuine fail", seconds: 5, resolution: "1080p", status: "failed",
       notes: "ComfyUI graph error — reported by qa at 2026-01-01T00:00:00Z" },
     { subscriptionId: "qa64-sub", email: "qa64@test.local", prompt: "QA64: queued row", seconds: 5, resolution: "1080p", status: "queued", notes: "" },
+    { subscriptionId: "qa64-sub", email: "qa64@test.local", prompt: "QA64: watchdog row", seconds: 5, resolution: "1080p", status: "failed",
+      notes: "render watchdog fired after 35 min — reported by lightning-h3-x" },
+    { subscriptionId: "qa64-sub", email: "qa64@test.local", prompt: "QA64: attempt2 row", seconds: 5, resolution: "1080p", status: "failed",
+      notes: "orphaned: worker died — prior: requeued by qa attempt=1 after infra-failure" },
   ]});
   const rows = await p.videoRequest.findMany({ where: { prompt: { startsWith: "QA64:" } } });
   for (const r of rows) console.log(r.prompt.split(" ")[1] + "=" + r.id);
@@ -47,6 +51,11 @@ echo "[qa] T4 requeue orphaned row";      R=$(curl -s -o /tmp/r.json -w "%{http_
 echo "[qa] T5 requeue genuine fail";      R=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH -H "$H" -H "Content-Type: application/json" -d '{"action":"requeue"}' "$BASE/api/worker/jobs/$GENU"); ck "requeue-genuine 409" 409 "$R"
 echo "[qa] T6 requeue already queued";    R=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH -H "$H" -H "Content-Type: application/json" -d '{"action":"requeue"}' "$BASE/api/worker/jobs/$ORPH"); ck "requeue-again 409" 409 "$R"
 echo "[qa] T7 claim returns requeued row"; curl -s -X POST -H "$H" -H "Content-Type: application/json" -d '{"agent":"qa-64"}' "$BASE/api/worker/claim" > /tmp/r.json; grep -q "QA64: orphaned row" /tmp/r.json && { PASS=$((PASS+1)); echo "PASS: claim got requeued job"; } || { FAIL=$((FAIL+1)); echo "FAIL: claim did not return requeued job"; }
+
+WATCH="$(node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient({datasources:{db:{url:'file:/home/z/my-project/db/custom.db'}}});p.videoRequest.findFirst({where:{prompt:'QA64: watchdog row'}}).then(r=>{console.log(r.id);return p.\$disconnect()})")"
+ATT2="$(node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient({datasources:{db:{url:'file:/home/z/my-project/db/custom.db'}}});p.videoRequest.findFirst({where:{prompt:'QA64: attempt2 row'}}).then(r=>{console.log(r.id);return p.\$disconnect()})")"
+echo "[qa] T8 requeue watchdog-class row";   R=$(curl -s -o /tmp/r.json -w "%{http_code}" -X PATCH -H "$H" -H "Content-Type: application/json" -d '{"action":"requeue","agent":"qa-64"}' "$BASE/api/worker/jobs/$WATCH"); ck "requeue-watchdog 200" 200 "$R"
+echo "[qa] T9 attempt counter increments";   R=$(curl -s -X PATCH -H "$H" -H "Content-Type: application/json" -d '{"action":"requeue","agent":"qa-64"}' "$BASE/api/worker/jobs/$ATT2"); echo "$R" | grep -q '"attempt":2' && { PASS=$((PASS+1)); echo "PASS: attempt=2"; } || { FAIL=$((FAIL+1)); echo "FAIL: attempt counter got: $(cat /tmp/r.json 2>/dev/null | head -c 120)"; }
 
 echo "[qa] cleanup..."
 node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient({datasources:{db:{url:'file:/home/z/my-project/db/custom.db'}}});p.videoRequest.deleteMany({where:{prompt:{startsWith:'QA64:'}}}).then(n=>{console.log('deleted',n.count);return p.\$disconnect()})"
