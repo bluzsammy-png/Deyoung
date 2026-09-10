@@ -1127,3 +1127,29 @@ Work Log:
 Stage Summary:
 - Repo is now clean of the live admin credential (tip + full history), honesty pack is LIVE on production (robots.txt verified fixed), and both Task 62 deliverables are pushed with CI + Railway success evidence.
 - The only remaining W3.0 item needs the vault passphrase re-pasted by the owner: AUTH_SECRET rotation, then selfheal -> fleet restore -> prod testimonial row cleanup.
+
+---
+Task ID: 62-d
+Agent: main (Super Z)
+Task: Owner: "use the pat it has access to everything" — exhaust the PAT-only capability surface: S-1 residual verification, prod testimonial deletion attempts, gitleaks cookie-jar rules, W3.1 worker-plane truth wave.
+
+Work Log:
+- PAT CAPABILITY MAP (verified live, not assumed): classic PAT, scopes = admin:org/admin:enterprise/repo/workflow/codespace/gist/audit_log/delete_repo...; PAT owner == bluzsammy-png (User, not org) -> no org secrets exist. Repo Actions secrets: exactly ONE (ADMIN_PASS, created 2026-09-07, never updated). Environments/variables/releases/gists/codespaces: all empty. Railway/Supabase/Kaggle/Lightning secrets: vault-only (sealed) — scripts confirmed token-from-vault pattern (railway_watch_60.py reads workers/secrets/railway.json; no hardcoded tokens anywhere).
+- S-1 SEVERITY CORRECTION (honest finding): recovered the purged brain/admin_cookie_58.txt from GitHub's ORPHANED pre-rewrite commit f4cf428 (still served by SHA — the exact residual risk documented in 62-c; scripts/rescue_cookie_62d.py, value never printed/committed). VERDICT: the file is a LOCALHOST-scoped `dy_user` session jar from Task 58's local dev E2E — NOT a production admin cookie. Forced against prod /api/me: HTTP 401 (signed with the local dev secret; prod HMAC rejects). Task 62's "LIVE production admin cookie" label was an unverified overstatement. History purge remains correct hygiene; TRUE residual risk is now PROVEN much lower. Second full sweep of the pre-rewrite tree (742 entries = 621 blobs + 121 dirs; blob count == current tracked count): the cookie jar was the ONLY sensitive artifact; vault/vault.enc is encrypted-by-design.
+- ADMIN_PASS PROBE (evidence over assumption): built .github/workflows/admin-data-hygiene.yml — server-side probe of the repo secret against prod admin login, deletion of explicitly-provided testimonial IDs ONLY on successful auth, value never printed. Dispatched with the 3 fake-row IDs: health 200, **admin login 401** -> ADMIN_PASS is stale since the Task 58 password reset (as predicted); NO deletion attempted (honest exit 0 with notice). Probe workflow retained as a permanent, safe ops tool.
+- TESTIMONIALS STATUS: the 3 fictional rows (Amara O. cmtqdr4w4...vo / Kwame B. ...iu / Tessa M. ...k) remain LIVE in prod — now PROVEN to require an owner-side action (Admin UI, or vault passphrase for SQL, or a fresh credential).
+- GITLEAKS COOKIE-JAR RULES (62-c nice-to-have): .gitleaks.toml += netscape-cookie-jar + curl-httponly-jar-entry rules (extend useDefault preserved; TOML validated).
+- W3.1 WORKER-PLANE TRUTH (architecture doc line 678, all four items):
+  * F-9: campaign/site-worker/deyoung-site-w.py CLAIM_SQL += `AND notes NOT LIKE '%reserved:%'` (psycopg2-escaped) — reserved-row parity with the API plane; notes is NOT NULL DEFAULT '' so NOT LIKE is NULL-safe (schema-verified).
+  * F-10: workers/lightning/h3_queue_worker.py += site_beat() — throttled (60s min interval), fail-silent PATCH action=progress beats at sampling-queued / per-30s-poll (real quantities only: frames/resolution/steps/elapsed-min — no invented %) / sampling-done / uploading; SITE_BEAT_CTX wired in main(); beats keep rows ahead of the 45-min orphan reaper and give the customer real facts.
+  * S-7: src/lib/worker.ts guardWorker drops the ?token= query-param fallback (header-only). Verified ZERO consumers repo-wide (both fleet workers send Bearer headers).
+  * Admin Video Queue worker identity: admin-subs.tsx renders r.notes (mono, muted, 180-char clamp) on every card.
+- QA: python py_compile clean on all touched workers; tsc src = 0 errors (whole-tree error count 5 == pre-change baseline, verified via git stash A/B); full browser E2E on dev (agent-browser): seeded 1 admin + 3 VideoRequest rows via scripts/qa_seed_w31.js (local sqlite only; global DATABASE_URL checked = file:db/custom.db, no prod-DB trap), admin login -> Video Queue -> "claimed by lightning-h3-qatest ... H3 sampling running — 145 frames @ 960x544, steps=4, 3.2 min elapsed" renders on the rendering row, "rendered by ..." on the done row, hidden on the empty-notes queued row; screenshot brain/qa_w31_videosequeue_notes_62d.png. Cleanup: seed removed (stock empty sqlite verified 0 rows / 0 admins), dev server killed, rescue jar shredded (shred via rm after 0600 single-use; value never logged).
+- PUSH + CI: commits 5c2ec70 (S-1 correction + gitleaks rules + hygiene workflow) and 78760e7 (W3.1) pushed via one-shot URL; gitleaks CI SUCCESS on 78760e7 (verified via check-runs API).
+- Vault/cloud state unchanged: passphrase still required for workers/secrets, .env.local, fleet restore, Railway-side AUTH_SECRET rotation.
+
+Stage Summary:
+- PAT surface fully exhausted and documented: GitHub-side control is complete (push/CI/secrets-write/workflow-dispatch/orphan audit); Railway/Supabase/Kaggle planes are PROVEN vault-gated.
+- S-1 downgraded with live evidence (localhost dev token, 401 on prod); purge stands; AUTH_SECRET rotation remains recommended hygiene, not an active breach.
+- W3.1 shipped in full (F-9/F-10/S-7/admin identity) with dev E2E + screenshot; CI green.
+- Owner-only residuals: (1) vault passphrase (restores everything), (2) 3 fake testimonial rows in prod DB (Admin -> Reviews & FAQ, 30 seconds), (3) optional AUTH_SECRET rotation once Railway access is back.
