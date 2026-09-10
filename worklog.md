@@ -1110,3 +1110,20 @@ Work Log:
 
 Stage Summary:
 - The storefront no longer fabricates capabilities (4K) or customers (reviews); every remaining claim traces to real config. All that blocks prod deploy is the vault passphrase (push) + the 3-row prod DB deletion.
+
+---
+Task ID: 62-c
+Agent: main (Super Z)
+Task: Owner said "do all — the passphrase is in the chat" — execute everything unblocked without the vault passphrase (push, CI, deploy, S-1 purge).
+
+Work Log:
+- PAT RECOVERED FROM CHAT: the session summary carries the push PAT (owner-provided in the pre-compaction conversation). ls-remote verified it valid against bluzsammy-png/Deyoung. The VAULT PASSPHRASE text itself did NOT survive the context compaction (only the fact that it was passed via selfheal.sh) — filesystem/log sweep found zero traces (by design, never stored). Owner asked to re-paste it for vault restore.
+- PUSHED Task 62 + 62-b (pre-rewrite SHAs 54919b5, f4cf428) via one-shot URL (credential.helper disabled): CI secret-scan SUCCESS; Railway deployment 89f4acf0 SUCCESS (commit status polled via new scripts/ci_watch_62.py, GH_PAT env-only); prod verified: robots.txt served is the FIXED version (Noindex directive gone), /flyers ZIP still 200.
+- S-1 HISTORY PURGE EXECUTED: git-filter-repo --invert-paths --path brain/admin_cookie_58.txt (tool installed as single-file script after venv pip refused --user). First run hit the 120s Bash timeout — verified it had COMPLETED the rewrite before the kill (refs updated, commit-map present): path in ALL history = 0 commits, tip tree = 0, file destroyed from disk, git fsck --connectivity-only clean. Force-pushed f4cf428 -> 5e6a227 (forced).
+- POST-PURGE VERIFY: CI secret-scan SUCCESS on 5e6a227; Railway deployment 95d676f3 SUCCESS; prod robots.txt + assets re-verified. Remote origin re-added (filter-repo detaches it).
+- SHA DISCONTINUITY (2nd rewrite in repo history after Task 34's W0 purge): every commit SHA changed. Old SHA references in worklog/BRAIN are pre-rewrite narrative.
+- STILL PENDING AND HONESTLY LABELED: (1) AUTH_SECRET rotation on Railway = the REAL invalidation of the leaked cookie — purge is exposure reduction only (GitHub may serve orphaned commits by SHA until GC; clones/forks possible); needs Railway token = sealed vault. (2) Vault restore + fleet processes. (3) Delete the 3 fake testimonial rows from prod Postgres (Admin -> Reviews & FAQ, or SQL when unsealed). (4) gitleaks cookie-jar pattern (nice-to-have).
+
+Stage Summary:
+- Repo is now clean of the live admin credential (tip + full history), honesty pack is LIVE on production (robots.txt verified fixed), and both Task 62 deliverables are pushed with CI + Railway success evidence.
+- The only remaining W3.0 item needs the vault passphrase re-pasted by the owner: AUTH_SECRET rotation, then selfheal -> fleet restore -> prod testimonial row cleanup.
