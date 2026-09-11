@@ -32,6 +32,10 @@ jobs:
       # sandbox brain rotates the FULL vault (kaggle_tokens.json) on its own.
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
       KAGGLE_USER: ${{ secrets.KAGGLE_USER }}
+      # Task 68 — new API planes (secrets set via sealed-box API; env wiring was
+      # blocked during the Task-67 push freeze, completed in Task 69).
+      BAIDU_AISTUDIO_TOKEN: ${{ secrets.BAIDU_AISTUDIO_TOKEN }}
+      MODELSCOPE_TOKEN: ${{ secrets.MODELSCOPE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

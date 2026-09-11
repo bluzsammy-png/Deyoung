@@ -1268,3 +1268,19 @@ Stage Summary:
 - Baidu AI Studio plane: ONBOARDED end-to-end (valid token, live canary, doctor-wired 0-burn, vaulted, mirrored).
 - ModelScope plane: vaulted + mirrored but token INVALID (401) — blocked ONLY on owner re-copying the token.
 - Still blocked on GitHub PAT (owner-side): origin push (2 local commits now 3), GitHub mirror sync, Actions secrets for the two new planes.
+---
+Task ID: 69
+Agent: main (Super Z)
+Task: Owner delivered the GitHub PAT — close every custody-blocked item: origin push, plaintext vault mirror sync, Actions secrets for the two new planes, fleet-doctor env wiring, end-to-end Actions validation.
+
+Work Log:
+- PAT CUSTODY: workers/secrets/github.json (0600, git-ignored verified) written from the chat value; PAT verified live via /user (login bluzsammy-png, full repo+workflow scopes). Value never echoed to logs.
+- SECRET SWEEP + ORIGIN PUSH: pre-push pattern sweep over the 4 unpushed commits (ghp_/ms-/baidu-key/passphrase patterns) CLEAN; pushed a9e1c75..77b1ff6 -> main SUCCESS. Post-push secret-scan workflow: completed success.
+- MIRROR SYNC: vault_mirror_sync_63.sh SUCCESS — "MIRROR SYNCED (private-verified): workers/secrets + .env.local -> bluzsammy-png/deyoung-vault-mirror". Fleet now has THREE independent restore paths: repo blob (encrypted), GitHub plaintext mirror, Kaggle dataset mirror.
+- ACTIONS SECRETS: gh_set_secret_65.py sealed-box PUT -> BAIDU_AISTUDIO_TOKEN HTTP 201, MODELSCOPE_TOKEN HTTP 201. Repo secrets now 7: ADMIN_PASS, BAIDU_AISTUDIO_TOKEN, KAGGLE_API_TOKEN, KAGGLE_USER, LIGHTNING_API_KEY, MODELSCOPE_TOKEN, WORKER_TOKEN. (PyNaCl was missing in this rebuilt sandbox — installed into the venv; note: python3 is /home/z/.venv 3.12, system pip targets 3.13, always use python3 -m pip.)
+- E2E VALIDATION + GAP FOUND: dispatched fleet-doctor (status) run 34647758422 — completed success BUT "new planes: no credentials visible": the Task-67 push freeze left fleet-doctor.yml env-wiring without the two new secrets. Fixed: added BAIDU_AISTUDIO_TOKEN + MODELSCOPE_TOKEN env entries (Task 69). Follow-up dispatch validates.
+- MODELSCOPE: token still the invalid one (owner has not re-copied yet); Actions arm will report the honest 401 until then — free, nothing burned.
+
+Stage Summary:
+- GitHub custody chain CLOSED: push, mirror, Actions secrets all live. Every earlier "blocked" item from Tasks 67/68 is now unblocked and executed.
+- Remaining owner-side inputs: (1) re-copied ModelScope token, (2) optional Kaggle vault round-trip re-verify next session (rate-limit deferral), (3) pre-existing: queue 4/0 waiting on Kaggle quota reset / Lightning top-up.
