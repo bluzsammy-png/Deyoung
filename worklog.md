@@ -1229,3 +1229,21 @@ Stage Summary:
 - The fleet is now genuinely COMPLETE as a system, not a single-vendor hope: Lightning (paid, balance-gated, debt-guarded), Kaggle (free, 6-account rotation, quota-aware, exit-idle polite), HF (verified reserve plane), prod queue (repaired, honest notes), two independent supervisors (sandbox brain every 60s + Actions doctor, sandbox-death-immune), and the private mirror for rebuild self-heal — all live-tested with evidence today.
 - Current capacity truth: 4 videos queued and waiting; every plane is honestly gated (Kaggle quota reset / Lightning top-up). Auto-resume is armed on BOTH supervisors; zero owner action required, top-up renders immediately.
 - Remaining owner-side items: optional Lightning top-up (immediate render), optional Lightning key rotation (hygiene), optional HF probe-repo deletion (cosmetic), 3 fake testimonials + AUTH_SECRET rotation (unchanged from Task 62/64).
+---
+Task ID: 67
+Agent: main (Super Z)
+Task: Owner registered Baidu AI Studio + ModelScope and pasted both API keys — onboard both into the fleet (vault ingest -> live canary -> doctor wiring -> mirror seed) and update the tracker.
+
+Work Log:
+- VAULT INGEST: workers/secrets/baidu_tokens.json (baidu-1, aistudio_llm_api, base https://aistudio.baidu.com/llm/lmapi/v3, default ernie-5.1) + workers/secrets/modelscope_tokens.json (ms-1, api_inference) created per fleet schema; 0600; /workers/secrets/ git-ignored verified (line 76).
+- LIVE CANARY (scripts/canary_new_planes_67.py, evidence brain/new_planes_canary_67.json, keys masked to 6-char): baidu_aistudio PASS (chat 200, 4.7s; /models GET 200 = free probe endpoint, 52-56 entries; 16-token completion, finish=length on reasoning); modelscope FAIL — chat 401 "Authentication failed, please make sure that a valid ModelScope token is supplied" (header variants tested; /models is PUBLIC 200 so no auth signal there; 401 persists across model ids from the live list).
+- DOCTOR WIRING (fleet_doctor_actions.py): new_planes_probe() added and called in status + ensure paths. Burn discipline: Baidu = authenticated /models GET only (0 points burned, verified live: token VALID); ModelScope = 1-token chat probe (free tier; 401s cost nothing). Token sources: env BAIDU_AISTUDIO_TOKEN / MODELSCOPE_TOKEN first, else workers/secrets jsons. py_compile OK; probe run live with honest output.
+- SANDBOX CLEANUP INCIDENT: download/ + research packaging artifacts (gen_report.py, gen_charts.py, cover_free_gpu.html, merge_final.py, research_out digests) were wiped mid-session by an external cleanup. Fleet-critical state (vault.enc, secrets, canary, doctor, evidence) INTACT. Tracker regenerated v2 via scripts/gen_registration_tracker.py with Task-67 statuses baked in (QA: recalc/audit/scan/validate all clean, Review 4/4 PASS). Deep-study PDF (Free_GPU_Hosting_0USD_Landscape_Study.pdf) NOT regenerated — rebuildable on request.
+- TRACKER: download/Free_GPU_Registration_Tracker.xlsx v2 — Baidu + ModelScope = "Token handed off" (amber), new fleet rows added to Existing Fleet sheet (5 planes), Task-67 note in Register Now.
+- PUSH BLOCKED: git push failed — no GitHub credentials in this sandbox (GH_PAT env absent, no gh auth, no git-credentials). Commit bd53276 (doctor patch + canary + diag scripts + masked evidence) is LOCAL-ONLY. Same custody gap blocks: vault_mirror_sync_63.sh (needs PAT), vault.enc re-encryption (needs owner passphrase), Actions secrets BAIDU_AISTUDIO_TOKEN/MODELSCOPE_TOKEN (needs PAT).
+- HYGIENE: token-leak sweep across tracked files for both key prefixes: clean; prepush scan's single "default_model" hit is a heuristic match on a dict-key string, not a secret.
+
+Stage Summary:
+- Baidu plane: LIVE and doctor-monitored at zero point burn; ernie-5.1 reachable; stored in fleet schema.
+- ModelScope plane: ingested but token INVALID (401) — owner must re-copy from modelscope.cn/my/myaccesstoken.
+- Owner asks (2): (1) re-copied ModelScope token; (2) vault passphrase (Task 64) OR a repo-scoped GitHub PAT — the PAT unblocks push + mirror seed + Actions secrets in one move.
