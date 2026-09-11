@@ -19,6 +19,11 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const agent =
     (typeof body?.agent === "string" ? body.agent.trim().slice(0, 60) : "") || "unnamed-worker";
+  // Task 65 — reap-only hygiene poke: fleet supervisors (GitHub Actions doctor)
+  // need the orphan reaper to run even when no live worker is polling, but must
+  // NEVER steal a queued job they cannot render. reap_only runs the reaper and
+  // returns without claiming — plain claims keep working exactly as before.
+  const reapOnly = body?.reap_only === true;
 
   // Reaper: a worker that dies mid-render leaves its row stuck in
   // "rendering" forever and the queue silently clogs. No heartbeat system
@@ -26,13 +31,21 @@ export async function POST(req: Request) {
   // never exceeds the worker-side hard cap (~35 min watchdog + upload
   // headroom). Past that, orphan the row honestly so the customer's queue
   // position math stays truthful.
-  await db.videoRequest.updateMany({
+  const reaped = await db.videoRequest.updateMany({
     where: { status: "rendering", updatedAt: { lt: new Date(Date.now() - 45 * 60 * 1000) } },
     data: {
       status: "failed",
       notes: "orphaned: no worker reported back for 45+ minutes (worker died mid-render) — safe to re-submit",
     },
   });
+
+  if (reapOnly) {
+    return ok({
+      job: null,
+      reaped: reaped.count,
+      message: "reap-only poke — reaper ran, nothing claimed",
+    });
+  }
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const next = await db.videoRequest.findFirst({

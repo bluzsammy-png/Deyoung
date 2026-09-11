@@ -27,6 +27,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SITE = os.environ.get("DEYOUNG_SITE", "https://deyoungltd.site")
 PROJECT_ID = "01m1svndkgcbberk6v4yfcdr00"
 STUDIO_NAME = "deyoung-h3"
+# Task 65 — measured T4 render cost is ~0.75-0.8 credits; starting below this
+# floor produces a doomed render that can even push the balance negative
+# (proven: 2026-09-11 the 05:09Z tick started at 0.84 and ended -0.32).
+MIN_START_BALANCE = float(os.environ.get("MIN_START_BALANCE", "0.85"))
+KAGGLE_KERNEL_USER = (os.environ.get("KAGGLE_USER") or "").strip()
+KAGGLE_SLUG = "deyoung-worker"
 
 
 def die(msg, code=1):
@@ -65,11 +71,16 @@ def worker_req(path, data=None, method="GET"):
 
 
 def reaper_poke():
-    """Task 64 — the 45-min orphan reaper lives inside POST /api/worker/claim;
-    with no live worker nobody triggers it. One claim poke per tick runs the
-    reaper (empty queue -> 'Queue is empty', side effect: stuck rows reaped)."""
+    """Task 65 — steal-proof hygiene poke. Runs the 45-min orphan reaper via
+    the site's reap_only claim mode: stuck rows are reaped, NOTHING is ever
+    claimed (the Task 64 poke could steal a queued job into rendering with no
+    renderer behind it — proven live on cmt12fd3a at 2026-09-11T05:09Z)."""
     try:
-        worker_req("/api/worker/claim", {"agent": "fleet-doctor-poke"}, "POST")
+        body = worker_req("/api/worker/claim", {"agent": "fleet-doctor-poke", "reap_only": True}, "POST")
+        if body.get("job") is not None:
+            print("[fleet-doctor] WARNING: site pre-dates reap_only — poke CLAIMED a job it cannot render; it will orphan-reap on a later poke (self-heals)")
+        else:
+            print(f"[fleet-doctor] reap-only poke: reaped={body.get('reaped', '?')}")
     except Exception as e:  # noqa: BLE001
         print(f"[fleet-doctor] reaper poke: {type(e).__name__}: {str(e)[:90]}")
 
@@ -127,6 +138,54 @@ def lightning_rest():
     return state, machine, bal
 
 
+def kaggle_session_status():
+    """Read the deyoung-worker kernel status via the Kaggle CLI (token from
+    env KAGGLE_API_TOKEN). Returns one of: running, idle (no live session),
+    or None when the Kaggle plane is not configured/probed."""
+    tok = (os.environ.get("KAGGLE_API_TOKEN") or "").strip()
+    if not tok or not KAGGLE_KERNEL_USER:
+        return None
+    import subprocess  # noqa: PLC0415
+    r = subprocess.run(
+        [sys.executable, "-m", "kaggle", "kernels", "status", f"{KAGGLE_KERNEL_USER}/{KAGGLE_SLUG}"],
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, "KAGGLE_API_TOKEN": tok},
+    )
+    out = (r.stdout + r.stderr).lower()
+    if r.returncode != 0:
+        print(f"[fleet-doctor] kaggle status probe: {(r.stdout + r.stderr).strip()[:120]}")
+        return None if ("404" in out or "not found" in out) else "idle"
+    if "running" in out or "queued" in out:
+        return "running"
+    return "idle"
+
+
+def kaggle_ensure(worker_token):
+    """Task 65 — the FREE fallback plane. When the queue has work and the
+    Lightning plane is balance-gated, launch/refresh one Kaggle GPU worker
+    session (LTX renderer, explicit --renderer ltx so a broken kernel fails a
+    job honestly instead of delivering a placeholder; --exit-idle so it stops
+    burning quota when the queue drains). Idempotent: skips when a session is
+    already live. Only ever runs when KAGGLE_API_TOKEN + KAGGLE_USER exist."""
+    state = kaggle_session_status()
+    if state == "running":
+        print("[fleet-doctor] kaggle: session already running — nothing to do")
+        return
+    if state is None:
+        print("[fleet-doctor] kaggle: not configured (KAGGLE_API_TOKEN/KAGGLE_USER secrets) — skipping fallback plane")
+        return
+    print("[fleet-doctor] kaggle: launching a fresh deyoung-worker GPU session (free plane)")
+    rc = run(
+        "scripts/kaggle_launch.py",
+        "--token", worker_token,
+        "--renderer", "ltx",
+        "--max-minutes", "480",
+        "--exit-idle",
+    )
+    if rc != 0:
+        print(f"[fleet-doctor] kaggle launch returned {rc} — quota may be exhausted on this account; will retry next tick")
+
+
 def run(script, *args):
     print(f"[fleet-doctor] run: {script} {' '.join(args)}", flush=True)
     r = subprocess.run(
@@ -163,6 +222,12 @@ def main():
     requeued = requeue_orphaned() if mode == "ensure" else 0
     q, rend = queue_counts()
     print(f"[fleet-doctor] requeued {requeued} orphaned row(s) | queue: queued={q} rendering={rend} | studio: {state} | balance: {bal}")
+
+    # Task 65 debt guard: negative balance with a running studio = live debt.
+    if bal is not None and bal < 0 and state and "Running" in str(state):
+        print("[fleet-doctor] balance NEGATIVE with studio running -> emergency stop (debt guard)")
+        run("scripts/h3_doctor_61.py", "--stop-studio")
+
     if (q or 0) + (rend or 0) == 0:
         if state and "Running" in str(state):
             print("[fleet-doctor] queue empty + studio running -> stopping machine (credit guard)")
@@ -170,10 +235,25 @@ def main():
             sys.exit(0 if rc == 0 else 5)
         print("[fleet-doctor] queue empty — nothing to do (studio not started; credits safe)")
         return
+
+    # Task 65 balance gate: never start a studio that cannot finish a render.
+    lightning_gated = False
+    if bal is not None and bal < MIN_START_BALANCE:
+        lightning_gated = True
+        print(f"[fleet-doctor] balance {bal} < floor {MIN_START_BALANCE} — Lightning plane idle until top-up (a started render would die mid-way and can go negative, proven 2026-09-11)")
+    elif bal is None:
+        lightning_gated = True
+        print("[fleet-doctor] balance unknown (probe failed) — refusing to start the studio blind")
+
+    wt = (os.environ.get("WORKER_TOKEN") or "").strip()
     if state == "NOT_FOUND":
         die(f"studio {STUDIO_NAME} not found under project {PROJECT_ID} — check account/teamspace")
+    if lightning_gated:
+        kaggle_ensure(wt)
+        print("[fleet-doctor] ensure complete for this tick — Lightning gated; free planes carry the queue")
+        return
     if "Running" not in str(state):
-        print("[fleet-doctor] work queued + studio stopped -> starting studio")
+        print("[fleet-doctor] work queued + studio stopped + balance ok -> starting studio")
         if run("scripts/lightning_start_61.py") != 0:
             die("studio start failed (see output above)", 6)
     else:

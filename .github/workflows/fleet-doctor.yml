@@ -28,12 +28,16 @@ jobs:
     env:
       LIGHTNING_API_KEY: ${{ secrets.LIGHTNING_API_KEY }}
       WORKER_TOKEN: ${{ secrets.WORKER_TOKEN }}
+      # Task 65 — free fallback plane: one Kaggle account is enough here; the
+      # sandbox brain rotates the FULL vault (kaggle_tokens.json) on its own.
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KAGGLE_USER: ${{ secrets.KAGGLE_USER }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install fleet deps
-        run: pip install requests lightning-sdk
+        run: pip install requests lightning-sdk kaggle
       - name: Run fleet doctor
         run: python scripts/fleet_doctor_actions.py "${{ github.event.inputs.mode || 'ensure' }}"

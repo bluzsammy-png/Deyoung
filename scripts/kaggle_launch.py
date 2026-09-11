@@ -59,6 +59,26 @@ def ensure_kaggle_cli():
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", "kaggle"], check=True)
 
 
+def discover_username(auth_env):
+    """Task 65 — token-auth (KGAT) sessions have no username in env; discover
+    it live via the kernels/list?mine=true REST probe so the kernel id is
+    always the full `user/slug` form."""
+    import urllib.request
+    req = urllib.request.Request(
+        "https://www.kaggle.com/api/v1/kernels/list?mine=true&pageSize=20",
+        headers={"Authorization": f"Bearer {auth_env['KAGGLE_API_TOKEN']}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            for k in json.loads(r.read().decode()):
+                ref = k.get("ref") or ""
+                if "/" in ref:
+                    return ref.split("/", 1)[0]
+    except Exception as exc:  # noqa: BLE001
+        print(f"[kaggle-launch] username discovery failed ({exc.__class__.__name__}: {exc}) — pushing with bare slug")
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description="Launch DeYoung render worker on Kaggle GPU")
     ap.add_argument("--token", required=True, help="the site WORKER_TOKEN (not your Kaggle token)")
@@ -67,10 +87,18 @@ def main():
     ap.add_argument("--renderer", choices=["auto", "stub", "ltx"], default="auto")
     ap.add_argument("--slug", default=SLUG)
     ap.add_argument("--watch", action="store_true", help="poll kernel status until it finishes")
+    ap.add_argument("--exit-idle", action="store_true", help="worker exits when the queue drains (saves GPU quota)")
+    ap.add_argument("--user", default=os.environ.get("KAGGLE_USER", "").strip(), help="explicit Kaggle username for the kernel id (token-auth sessions)")
     args = ap.parse_args()
 
     username, auth_env = kaggle_creds()
     ensure_kaggle_cli()
+    if username is None and args.user:
+        username = args.user
+    if username is None and "KAGGLE_API_TOKEN" in auth_env:
+        username = discover_username(auth_env)
+        if username:
+            print(f"[kaggle-launch] token authenticated as {username}")
 
     worker_b64 = base64.b64encode(WORKER_SRC.read_bytes()).decode()
     kernel_id = f"{username}/{args.slug}" if username else args.slug
@@ -85,7 +113,8 @@ sys.argv = [
     "--token", "{args.token}",
     "--renderer", "{args.renderer}",
     "--max-minutes", "{args.max_minutes}",
-    "--agent", "kaggle-gpu",
+    "--agent", "kaggle-gpu",{'' if not args.exit_idle else '''
+    "--exit-idle",'''}
 ]
 print("[kaggle] booting DeYoung render worker…", flush=True)
 exec(compile(src, "deyoung_worker.py", "exec"), {{"__name__": "__main__"}})
@@ -120,7 +149,7 @@ exec(compile(src, "deyoung_worker.py", "exec"), {{"__name__": "__main__"}})
     )
     out = (proc.stdout + proc.stderr).strip()
     print(out)
-    if proc.returncode != 0:
+    if proc.returncode != 0 or "successfully pushed" not in out.lower():
         sys.exit("[kaggle-launch] kernel push failed — see message above")
 
     print(f"[kaggle-launch] LIVE: https://www.kaggle.com/code/{kernel_id}")

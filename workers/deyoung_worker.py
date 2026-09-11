@@ -202,19 +202,68 @@ def render_stub(job, workdir):
     return raw
 
 
-def render_ltx(job, workdir):
-    """LTX-Video (open weights) text-to-video on CUDA. Auto-falls back to stub."""
+def torch_ok():
+    try:
+        import torch  # noqa
+        return True
+    except Exception:
+        return False
+
+
+def bootstrap_diffusers():
+    """One-time in-kernel pip bootstrap (Kaggle GPU images ship torch but not
+    diffusers). Returns True when the import works afterwards."""
+    import subprocess
+    log("diffusers missing — bootstrapping via pip (one-time, ~60s)…")
+    for pkg in ("diffusers", "imageio", "imageio-ffmpeg"):
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", pkg],
+                           check=False, timeout=420)
+        except Exception as exc:
+            log(f"pip {pkg} failed: {exc.__class__.__name__}: {exc}")
+            return False
+    try:
+        from diffusers import LTXPipeline  # noqa
+        return True
+    except Exception as exc:
+        log(f"diffusers still unavailable after bootstrap: {exc.__class__.__name__}")
+        return False
+
+
+def _ltx_unavailable(exc, allow_stub, job, workdir):
+    """Honest failure for explicit-ltx renders; stub only for renderer=auto."""
+    if allow_stub:
+        log(f"ltx renderer unavailable ({exc.__class__.__name__}: {exc}) — falling back to stub")
+        return render_stub(job, workdir)
+    raise RuntimeError(f"ltx renderer unavailable ({exc.__class__.__name__}: {exc}) — explicit ltx fails honestly, no placeholder will be delivered")
+
+
+def render_ltx(job, workdir, allow_stub=True):
+    """LTX-Video (open weights) text-to-video on CUDA.
+
+    Task 65 honesty rule: when the caller explicitly selected --renderer ltx
+    (i.e. a real customer render on a GPU box), a missing dependency must FAIL
+    the job honestly — never silently deliver a branded placeholder. The stub
+    fallback stays available only for renderer=auto (QA/dev convenience).
+    When diffusers is missing but we have CUDA + internet (Kaggle kernels do),
+    bootstrap it with pip once before giving up.
+    """
     try:
         import torch  # noqa
         from diffusers import LTXPipeline
         from diffusers.utils import export_to_video
     except Exception as exc:  # ImportError or broken CUDA build
-        log(f"ltx renderer unavailable ({exc.__class__.__name__}: {exc}) — falling back to stub")
-        return render_stub(job, workdir)
+        if torch_ok() and bootstrap_diffusers():
+            try:
+                from diffusers import LTXPipeline  # noqa
+                from diffusers.utils import export_to_video  # noqa
+            except Exception as exc2:
+                return _ltx_unavailable(exc2, allow_stub, job, workdir)
+        else:
+            return _ltx_unavailable(exc, allow_stub, job, workdir)
 
     if not torch.cuda.is_available():
-        log("no CUDA device — falling back to stub (LTX needs a GPU)")
-        return render_stub(job, workdir)
+        return _ltx_unavailable(RuntimeError("no CUDA device"), allow_stub, job, workdir)
 
     seconds = job["seconds"]
     frames = max(((seconds * 24 - 1) // 8) * 8 + 1, 25)
@@ -262,7 +311,10 @@ def render(job, renderer_mode, workdir):
     else:
         mode = renderer_mode
     name = f"ltx" if mode == "ltx" else "stub"
-    raw = RENDERERS[mode](job, workdir)
+    # Task 65: stub fallback is only legitimate when the operator chose auto
+    # (QA/dev). An explicit ltx request must fail honestly instead of
+    # delivering a placeholder for a real customer job.
+    raw = RENDERERS[mode](job, workdir, allow_stub=(renderer_mode == "auto"))
     out = os.path.join(workdir, "final.mp4")
     watermark = bool(job.get("watermark"))
     seconds, (width, height) = job["seconds"], RESOLUTIONS.get(job["resolution"], RESOLUTIONS["720p"])

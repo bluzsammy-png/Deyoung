@@ -420,6 +420,109 @@ def lightning_watch():
         log(f"lightning_watch error: {type(e).__name__}: {str(e)[:140]}")
 
 
+# --- Task 65: render-plane constants ---
+WORKER_SITE = "https://deyoungltd.site"
+RENDER_LAUNCH_COOLDOWN_MIN = 90  # after a failed/quota-blocked push, wait before retrying that account
+MIN_START_BALANCE = 0.85  # mirrors fleet_doctor_actions.py — T4 render ~0.8 credits
+
+
+def render_ensure(st):
+    """Task 65 — keep the FREE Kaggle render plane carrying the site queue
+    whenever the Lightning plane cannot (balance below floor / probe dead)
+    and the queue actually has work. Full-vault rotation: tries every labeled
+    account, marks quota-blocked ones with a cooldown so a pass never spams
+    pushes, and never launches when a deyoung-worker session is already live.
+    The exit-idle worker stops on its own when the queue drains."""
+    import urllib.error
+    import urllib.request
+
+    kag = st.setdefault(
+        "kaggle_render",
+        {"launched": {}, "quota_blocked": {}, "last_probe": None, "last_error": None},
+    )
+
+    # 1. prod queue probe (vault WORKER_TOKEN — never printed)
+    try:
+        wt = json.load(open(os.path.join(ROOT, "workers/secrets/worker_token.json")))["token"]
+        req = urllib.request.Request(
+            f"{WORKER_SITE}/api/worker/status", headers={"Authorization": f"Bearer {wt}"}
+        )
+        with urllib.request.urlopen(req, timeout=30) as r:
+            q = json.loads(r.read().decode()).get("queue", {})
+        queued, rendering = int(q.get("queued", 0)), int(q.get("rendering", 0))
+        kag["last_probe"] = {"queued": queued, "rendering": rendering, "at": now()}
+    except Exception as e:  # noqa: BLE001
+        kag["last_error"] = f"probe {type(e).__name__}: {str(e)[:100]}"
+        log(f"render_ensure {kag['last_error']}")
+        return
+    if queued + rendering == 0:
+        return  # queue drained — exit-idle workers die on their own; quota safe
+
+    # 2. Lightning gate (same floor as the Actions doctor)
+    gated = True
+    try:
+        lt = json.load(open(os.path.join(ROOT, "workers/secrets/lightning_tokens.json")))["keys"][0]
+        import requests  # noqa: PLC0415
+        rm = requests.get(
+            f"{lt.get('cloud_url', 'https://lightning.ai')}/v1/memberships",
+            headers={"Authorization": f"Bearer {lt['key']}"}, timeout=25,
+        )
+        if rm.status_code == 200:
+            for m in rm.json().get("memberships", []):
+                if m.get("projectId") == lt.get("teamspace_id"):
+                    if (m.get("balance") or 0) >= MIN_START_BALANCE:
+                        gated = False
+                    break
+    except Exception:  # noqa: BLE001
+        pass  # probe failed -> treat as gated (Kaggle is free; Lightning is not)
+    if not gated:
+        return  # Lightning can carry the queue — h3 doctor/watcher own that plane
+
+    # 3. a live session anywhere? (status probe per labeled account)
+    vault = load_vault()
+    for t in vault["tokens"]:
+        acct = t.get("account")
+        if not acct:
+            continue
+        try:
+            s = str(api(t["token"], f"/kernels/status?userName={acct}&kernelSlug=deyoung-worker").get("status", "")).lower()
+            if "running" in s or "queued" in s:
+                return  # worker alive — nothing to do
+        except Exception:
+            continue
+
+    # 4. launch on the first account that is out of cooldown and accepts a push
+    for t in vault["tokens"]:
+        acct = t.get("account")
+        if not acct:
+            continue
+        blocked_at = kag["quota_blocked"].get(acct, 0)
+        if blocked_at and (time.time() - blocked_at) < RENDER_LAUNCH_COOLDOWN_MIN * 60:
+            continue
+        try:
+            r = subprocess.run(
+                ["bash", os.path.join(ROOT, "scripts/launch_kaggle_worker_65.sh"), t["id"], "--exit-idle"],
+                capture_output=True, text=True, timeout=900,
+            )
+        except Exception as e:  # noqa: BLE001
+            log(f"render_ensure launch {acct}: EXC {type(e).__name__}: {str(e)[:120]}")
+            kag["quota_blocked"][acct] = time.time()
+            continue
+        out = (r.stdout or "") + (r.stderr or "")
+        if "successfully pushed" in out.lower():
+            kag["launched"][acct] = now()
+            kag["last_error"] = None
+            log(f"render_ensure: launched deyoung-worker on {acct} (kaggle free plane)")
+            break
+        if "quota" in out.lower():
+            kag["quota_blocked"][acct] = time.time()
+            log(f"render_ensure: {acct} weekly GPU quota exhausted — cooldown {RENDER_LAUNCH_COOLDOWN_MIN}m")
+            continue
+        kag["quota_blocked"][acct] = time.time()
+        kag["last_error"] = f"{acct} push failed: {out.strip()[-160:]}"
+        log(f"render_ensure {kag['last_error']}")
+
+
 def main():
     no_fetch = "--no-fetch" in sys.argv
     if "--loop" in sys.argv:
@@ -436,6 +539,7 @@ def main():
                 relaunch_step(st)
                 ensure_orchestrator()
                 lightning_watch()
+                render_ensure(st)
                 save_state(st)
             except KeyboardInterrupt:
                 break
@@ -448,6 +552,7 @@ def main():
         st = load_state()
         relaunch_step(st)
         lightning_watch()
+        render_ensure(st)
         save_state(st)
 
 
