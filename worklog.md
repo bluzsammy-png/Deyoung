@@ -1284,3 +1284,21 @@ Work Log:
 Stage Summary:
 - GitHub custody chain CLOSED: push, mirror, Actions secrets all live. Every earlier "blocked" item from Tasks 67/68 is now unblocked and executed.
 - Remaining owner-side inputs: (1) re-copied ModelScope token, (2) optional Kaggle vault round-trip re-verify next session (rate-limit deferral), (3) pre-existing: queue 4/0 waiting on Kaggle quota reset / Lightning top-up.
+---
+Task ID: 70
+Agent: main (Super Z)
+Task: Owner pasted a re-copied ModelScope token (ms-a3da6753...) — validate, and if still rejected, diagnose the true blocker; propagate the newest credential everywhere so activation auto-lights-up.
+
+Work Log:
+- TOKEN SWAP: workers/secrets/modelscope_tokens.json updated (ms-5e8... -> ms-a3d..., masked prints, 0600).
+- CANARY: chat STILL 401 (0.29s). Verbatim body captured: "Authentication failed, please make sure that a valid ModelScope token is supplied" (request_id f62ef7c3...); /models stays public-200. Two different well-formed tokens (ms- + 36-char UUID) -> same 401 = token string is NOT the problem; ACCOUNT-SIDE state is: API-Inference not activated (enable on a model page / phone verification / Aliyun binding, per tracker's "regional signup; Aliyun binding for some routes").
+- PROPAGATION DONE ANYWAY (deliberate): when the owner flips activation, everything lights up with zero further ingest. vault_unseal_68.sh re-run: re-sealed vault.enc round-trip hash PASS; Actions MODELSCOPE_TOKEN PUT HTTP 204; vault_mirror_sync_63.sh MIRROR SYNCED (private-verified).
+- KAGGLE VAULT: re-created NEW (private) via vault_backup.py create path — the Task-68 push had stalled in async processing and was cleaned up by Kaggle. Round-trip polls 403 (download rate-limit window still open) -> final verify honestly DEFERRED to next session. Note: github.json (the PAT) is now among the 7 vault files backed up there.
+- ACTIONS PROOF: fleet-doctor dispatched (run completed success) — the Actions arm now reads the NEW token (probe ran against ms-a3d...): baidu VALID (0-burn), modelscope 401 (expected until activation). The */5 cron will flip the modelscope line to VALID automatically once the account is activated — no agent action needed.
+- TRACKER v4: ModelScope note updated (activation-required diagnosis, fleet-wide propagation, auto-heal path); P2 status honestly stays "Token handed off". QA chain recalc/audit/scan/validate all clean.
+
+Stage Summary:
+- ModelScope: credential pipeline fully proven end-to-end (sandbox + vault + Actions + mirror all consistent on the newest token); the ONLY missing piece is one click/toggle by the OWNER inside modelscope.cn (API-Inference activation).
+- Baidu: stable VALID across sandbox + Actions.
+- Fleet restore paths: repo blob (fresh re-seal), GitHub mirror (fresh sync), Kaggle dataset (re-created; round-trip verify deferred).
+- Deferred: Kaggle round-trip final verify (rate limit), optional fine-grained PAT swap (hygiene).

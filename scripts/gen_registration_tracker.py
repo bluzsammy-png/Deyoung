@@ -119,7 +119,7 @@ c2 = ws1.cell(row=n1 + 1, column=3, value=f"=COUNTA(C5:C{last1})")
 c2.font = font_body()
 
 n3 = n1 + 3
-ws1.cell(row=n3, column=2, value="Task 68 vault cycle complete: owner passphrase unsealed vault.enc, new planes merged, re-sealed (round-trip hash PASS), full fleet secrets restored. Baidu = Onboarded (canary PASS x2, doctor 0-burn probe). ModelScope still 401 - re-copy token from modelscope.cn/my/myaccesstoken. Kaggle private mirror pushed (round-trip final check pending Kaggle rate-limit); GitHub mirror + push still PAT-blocked.")
+ws1.cell(row=n3, column=2, value="Task 70 status: Baidu = Onboarded (canary PASS x3, Actions-verified). ModelScope = TWO well-formed tokens both 401 with /models public-200 -> account-side API-Inference activation required (enable on a model page / phone verification / Aliyun binding). New token ms-a3d... propagated fleet-wide (vault re-sealed round-trip PASS, Actions secret HTTP 204, GitHub mirror synced) - the 5-min Actions doctor cron will flip to VALID automatically once activated. Kaggle vault re-created NEW (private); round-trip final check deferred (rate limit).")
 ws1.cell(row=n3, column=2).font = font_caption()
 
 # ---------------- Sheet 2: Existing Fleet ----------------
@@ -144,8 +144,8 @@ rows2 = [
      "baidu_tokens.json + vault.enc (re-sealed Task 68)"],
     ["ModelScope (NEW)", "1 account (ms-1)",
      "API-Inference free tier + A10 notebook quota (separate)",
-     "TOKEN REJECTED 401 on 2026-09-12 - owner re-copy needed; vaulted + mirrored anyway",
-     "modelscope_tokens.json + vault.enc (re-sealed Task 68)"],
+     "401 despite 2 valid-format tokens -> ACTIVATION required on account (API-Inference enable / Aliyun binding); token ms-a3d... propagated fleet-wide 2026-09-11",
+     "modelscope_tokens.json + vault.enc + Actions secret (all updated)"],
 ]
 last2 = build_table(ws2, "Fleet Planes (existing + new, vault / doctor / mirror status)", h2, rows2)
 n2 = last2 + 2

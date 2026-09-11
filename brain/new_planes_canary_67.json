@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-11T20:15:23Z",
+  "generated": "2026-09-11T21:10:23Z",
   "planes": [
     {
       "plane": "baidu_aistudio",
@@ -11,7 +11,7 @@
       },
       "chat": {
         "status": 200,
-        "latency_s": 2.43,
+        "latency_s": 1.1,
         "err": null,
         "model": "ernie-5.1",
         "finish": "length",
@@ -22,7 +22,7 @@
     },
     {
       "plane": "modelscope",
-      "key": "ms-5e8…",
+      "key": "ms-a3d…",
       "base_url": "https://api-inference.modelscope.cn/v1",
       "models_list": {
         "status": 200,
@@ -31,7 +31,7 @@
       },
       "chat": {
         "status": 401,
-        "latency_s": 0.26,
+        "latency_s": 0.29,
         "err": "HTTP 401",
         "model_requested": "Qwen/Qwen2.5-7B-Instruct",
         "model_used": "Qwen/Qwen2.5-7B-Instruct",
