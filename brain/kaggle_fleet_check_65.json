@@ -1,0 +1,176 @@
+{
+ "checked": [
+  {
+   "id": "k1",
+   "known_account": "deyoungsltd",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "jimcreat",
+   "fleet_kernels": [
+    "jimcreat/deyoung-diag",
+    "jimcreat/deyoung-h3-a",
+    "jimcreat/deyoung-h3-a-canary",
+    "jimcreat/deyoung-h3-a2",
+    "jimcreat/deyoung-worker-a"
+   ],
+   "kernel_statuses": {
+    "jimcreat/deyoung-diag": "jimcreat/deyoung-diag has status \"KernelWorkerStatus.COMPLETE\"",
+    "jimcreat/deyoung-h3-a": "jimcreat/deyoung-h3-a has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "jimcreat/deyoung-h3-a-canary": "jimcreat/deyoung-h3-a-canary has status \"KernelWorkerStatus.COMPLETE\"",
+    "jimcreat/deyoung-h3-a2": "jimcreat/deyoung-h3-a2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "jimcreat/deyoung-worker-a": "jimcreat/deyoung-worker-a has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  },
+  {
+   "id": "k2",
+   "known_account": "youngwilly",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "bittrexminingltd",
+   "fleet_kernels": [
+    "bittrexminingltd/deyoung-h3-b",
+    "bittrexminingltd/deyoung-h3-b2",
+    "bittrexminingltd/deyoung-worker-b"
+   ],
+   "kernel_statuses": {
+    "bittrexminingltd/deyoung-h3-b": "bittrexminingltd/deyoung-h3-b has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "bittrexminingltd/deyoung-h3-b2": "bittrexminingltd/deyoung-h3-b2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "bittrexminingltd/deyoung-worker-b": "bittrexminingltd/deyoung-worker-b has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  },
+  {
+   "id": "k3",
+   "known_account": "unlabeled-3",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "teslaprime",
+   "fleet_kernels": [
+    "teslaprime/deyoung-h3-f",
+    "teslaprime/deyoung-h3-f2",
+    "teslaprime/deyoung-netdiag",
+    "teslaprime/deyoung-speedprobe",
+    "teslaprime/deyoung-worker-c"
+   ],
+   "kernel_statuses": {
+    "teslaprime/deyoung-h3-f": "teslaprime/deyoung-h3-f has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "teslaprime/deyoung-h3-f2": "teslaprime/deyoung-h3-f2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "teslaprime/deyoung-netdiag": "teslaprime/deyoung-netdiag has status \"KernelWorkerStatus.COMPLETE\"",
+    "teslaprime/deyoung-speedprobe": "teslaprime/deyoung-speedprobe has status \"KernelWorkerStatus.COMPLETE\"",
+    "teslaprime/deyoung-worker-c": "teslaprime/deyoung-worker-c has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  },
+  {
+   "id": "k4",
+   "known_account": "unlabeled-4",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "bittrexminingltd",
+   "fleet_kernels": [
+    "bittrexminingltd/deyoung-h3-b",
+    "bittrexminingltd/deyoung-h3-b2",
+    "bittrexminingltd/deyoung-worker-b"
+   ],
+   "kernel_statuses": {
+    "bittrexminingltd/deyoung-h3-b": "bittrexminingltd/deyoung-h3-b has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "bittrexminingltd/deyoung-h3-b2": "bittrexminingltd/deyoung-h3-b2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "bittrexminingltd/deyoung-worker-b": "bittrexminingltd/deyoung-worker-b has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  },
+  {
+   "id": "k5",
+   "known_account": "unlabeled-5",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "youngwilly",
+   "fleet_kernels": [
+    "youngwilly/deyoung-h3-c",
+    "youngwilly/deyoung-h3-c2",
+    "youngwilly/deyoung-v2-c01"
+   ],
+   "kernel_statuses": {
+    "youngwilly/deyoung-h3-c": "youngwilly/deyoung-h3-c has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "youngwilly/deyoung-h3-c2": "youngwilly/deyoung-h3-c2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "youngwilly/deyoung-v2-c01": "youngwilly/deyoung-v2-c01 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\""
+   }
+  },
+  {
+   "id": "k6",
+   "known_account": "unlabeled-6",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "wikeyoung5",
+   "fleet_kernels": [
+    "wikeyoung5/deyoung-h3-d",
+    "wikeyoung5/deyoung-h3-d2",
+    "wikeyoung5/deyoung-lipsync-cpu"
+   ],
+   "kernel_statuses": {
+    "wikeyoung5/deyoung-h3-d": "wikeyoung5/deyoung-h3-d has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "wikeyoung5/deyoung-h3-d2": "wikeyoung5/deyoung-h3-d2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "wikeyoung5/deyoung-lipsync-cpu": "wikeyoung5/deyoung-lipsync-cpu has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  },
+  {
+   "id": "k7",
+   "known_account": "unlabeled-7",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "deyoungsltd",
+   "fleet_kernels": [
+    "deyoungsltd/deyoung-h3-e",
+    "deyoungsltd/deyoung-h3-e2",
+    "deyoungsltd/deyoung-prod-selftest",
+    "deyoungsltd/deyoung-v2-s01"
+   ],
+   "kernel_statuses": {
+    "deyoungsltd/deyoung-h3-e": "deyoungsltd/deyoung-h3-e has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "deyoungsltd/deyoung-h3-e2": "deyoungsltd/deyoung-h3-e2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "deyoungsltd/deyoung-prod-selftest": "deyoungsltd/deyoung-prod-selftest has status \"KernelWorkerStatus.ERROR\"",
+    "deyoungsltd/deyoung-v2-s01": "deyoungsltd/deyoung-v2-s01 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\""
+   }
+  },
+  {
+   "id": "k8",
+   "known_account": "unlabeled-8",
+   "rest_probe": 400,
+   "cli_probe_rc": 0,
+   "valid": true,
+   "username": "teslaprime",
+   "fleet_kernels": [
+    "teslaprime/deyoung-h3-f",
+    "teslaprime/deyoung-h3-f2",
+    "teslaprime/deyoung-netdiag",
+    "teslaprime/deyoung-speedprobe",
+    "teslaprime/deyoung-worker-c"
+   ],
+   "kernel_statuses": {
+    "teslaprime/deyoung-h3-f": "teslaprime/deyoung-h3-f has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "teslaprime/deyoung-h3-f2": "teslaprime/deyoung-h3-f2 has status \"KernelWorkerStatus.CANCEL_ACKNOWLEDGED\"",
+    "teslaprime/deyoung-netdiag": "teslaprime/deyoung-netdiag has status \"KernelWorkerStatus.COMPLETE\"",
+    "teslaprime/deyoung-speedprobe": "teslaprime/deyoung-speedprobe has status \"KernelWorkerStatus.COMPLETE\"",
+    "teslaprime/deyoung-worker-c": "teslaprime/deyoung-worker-c has status \"KernelWorkerStatus.COMPLETE\""
+   }
+  }
+ ],
+ "summary": {
+  "valid": 8,
+  "invalid": 0,
+  "usernames": {
+   "k1": "jimcreat",
+   "k2": "bittrexminingltd",
+   "k3": "teslaprime",
+   "k4": "bittrexminingltd",
+   "k5": "youngwilly",
+   "k6": "wikeyoung5",
+   "k7": "deyoungsltd",
+   "k8": "teslaprime"
+  }
+ }
+}
