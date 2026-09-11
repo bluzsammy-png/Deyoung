@@ -188,6 +188,74 @@ def kaggle_ensure(worker_token):
         print(f"[fleet-doctor] kaggle launch returned {rc} — quota may be exhausted on this account; will retry next tick")
 
 
+BAIDU_MODELS_URL = "https://aistudio.baidu.com/llm/lmapi/v3/models"
+MS_CHAT_URL = "https://api-inference.modelscope.cn/v1/chat/completions"
+
+
+def _new_plane_token(path, env_key):
+    """Token source: Actions env first, then the local (git-ignored) vault json."""
+    tok = (os.environ.get(env_key) or "").strip()
+    if tok:
+        return tok
+    f = ROOT / path
+    if f.exists():
+        try:
+            d = json.loads(f.read_text())
+            return (d.get("tokens") or [{}])[0].get("token", "")
+        except Exception:  # noqa: BLE001
+            return ""
+    return ""
+
+
+def _http_json(url, token, payload=None, timeout=45):
+    data = json.dumps(payload).encode() if payload is not None else None
+    r = urllib.request.Request(url, data=data, method="POST" if data else "GET")
+    r.add_header("Authorization", f"Bearer {token}")
+    r.add_header("Content-Type", "application/json")
+    with urllib.request.urlopen(r, timeout=timeout) as resp:  # noqa: S310
+        return resp.status, json.loads(resp.read().decode())
+
+
+def new_planes_probe():
+    """Task 67: health probes for the two NEW API planes.
+
+    Burn discipline (probed live 2026-09-12):
+      * Baidu AI Studio: authenticated GET /models is FREE (200) — never a chat
+        call from the cron (points are precious); full canary only via
+        scripts/canary_new_planes_67.py on demand.
+      * ModelScope: /models is PUBLIC (no auth signal), so validity = a
+        1-token chat; free tier ~2000 calls/day, 401s cost nothing.
+    Tokens: env BAIDU_AISTUDIO_TOKEN / MODELSCOPE_TOKEN, else
+    workers/secrets/{baidu,modelscope}_tokens.json. Never printed.
+    """
+    bt = _new_plane_token("workers/secrets/baidu_tokens.json", "BAIDU_AISTUDIO_TOKEN")
+    mt = _new_plane_token("workers/secrets/modelscope_tokens.json", "MODELSCOPE_TOKEN")
+    if not bt and not mt:
+        print("[fleet-doctor] new planes: no Baidu/ModelScope credentials visible — skipping")
+        return
+    if bt:
+        try:
+            st, body = _http_json(BAIDU_MODELS_URL, bt)
+            n = len(body.get("data") or [])
+            print(f"[fleet-doctor] baidu plane: token VALID (models GET {st}, {n} entries, 0 points burned)")
+        except urllib.error.HTTPError as e:
+            print(f"[fleet-doctor] baidu plane: token check FAILED (HTTP {e.code}) — check/rotate baidu_tokens.json")
+        except Exception as e:  # noqa: BLE001
+            print(f"[fleet-doctor] baidu plane: probe error {type(e).__name__}: {str(e)[:100]}")
+    if mt:
+        try:
+            st, _ = _http_json(MS_CHAT_URL, mt, {
+                "model": "Qwen/Qwen2.5-7B-Instruct",
+                "messages": [{"role": "user", "content": "ok?"}],
+                "max_tokens": 1,
+            })
+            print(f"[fleet-doctor] modelscope plane: token VALID (chat {st})")
+        except urllib.error.HTTPError as e:
+            print(f"[fleet-doctor] modelscope plane: token check FAILED (HTTP {e.code}) — re-copy from modelscope.cn/my/myaccesstoken")
+        except Exception as e:  # noqa: BLE001
+            print(f"[fleet-doctor] modelscope plane: probe error {type(e).__name__}: {str(e)[:100]}")
+
+
 def run(script, *args):
     print(f"[fleet-doctor] run: {script} {' '.join(args)}", flush=True)
     r = subprocess.run(
@@ -213,6 +281,7 @@ def main():
 
     if mode == "status":
         print(f"[fleet-doctor] queue: queued={q} rendering={rend} | studio: {state} machine={machine} | balance: {bal}")
+        new_planes_probe()
         return
 
     if mode == "stop":
@@ -224,6 +293,7 @@ def main():
     requeued = requeue_orphaned() if mode == "ensure" else 0
     q, rend = queue_counts()
     print(f"[fleet-doctor] requeued {requeued} orphaned row(s) | queue: queued={q} rendering={rend} | studio: {state} | balance: {bal}")
+    new_planes_probe()
 
     # Task 65 debt guard: negative balance with a running studio = live debt.
     if bal is not None and bal < 0 and state and "Running" in str(state):
