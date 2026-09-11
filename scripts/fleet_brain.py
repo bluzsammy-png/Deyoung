@@ -372,7 +372,7 @@ def lightning_watch():
         hdr = {"Authorization": f"Bearer {key['key']}"}
         base = key.get("cloud_url", "https://lightning.ai")
         out = {"checked": now()}
-        r = requests.get(f"{base}/v1/projects/{key['teamspace_id']}/cloudspaces", headers=hdr, timeout=25)
+        r = requests.get(f"{base}/v1/projects/{key.get('teamspace_id') or key.get('project_id')}/cloudspaces", headers=hdr, timeout=25)
         if r.status_code == 200:
             for cs in r.json().get("cloudspaces", []):
                 if cs.get("name") == "deyoung-h3":
@@ -385,7 +385,7 @@ def lightning_watch():
         rm = requests.get(f"{base}/v1/memberships", headers=hdr, timeout=25)
         if rm.status_code == 200:
             for m in rm.json().get("memberships", []):
-                if m.get("projectId") == key["teamspace_id"]:
+                if m.get("projectId") == (key.get("teamspace_id") or key.get("project_id")):
                     out["balance"] = m.get("balance")
         stf = pathlib.Path("/home/z/my-project/brain/lightning_c20_evidence.json")
         if stf.exists():
