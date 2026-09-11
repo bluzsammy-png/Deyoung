@@ -154,7 +154,9 @@ def kaggle_session_status():
     out = (r.stdout + r.stderr).lower()
     if r.returncode != 0:
         print(f"[fleet-doctor] kaggle status probe: {(r.stdout + r.stderr).strip()[:120]}")
-        return None if ("404" in out or "not found" in out) else "idle"
+        if "404" in out or "not found" in out:
+            return "idle"  # kernel never pushed yet — a launch will create it
+        return None  # auth/transport problems — do not push blind
     if "running" in out or "queued" in out:
         return "running"
     return "idle"
@@ -172,7 +174,7 @@ def kaggle_ensure(worker_token):
         print("[fleet-doctor] kaggle: session already running — nothing to do")
         return
     if state is None:
-        print("[fleet-doctor] kaggle: not configured (KAGGLE_API_TOKEN/KAGGLE_USER secrets) — skipping fallback plane")
+        print("[fleet-doctor] kaggle: probe unavailable (secrets missing or auth error) — skipping fallback plane this tick")
         return
     print("[fleet-doctor] kaggle: launching a fresh deyoung-worker GPU session (free plane)")
     rc = run(
