@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Free GPU Registration Tracker - combines research shortlist + fleet + runbook.
-v2 (Task 67): Baidu + ModelScope statuses updated after live onboarding canary."""
+v2 (Task 67): Baidu + ModelScope statuses updated after live onboarding canary.
+v3 (Task 68): vault unsealed+re-sealed with owner passphrase; Baidu -> Onboarded;
+ModelScope still 401 (re-copy pending); Kaggle mirror pushed, round-trip pending rate-limit."""
 import sys, os
 XLSX_SKILL_DIR = "/home/z/my-project/skills/xlsx"
 for sub in [XLSX_SKILL_DIR, os.path.join(XLSX_SKILL_DIR, "templates")]:
@@ -48,7 +50,7 @@ rows1 = [
     ["P3", "Baidu AI Studio", "https://aistudio.baidu.com",
      "~8 compute points daily = ~16 hrs/day V100-16GB; A100 grants via programs; + LLM API (ernie) with the same account",
      "Daily", "Chinese phone verification flow", "V100 bulk training lane + ernie inference",
-     "Access token", "Token handed off"],
+     "Access token", "Onboarded"],
     ["P4", "Google TPU Research Cloud", "https://research.google/tpu",
      "Cloud TPU v4 / v5e pod slices on 30-day rolling projects",
      "Application + renewal", "Research justification; publication intent", "Quarterly heavy training (JAX/XLA)",
@@ -117,7 +119,7 @@ c2 = ws1.cell(row=n1 + 1, column=3, value=f"=COUNTA(C5:C{last1})")
 c2.font = font_body()
 
 n3 = n1 + 3
-ws1.cell(row=n3, column=2, value="Task 67 live onboarding: Baidu canary PASS (HTTP 200, ernie reachable; doctor probe burns 0 points via /models). ModelScope token REJECTED 401 by api-inference - re-copy from modelscope.cn/my/myaccesstoken. Mirror seed pending vault passphrase (owner).")
+ws1.cell(row=n3, column=2, value="Task 68 vault cycle complete: owner passphrase unsealed vault.enc, new planes merged, re-sealed (round-trip hash PASS), full fleet secrets restored. Baidu = Onboarded (canary PASS x2, doctor 0-burn probe). ModelScope still 401 - re-copy token from modelscope.cn/my/myaccesstoken. Kaggle private mirror pushed (round-trip final check pending Kaggle rate-limit); GitHub mirror + push still PAT-blocked.")
 ws1.cell(row=n3, column=2).font = font_caption()
 
 # ---------------- Sheet 2: Existing Fleet ----------------
@@ -138,12 +140,12 @@ rows2 = [
      "hf_tokens.json + vault.enc + private mirror"],
     ["Baidu AI Studio (NEW)", "1 account (baidu-1)",
      "LLM API live (ernie); notebook points = separate daily grant",
-     "Canary PASS 2026-09-12; doctor probe: /models GET 200, 0 points burned",
-     "workers/secrets/baidu_tokens.json"],
+     "ONBOARDED 2026-09-12: canary PASS x2, doctor 0-burn probe, in vault.enc + Kaggle mirror",
+     "baidu_tokens.json + vault.enc (re-sealed Task 68)"],
     ["ModelScope (NEW)", "1 account (ms-1)",
      "API-Inference free tier + A10 notebook quota (separate)",
-     "TOKEN REJECTED 401 on 2026-09-12 - owner re-copy needed",
-     "workers/secrets/modelscope_tokens.json"],
+     "TOKEN REJECTED 401 on 2026-09-12 - owner re-copy needed; vaulted + mirrored anyway",
+     "modelscope_tokens.json + vault.enc (re-sealed Task 68)"],
 ]
 last2 = build_table(ws2, "Fleet Planes (existing + new, vault / doctor / mirror status)", h2, rows2)
 n2 = last2 + 2

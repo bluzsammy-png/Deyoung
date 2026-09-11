@@ -1247,3 +1247,24 @@ Stage Summary:
 - Baidu plane: LIVE and doctor-monitored at zero point burn; ernie-5.1 reachable; stored in fleet schema.
 - ModelScope plane: ingested but token INVALID (401) — owner must re-copy from modelscope.cn/my/myaccesstoken.
 - Owner asks (2): (1) re-copied ModelScope token; (2) vault passphrase (Task 64) OR a repo-scoped GitHub PAT — the PAT unblocks push + mirror seed + Actions secrets in one move.
+---
+Task ID: 68
+Agent: main (Super Z)
+Task: Owner delivered the real vault passphrase — unseal vault.enc, merge the two Task-67 plane tokens into the sealed blob, restore the full fleet secrets, refresh canary/doctor evidence, re-seed the Kaggle mirror, flip the tracker.
+
+Work Log:
+- VAULT UNSEALED (scripts/vault_unseal_68.sh, passphrase argv-only, never echoed/stored): openssl AES-256-CBC/PBKDF2-600k decrypt + untar OK. Inventory (names only): kaggle_tokens, lightning_tokens, hf_tokens, worker_token (+ .env.local not present in blob).
+- MERGE + RE-SEAL: baidu_tokens.json + modelscope_tokens.json copied into the tree; re-tarred and re-encrypted with the same cipher params; ROUND-TRIP HASH VERIFY PASS (full per-file sha256 identical) before swapping the blob; old blob never left a plaintext copy behind (tmp dirs shredded via trap).
+- FLEET RESTORED: workers/secrets/ back to 6 files (0600). Sandbox-cleanup incident from Task 67 fully healed — all planes' tokens present locally again.
+- NOTE: vault blob contains NO github.json — the GitHub PAT custody gap (push to origin, vault_mirror_sync_63.sh, Actions secrets BAIDU_AISTUDIO_TOKEN/MODELSCOPE_TOKEN) REMAINS OPEN pending owner PAT.
+- LIVE CANARY REFRESH (scripts/canary_new_planes_67.py, evidence brain/new_planes_canary_67.json): baidu_aistudio PASS again (chat 200, 2.43s, ernie-5.1); modelscope STILL 401 — token is definitively invalid, owner must re-copy from modelscope.cn/my/myaccesstoken (chat probes are free, nothing burned).
+- DOCTOR (fleet_doctor_actions.py status with vault env): queue 4/0, studio READY (stopped), balance -0.319 (debt guard holds), baidu plane token VALID (0-burn /models GET 200, 52 entries), modelscope plane 401. Ensures the Task-67 wiring works post-restore.
+- MIRROR SEED (Kaggle route, scripts/vault_backup.py): version push ACCEPTED to private deyoungsltd/deyoung-worker-vault (staging = exact local copies). Propagation observed live (verify mismatches shrank 5 -> 3 files), then Kaggle DOWNLOAD rate-limit (403) blocked further polls for the hour (~6 downloads in 15 min triggered it; status/files REST endpoints 403 for KGAT is the known v1 limitation, unrelated). Privacy re-confirmed: foreign-token read blocked. HONEST STATUS: backup pushed + async processing; final round-trip PASS deferred — re-run `python3 scripts/vault_backup.py --verify` next session (scripts/vault_backup_poll_68.py also available).
+- TRACKER v3 (scripts/gen_registration_tracker.py -> download/Free_GPU_Registration_Tracker.xlsx): P3 Baidu -> "Onboarded"; Existing Fleet rows updated (vault.enc re-seal + mirror state); Register Now note now documents the Task-68 vault cycle. QA chain recalc/audit/scan/validate all clean (10 formulas, 0 findings, exit 0).
+- NEW SCRIPTS PERSISTED: scripts/vault_unseal_68.sh (reusable unseal->merge->reseal->verify->restore), scripts/vault_backup_diag_68.py (per-file hash + key-path diff, values never printed), scripts/vault_backup_poll_68.py (bounded round-trip poller).
+
+Stage Summary:
+- Vault custody chain CLOSED: owner passphrase -> unseal -> merge -> re-seal (verified) -> fleet restored. Future rebuilds: bash scripts/selfheal.sh "<passphrase>" works again, and the passphrase also lives in agent chat history per selfheal.sh policy.
+- Baidu AI Studio plane: ONBOARDED end-to-end (valid token, live canary, doctor-wired 0-burn, vaulted, mirrored).
+- ModelScope plane: vaulted + mirrored but token INVALID (401) — blocked ONLY on owner re-copying the token.
+- Still blocked on GitHub PAT (owner-side): origin push (2 local commits now 3), GitHub mirror sync, Actions secrets for the two new planes.
