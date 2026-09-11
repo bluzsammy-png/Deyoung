@@ -368,11 +368,14 @@ def lightning_watch():
     try:
         import requests
         lf = pathlib.Path("/home/z/my-project/workers/secrets/lightning_tokens.json")
-        key = _json.loads(lf.read_text())["keys"][0]
+        lt = _json.loads(lf.read_text())
+        key = lt["keys"][0]
         hdr = {"Authorization": f"Bearer {key['key']}"}
         base = key.get("cloud_url", "https://lightning.ai")
+        # Task 65: project id lives top-level in the task-64 vault schema
+        project_id = key.get("teamspace_id") or lt.get("project_id") or lt.get("teamspace")
         out = {"checked": now()}
-        r = requests.get(f"{base}/v1/projects/{key.get('teamspace_id') or key.get('project_id')}/cloudspaces", headers=hdr, timeout=25)
+        r = requests.get(f"{base}/v1/projects/{project_id}/cloudspaces", headers=hdr, timeout=25)
         if r.status_code == 200:
             for cs in r.json().get("cloudspaces", []):
                 if cs.get("name") == "deyoung-h3":
@@ -385,7 +388,7 @@ def lightning_watch():
         rm = requests.get(f"{base}/v1/memberships", headers=hdr, timeout=25)
         if rm.status_code == 200:
             for m in rm.json().get("memberships", []):
-                if m.get("projectId") == (key.get("teamspace_id") or key.get("project_id")):
+                if m.get("projectId") == project_id:
                     out["balance"] = m.get("balance")
         stf = pathlib.Path("/home/z/my-project/brain/lightning_c20_evidence.json")
         if stf.exists():
@@ -461,15 +464,17 @@ def render_ensure(st):
     # 2. Lightning gate (same floor as the Actions doctor)
     gated = True
     try:
-        lt = json.load(open(os.path.join(ROOT, "workers/secrets/lightning_tokens.json")))["keys"][0]
+        ltfile = json.load(open(os.path.join(ROOT, "workers/secrets/lightning_tokens.json")))
+        ltk = ltfile["keys"][0]
+        ltpid = ltk.get("teamspace_id") or ltfile.get("project_id")
         import requests  # noqa: PLC0415
         rm = requests.get(
-            f"{lt.get('cloud_url', 'https://lightning.ai')}/v1/memberships",
-            headers={"Authorization": f"Bearer {lt['key']}"}, timeout=25,
+            f"{ltk.get('cloud_url', 'https://lightning.ai')}/v1/memberships",
+            headers={"Authorization": f"Bearer {ltk['key']}"}, timeout=25,
         )
         if rm.status_code == 200:
             for m in rm.json().get("memberships", []):
-                if m.get("projectId") == lt.get("teamspace_id"):
+                if m.get("projectId") == ltpid:
                     if (m.get("balance") or 0) >= MIN_START_BALANCE:
                         gated = False
                     break
