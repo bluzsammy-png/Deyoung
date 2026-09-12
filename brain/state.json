@@ -10,7 +10,7 @@
         ]
       },
       "deyoungsltd": {
-        "checked": "2026-09-12T22:52:24Z",
+        "checked": "2026-09-12T23:12:06Z",
         "known_fleet_kernels": []
       },
       "jimcreat": {
@@ -35,27 +35,27 @@
         ]
       },
       "unlabeled-3": {
-        "checked": "2026-09-12T22:52:25Z",
+        "checked": "2026-09-12T23:12:06Z",
         "known_fleet_kernels": []
       },
       "unlabeled-4": {
-        "checked": "2026-09-12T22:52:25Z",
+        "checked": "2026-09-12T23:12:07Z",
         "known_fleet_kernels": []
       },
       "unlabeled-5": {
-        "checked": "2026-09-12T22:52:26Z",
+        "checked": "2026-09-12T23:12:07Z",
         "known_fleet_kernels": []
       },
       "unlabeled-6": {
-        "checked": "2026-09-12T22:52:26Z",
+        "checked": "2026-09-12T23:12:07Z",
         "known_fleet_kernels": []
       },
       "unlabeled-7": {
-        "checked": "2026-09-12T22:52:26Z",
+        "checked": "2026-09-12T23:12:08Z",
         "known_fleet_kernels": []
       },
       "unlabeled-8": {
-        "checked": "2026-09-12T22:52:27Z",
+        "checked": "2026-09-12T23:12:08Z",
         "known_fleet_kernels": []
       },
       "wikeyoung5": {
@@ -67,7 +67,7 @@
         ]
       },
       "youngwilly": {
-        "checked": "2026-09-12T22:52:25Z",
+        "checked": "2026-09-12T23:12:06Z",
         "known_fleet_kernels": []
       }
     },
@@ -712,13 +712,13 @@
         "status": "cancelAcknowledged"
       }
     },
-    "last_pass": "2026-09-12T22:52:27Z"
+    "last_pass": "2026-09-12T23:12:08Z"
   },
   "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
   "kaggle_render": {
     "last_error": "unlabeled-8 push failed: t on)\u2026\n409 Client Error: Conflict for url: https://api.kaggle.com/v1/kernels.KernelsApiService/SaveKernel\n[kaggle-launch] kernel push failed \u2014 see message above",
     "last_probe": {
-      "at": "2026-09-12T22:52:30Z",
+      "at": "2026-09-12T23:12:10Z",
       "queued": 4,
       "rendering": 0
     },
