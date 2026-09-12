@@ -10,13 +10,8 @@
         ]
       },
       "deyoungsltd": {
-        "checked": "2026-09-12T14:14:14Z",
-        "known_fleet_kernels": [
-          "deyoungsltd/deyoung-h3-e",
-          "deyoungsltd/deyoung-h3-e2",
-          "deyoungsltd/deyoung-prod-selftest",
-          "deyoungsltd/deyoung-v2-s01"
-        ]
+        "checked": "2026-09-12T22:52:24Z",
+        "known_fleet_kernels": []
       },
       "jimcreat": {
         "checked": "2026-09-12T14:14:06Z",
@@ -40,27 +35,27 @@
         ]
       },
       "unlabeled-3": {
-        "checked": "2026-09-12T12:40:42Z",
+        "checked": "2026-09-12T22:52:25Z",
         "known_fleet_kernels": []
       },
       "unlabeled-4": {
-        "checked": "2026-09-12T12:40:42Z",
+        "checked": "2026-09-12T22:52:25Z",
         "known_fleet_kernels": []
       },
       "unlabeled-5": {
-        "checked": "2026-09-12T12:40:42Z",
+        "checked": "2026-09-12T22:52:26Z",
         "known_fleet_kernels": []
       },
       "unlabeled-6": {
-        "checked": "2026-09-12T12:40:43Z",
+        "checked": "2026-09-12T22:52:26Z",
         "known_fleet_kernels": []
       },
       "unlabeled-7": {
-        "checked": "2026-09-12T12:40:43Z",
+        "checked": "2026-09-12T22:52:26Z",
         "known_fleet_kernels": []
       },
       "unlabeled-8": {
-        "checked": "2026-09-12T12:40:43Z",
+        "checked": "2026-09-12T22:52:27Z",
         "known_fleet_kernels": []
       },
       "wikeyoung5": {
@@ -72,12 +67,8 @@
         ]
       },
       "youngwilly": {
-        "checked": "2026-09-12T14:14:12Z",
-        "known_fleet_kernels": [
-          "youngwilly/deyoung-h3-c",
-          "youngwilly/deyoung-h3-c2",
-          "youngwilly/deyoung-v2-c01"
-        ]
+        "checked": "2026-09-12T22:52:25Z",
+        "known_fleet_kernels": []
       }
     },
     "history": {},
@@ -721,14 +712,14 @@
         "status": "cancelAcknowledged"
       }
     },
-    "last_pass": "2026-09-12T14:14:16Z"
+    "last_pass": "2026-09-12T22:52:27Z"
   },
   "fleet_note": "canary moved to youngwilly/deyoung-v2-c01 (v1 pushed 2026-09-07T11:5xZ) \u2014 deyoungsltd weekly GPU quota exhausted (30h cap; v1 12h failure + s01 burn); vault restored 2nd time after rebuild#2",
   "kaggle_render": {
-    "last_error": null,
+    "last_error": "unlabeled-8 push failed: t on)\u2026\n409 Client Error: Conflict for url: https://api.kaggle.com/v1/kernels.KernelsApiService/SaveKernel\n[kaggle-launch] kernel push failed \u2014 see message above",
     "last_probe": {
-      "at": "2026-09-12T14:14:19Z",
-      "queued": 0,
+      "at": "2026-09-12T22:52:30Z",
+      "queued": 4,
       "rendering": 0
     },
     "launched": {
@@ -736,17 +727,17 @@
     },
     "quota_blocked": {
       "bittrexminingltd": 1789121892.6161454,
-      "deyoungsltd": 1789216420.371874,
+      "deyoungsltd": 1789253556.783152,
       "jimcreat": 1789121887.5364008,
       "teslaprime": 1789121896.4603674,
-      "unlabeled-3": 1789216427.4840074,
-      "unlabeled-4": 1789216431.678231,
-      "unlabeled-5": 1789216436.8761911,
-      "unlabeled-6": 1789216440.5444248,
-      "unlabeled-7": 1789216445.350993,
-      "unlabeled-8": 1789216448.8568544,
+      "unlabeled-3": 1789253564.2319794,
+      "unlabeled-4": 1789253567.512513,
+      "unlabeled-5": 1789253571.125514,
+      "unlabeled-6": 1789253574.8338988,
+      "unlabeled-7": 1789253577.967144,
+      "unlabeled-8": 1789253581.593709,
       "wikeyoung5": 1789121906.8627748,
-      "youngwilly": 1789216423.8893173
+      "youngwilly": 1789253561.0033631
     }
   },
   "ops": {
