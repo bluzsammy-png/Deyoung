@@ -31,13 +31,13 @@ echo "UNSEAL: OK"
 echo "--- unsealed inventory (names only) ---"
 find "$TMP" -type f | sed "s|$TMP/||" | sort
 
-# --- 2. MERGE the two new-plane token files (Task 67 ingest) ---
-for f in baidu_tokens.json modelscope_tokens.json; do
-  if [ -f "$ROOT/workers/secrets/$f" ]; then
-    cp "$ROOT/workers/secrets/$f" "$TMP/workers/secrets/$f"
-    echo "MERGE: $f added"
-  else
-    echo "MERGE: $f MISSING in sandbox (skipped!)"; fi
+# --- 2. MERGE every secret json currently in the sandbox vault dir (generic
+#        since Task 71 — github.json was missed by the old two-file list) ---
+shopt -s nullglob
+for f in "$ROOT"/workers/secrets/*.json; do
+  b=$(basename "$f")
+  cp "$f" "$TMP/workers/secrets/$b"
+  echo "MERGE: $b added"
 done
 chmod 600 "$TMP"/workers/secrets/* 2>/dev/null || true
 
