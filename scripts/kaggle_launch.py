@@ -102,8 +102,13 @@ def main():
 
     worker_b64 = base64.b64encode(WORKER_SRC.read_bytes()).decode()
     kernel_id = f"{username}/{args.slug}" if username else args.slug
+    # nonce: Kaggle SaveKernel returns 409 Conflict when the pushed source is
+    # byte-identical to the latest version. Embed a build stamp so every push
+    # is unique (Task 72 — post-wipe pushes were silently 409ing).
+    build_stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     boot = f'''
+# deyoung worker build {build_stamp} (nonce: keeps each push unique)
 import base64, pathlib, sys
 src = base64.b64decode("{worker_b64}").decode()
 pathlib.Path("deyoung_worker.py").write_text(src)
