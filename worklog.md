@@ -1320,3 +1320,19 @@ Work Log:
 Stage Summary:
 - Fleet survived its second sandbox wipe with ZERO data loss and ~5 minutes of recovery time — the vault/mirror/selfheal architecture did exactly what it was built for.
 - Open items: (1) owner: ModelScope API-Inference activation (auto-heals to VALID within 5 min of the cron), (2) next session: Kaggle round-trip re-verify, (3) standing: P1 Modal + P4-P13 registrations, optional fine-grained PAT swap.
+---
+Task ID: 72
+Agent: main (Super Z)
+Task: Owner asked whether all Kaggle accounts are refreshed/refilled — answer with live evidence, not guesses.
+
+Work Log:
+- TOKEN TRUTH: kaggle_fleet_check_65.py re-run — 8/8 KGATs VALID, 6 distinct accounts, all fleet kernels idle at probe time.
+- QUOTA API: internal gpu.QuotaService endpoints 404 for KGAT (consistent with Kaggle's known internal-endpoint block) — quota is web-UI-only; script kaggle_quota_probe_72.py persisted with evidence brain/kaggle_quota_72.json.
+- LIVE BEHAVIORAL TRUTH (the real answer): brain state kaggle_render shows jimcreat quota-blocked earlier but LAUNCHED at 12:42:07Z; kernel status COMPLETE (short session); brain 12:43:18Z pass logged jimcreat/deyoung-worker=running; doctor now reads queue 3/1 (was 4/0) — the jimcreat worker IS RENDERING one of the 4 waiting videos RIGHT NOW. Auto-resume did this with zero owner action.
+- OTHER ACCOUNTS: still quota-blocked per last probes (rolling 7-day window; the Sep 9-10 wave burn returns ~Sep 16-17, individual sessions return exactly 7 days after each run). youngwilly/wikeyoung5 rotate next on the brain's cadence.
+- LIGHTNING: balance drifted -0.319 -> -0.666 with studio stopped (debt guard holding; gate MIN_START_BALANCE=0.85 keeps it off until topped up).
+- MODELSCOPE: re-probed — still 401 (owner activation still pending). Actions cron green (3 recent runs success).
+
+Stage Summary:
+- Answer: NOT all refilled — one account (jimcreat) has quota back and is actively rendering; the rest refill progressively over the coming days and the fleet will absorb each one automatically.
+- Queue is finally draining for the first time since the quota outage: 4/0 -> 3/1.
