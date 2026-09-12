@@ -1,10 +1,10 @@
 {
- "checked": "2026-09-11T10:41:07Z",
+ "checked": "2026-09-12T12:36:17Z",
  "state": "CLOUD_SPACE_STATE_READY",
  "id": "01m1tbnqb27z1fxg028awwttk2",
  "instance_phase": null,
  "machine": null,
  "running_since": null,
- "balance": -0.31896967485335037,
+ "balance": -0.6660559197749513,
  "c20_phase": null
 }
